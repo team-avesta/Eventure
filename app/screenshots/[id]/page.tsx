@@ -1,0 +1,1524 @@
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getModules } from '@/services/modules';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { Event } from '@/types';
+import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
+import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
+
+const EVENT_TYPES = [
+  { id: 'pageview', name: 'Page View', color: '#2563EB' }, // Bright Blue - stands out, professional
+  {
+    id: 'trackevent_pageview',
+    name: 'TrackEvent with PageView',
+    color: '#16A34A',
+  }, // Green - success, action
+  { id: 'trackevent', name: 'TrackEvent', color: '#9333EA' }, // Purple - distinct, engaging
+  { id: 'outlink', name: 'Outlink', color: '#DC2626' }, // Red - external action, attention
+];
+
+type RectangleState = {
+  id: string;
+  startX: number;
+  startY: number;
+  width: number;
+  height: number;
+  color: string;
+  eventType: string;
+  action: string;
+};
+
+export default function ScreenshotDetailPage() {
+  const params = useParams();
+  const screenshotId = params.id as string;
+  const [isDraggable, setIsDraggable] = useState(false);
+  const [showEventTypeModal, setShowEventTypeModal] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [selectedEventType, setSelectedEventType] = useState<{
+    id: string;
+    name: string;
+    color: string;
+  } | null>(null);
+  const [userRole, setUserRole] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [newEvent, setNewEvent] = useState<Partial<Event> | null>(null);
+  const [dropdownData, setDropdownData] = useState<{
+    pageData: Array<{
+      id: string;
+      title: string;
+      url: string;
+    }>;
+    dimensions: Array<{
+      id: string;
+      name: string;
+    }>;
+    eventCategories: string[];
+    eventActionNames: string[];
+    eventNames: string[];
+  }>({
+    pageData: [],
+    dimensions: [],
+    eventCategories: [],
+    eventActionNames: [],
+    eventNames: [],
+  });
+  const [selectedPageId, setSelectedPageId] = useState<string>('');
+  const [rectangles, setRectangles] = useState<RectangleState[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [highlightedCardId, setHighlightedCardId] = useState<string | null>(
+    null
+  );
+  const [formData, setFormData] = useState<{
+    eventcategory?: string;
+    eventactionname?: string;
+    eventname?: string;
+    eventvalue?: string;
+    dimensions?: string[];
+  }>({});
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const auth = sessionStorage.getItem('auth');
+    if (auth) {
+      const { role } = JSON.parse(auth);
+      setUserRole(role);
+    }
+  }, []);
+
+  const { data: modules, isLoading } = useQuery({
+    queryKey: ['modules'],
+    queryFn: getModules,
+  });
+
+  const { data: events = [], refetch: refetchEvents } = useQuery({
+    queryKey: ['events', screenshotId],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/screenshots/events?screenshotId=${screenshotId}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch events');
+      const data = await response.json();
+      // Update rectangles state when events are loaded
+      const savedRectangles = data.map((event: Event) => ({
+        id: event.id,
+        startX: event.coordinates.startX,
+        startY: event.coordinates.startY,
+        width: event.coordinates.width,
+        height: event.coordinates.height,
+        color:
+          EVENT_TYPES.find((type) => type.id === event.eventType)?.color ||
+          '#000000',
+        eventType: event.eventType,
+        action: event.action || 'No Action',
+      }));
+      setRectangles(savedRectangles);
+      return data;
+    },
+  });
+
+  const replaceMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('screenshotId', screenshotId);
+
+      const response = await fetch('/api/screenshots/replace', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to replace image');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['modules'] });
+      toast.success('Image replaced successfully');
+    },
+    onError: (error: Error) => {
+      console.error('Failed to replace image:', error);
+      toast.error(
+        error.message || 'Failed to replace image. Please try again.'
+      );
+    },
+  });
+
+  // Find screenshot in any module
+  const screenshot = modules
+    ?.flatMap((mod) => mod.screenshots)
+    .find((s) => s?.id === screenshotId);
+
+  // Find the module containing this screenshot
+  const parentModule = modules?.find((m) =>
+    m.screenshots.some((s) => s.id === screenshotId)
+  );
+
+  const handleReplaceClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      await replaceMutation.mutateAsync(file);
+    } catch (error) {
+      // Error is handled by mutation's onError
+    } finally {
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleEventTypeSelect = (type: {
+    id: string;
+    name: string;
+    color: string;
+  }) => {
+    setShowEventTypeModal(false);
+    setSelectedEventType(type);
+    // Clear form data for new event
+    setFormData({});
+    setSelectedPageId('');
+    setIsEditing(false); // Reset editing state
+    toast.success(`Click and drag on the image to add a ${type.name} event`);
+  };
+
+  // Add mutation to save events
+  const saveEventMutation = useMutation({
+    mutationFn: async (event: Event) => {
+      const response = await fetch('/api/screenshots/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save event');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Refetch events to get the latest data
+      refetchEvents();
+    },
+    onError: (error) => {
+      console.error('Error saving event:', error);
+      toast.error('Failed to update event position');
+    },
+  });
+
+  // Handle form submission
+  const handleEventFormSubmit = async (formData: {
+    name: string;
+    category: string;
+    action: string;
+    value: string;
+    dimensions: string[];
+  }) => {
+    if (!newEvent) return;
+
+    let eventData: Event = {
+      id: newEvent.id || Date.now().toString(),
+      coordinates: newEvent.coordinates!,
+      screenshotId,
+      eventType: selectedEventType?.id || '',
+      name:
+        selectedEventType?.id === 'pageview'
+          ? dropdownData.pageData.find((p) => p.id === formData.name)?.title ||
+            ''
+          : formData.name,
+      category: formData.category,
+      action: formData.action,
+      value: formData.value,
+      dimensions: formData.dimensions,
+    };
+
+    try {
+      const response = await fetch(
+        '/api/screenshots/events' + (isEditing ? `/${newEvent.id}` : ''),
+        {
+          method: isEditing ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(eventData),
+        }
+      );
+
+      if (!response.ok)
+        throw new Error(
+          isEditing ? 'Failed to update event' : 'Failed to save event'
+        );
+
+      // Update rectangles state with the new/updated event details
+      setRectangles((prev) =>
+        isEditing
+          ? prev.map((rect) =>
+              rect.id === eventData.id
+                ? {
+                    ...rect,
+                    action: formData.action,
+                  }
+                : rect
+            )
+          : [...prev]
+      );
+
+      // Refetch events to get the latest data
+      await refetchEvents();
+
+      setShowEventForm(false);
+      setNewEvent(null);
+      setSelectedEventType(null);
+      setIsEditing(false); // Reset editing state
+      toast.success(
+        isEditing ? 'Event updated successfully' : 'Event saved successfully'
+      );
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast.error(
+        isEditing ? 'Failed to update event' : 'Failed to save event'
+      );
+    }
+  };
+
+  // Add dropdown data fetching
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const response = await fetch('/api/dropdowns');
+        if (!response.ok) throw new Error('Failed to fetch dropdown data');
+        const data = await response.json();
+        setDropdownData(data);
+      } catch (error) {
+        console.error('Error fetching dropdown data:', error);
+        toast.error('Failed to load form data');
+      }
+    };
+
+    fetchDropdownData();
+  }, []);
+
+  // Handle title change for pageview
+  const handleTitleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    setSelectedPageId(selectedId);
+
+    // Find corresponding URL
+    const selectedPage = dropdownData.pageData.find(
+      (page) => page.id === selectedId
+    );
+    if (selectedPage) {
+      const urlInput = document.getElementById('customUrl') as HTMLInputElement;
+      if (urlInput) {
+        urlInput.value = selectedPage.url;
+      }
+    }
+  };
+
+  const renderFormFields = () => {
+    if (!selectedEventType) return null;
+
+    const dimensionsSection = (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Dimensions
+        </label>
+        <div className="max-h-[400px] overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+          {dropdownData.dimensions.map((dimension) => (
+            <label
+              key={dimension.id}
+              className="flex items-center space-x-3 hover:bg-gray-50 p-1 rounded cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                name="dimensions"
+                value={dimension.id}
+                checked={formData.dimensions?.includes(dimension.id)}
+                onChange={(e) => {
+                  const dimensionId = dimension.id;
+                  setFormData((prev) => ({
+                    ...prev,
+                    dimensions: e.target.checked
+                      ? [...(prev.dimensions || []), dimensionId]
+                      : (prev.dimensions || []).filter(
+                          (id) => id !== dimensionId
+                        ),
+                  }));
+                }}
+                className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">
+                {String(dimension.id).padStart(2, '0')}. {dimension.name}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+
+    switch (selectedEventType.id) {
+      case 'pageview':
+        return (
+          <>
+            <div>
+              <label
+                htmlFor="customTitle"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Custom Title *
+              </label>
+              <select
+                name="customTitle"
+                id="customTitle"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                onChange={handleTitleChange}
+                value={selectedPageId}
+              >
+                <option value="">Select Custom Title</option>
+                {dropdownData.pageData.map((page) => (
+                  <option key={page.id} value={page.id}>
+                    {page.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="customUrl"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Custom URL *
+              </label>
+              <input
+                type="text"
+                name="customUrl"
+                id="customUrl"
+                required
+                readOnly
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                placeholder="URL will be set automatically"
+                value={
+                  dropdownData.pageData.find((p) => p.id === selectedPageId)
+                    ?.url || ''
+                }
+              />
+            </div>
+
+            {dimensionsSection}
+          </>
+        );
+
+      case 'trackevent':
+      case 'trackevent_pageview':
+        return (
+          <>
+            <div>
+              <label
+                htmlFor="eventcategory"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Category *
+              </label>
+              <select
+                name="eventcategory"
+                id="eventcategory"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                value={formData.eventcategory || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventcategory: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select Event Category</option>
+                {dropdownData.eventCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventactionname"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Action Name *
+              </label>
+              <select
+                name="eventactionname"
+                id="eventactionname"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                value={formData.eventactionname || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventactionname: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select Event Action</option>
+                {dropdownData.eventActionNames.map((action) => (
+                  <option key={action} value={action}>
+                    {action}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventname"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Name
+              </label>
+              <select
+                name="eventname"
+                id="eventname"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                value={formData.eventname || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventname: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select Event Name (Optional)</option>
+                {dropdownData.eventNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventvalue"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Value
+              </label>
+              <input
+                type="text"
+                name="eventvalue"
+                id="eventvalue"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                placeholder="Enter Event Value (Optional)"
+                value={formData.eventvalue || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventvalue: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            {dimensionsSection}
+          </>
+        );
+
+      case 'outlink':
+        return (
+          <>
+            <div>
+              <label
+                htmlFor="eventcategory"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Category *
+              </label>
+              <input
+                type="text"
+                name="eventcategory"
+                id="eventcategory"
+                value="Common"
+                readOnly
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventactionname"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Action Name *
+              </label>
+              <input
+                type="text"
+                name="eventactionname"
+                id="eventactionname"
+                value="Outlink"
+                readOnly
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventname"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Name
+              </label>
+              <select
+                name="eventname"
+                id="eventname"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                value={formData.eventname || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventname: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select Event Name (Optional)</option>
+                {dropdownData.eventNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventvalue"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Event Value
+              </label>
+              <input
+                type="text"
+                name="eventvalue"
+                id="eventvalue"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                placeholder="Enter Event Value (Optional)"
+                value={formData.eventvalue || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventvalue: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            {dimensionsSection}
+          </>
+        );
+    }
+  };
+
+  const handleRectanglesChange = async (newRectangles: Rectangle[]) => {
+    // If it's a new rectangle being drawn
+    if (!isDraggable && selectedEventType) {
+      const lastRect = newRectangles[newRectangles.length - 1];
+      if (lastRect) {
+        const newEventId = Date.now().toString();
+
+        setNewEvent({
+          id: newEventId,
+          coordinates: {
+            startX: lastRect.startX,
+            startY: lastRect.startY,
+            width: lastRect.width,
+            height: lastRect.height,
+          },
+          screenshotId,
+          eventType: selectedEventType.id,
+        });
+
+        // Update rectangles state with the new rectangle including event type
+        setRectangles((prev) => [
+          ...prev,
+          {
+            id: newEventId,
+            startX: lastRect.startX,
+            startY: lastRect.startY,
+            width: lastRect.width,
+            height: lastRect.height,
+            color: selectedEventType.color,
+            eventType: selectedEventType.id,
+            action: '',
+          },
+        ]);
+      }
+    } else if (isDraggable) {
+      // If rectangles are being dragged/resized, update only the changed rectangle
+      const updatedRectangles = await Promise.all(
+        rectangles.map(async (rect) => {
+          // Find the corresponding rectangle in newRectangles by matching id
+          const newRect = newRectangles.find((r) => r.id === rect.id);
+          if (!newRect) return rect;
+
+          // Only update if position/size has changed
+          if (
+            rect.startX !== newRect.startX ||
+            rect.startY !== newRect.startY ||
+            rect.width !== newRect.width ||
+            rect.height !== newRect.height
+          ) {
+            // Find the original event to preserve its data
+            const originalEvent = events.find((e: Event) => e.id === rect.id);
+            if (!originalEvent) return rect;
+
+            // Create updated event with new coordinates
+            const updatedEvent = {
+              ...originalEvent,
+              coordinates: {
+                startX: newRect.startX,
+                startY: newRect.startY,
+                width: newRect.width,
+                height: newRect.height,
+              },
+            };
+
+            // Update the event in the database
+            try {
+              const response = await fetch(
+                `/api/screenshots/events/${rect.id}`,
+                {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(updatedEvent),
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error('Failed to update event position');
+              }
+
+              // Refetch events to ensure sync with database
+              await refetchEvents();
+
+              // Return updated rectangle with new position
+              return {
+                ...rect,
+                startX: newRect.startX,
+                startY: newRect.startY,
+                width: newRect.width,
+                height: newRect.height,
+              };
+            } catch (error) {
+              console.error('Error updating event:', error);
+              toast.error('Failed to update event position');
+              return rect; // Return original rectangle if update fails
+            }
+          }
+          return rect;
+        })
+      );
+
+      // Update local state with new positions
+      setRectangles(updatedRectangles);
+    }
+  };
+
+  const handleEditEvent = (rect: Rectangle) => {
+    const event = events.find((e: Event) => e.id === rect.id);
+
+    if (event) {
+      setIsEditing(true); // Set editing state
+      setSelectedEventType(
+        EVENT_TYPES.find((t) => t.id === event.eventType) || null
+      );
+
+      // Pre-fill form data based on event type
+      switch (event.eventType) {
+        case 'pageview':
+          const pageData = dropdownData.pageData.find(
+            (p) => p.title === event.name
+          );
+          if (pageData) {
+            setSelectedPageId(pageData.id);
+            setFormData({
+              dimensions: event.dimensions,
+            });
+          }
+          break;
+
+        case 'trackevent':
+        case 'trackevent_pageview':
+          setFormData({
+            eventcategory: event.category,
+            eventactionname: event.action,
+            eventname: event.name || '',
+            eventvalue: event.value || '',
+            dimensions: event.dimensions,
+          });
+          break;
+
+        case 'outlink':
+          setFormData({
+            eventname: event.name || '',
+            eventvalue: event.value || '',
+            dimensions: event.dimensions,
+          });
+          break;
+      }
+
+      setNewEvent({
+        id: event.id,
+        coordinates: event.coordinates,
+        screenshotId,
+        eventType: event.eventType,
+      });
+
+      setShowEventForm(true);
+    }
+  };
+
+  const handleDeleteEvent = async (rect: Rectangle) => {
+    // Find the event in rectangles array
+    const event = rectangles.find(
+      (r) =>
+        r.startX === rect.startX &&
+        r.startY === rect.startY &&
+        r.width === rect.width &&
+        r.height === rect.height
+    );
+
+    if (event) {
+      try {
+        const response = await fetch(`/api/screenshots/events/${event.id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) throw new Error('Failed to delete event');
+
+        // Update local state
+        setRectangles((prev) => prev.filter((r) => r.id !== event.id));
+        toast.success('Event deleted successfully');
+      } catch (error) {
+        console.error('Error deleting event:', error);
+        toast.error('Failed to delete event');
+      }
+    }
+  };
+
+  const handleGetEventDetails = async (rectId: string) => {
+    const event = events.find((e: Event) => e.id === rectId);
+    if (!event) return null;
+
+    // Map dimension IDs to their names while keeping the IDs
+    const dimensionNames = event.dimensions.map((dimId: string) => {
+      const dimension = dropdownData.dimensions.find((d) => d.id === dimId);
+      return dimension?.name || dimId;
+    });
+
+    if (event.eventType === 'pageview') {
+      const pageInfo = dropdownData.pageData.find((p) => p.id === event.name);
+      return {
+        ...event,
+        name: pageInfo?.title || event.name,
+        dimensionNames,
+      };
+    }
+    return {
+      ...event,
+      dimensionNames,
+    };
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      replaceMutation.mutate(file);
+    }
+  };
+
+  useEffect(() => {
+    setContainerWidth(window.innerWidth - 32);
+    const handleResize = () => {
+      setContainerWidth(window.innerWidth - 32);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleRectangleClick = (rectId: string) => {
+    setHighlightedCardId(rectId);
+    // Find and scroll to the card
+    const card = document.getElementById(`event-card-${rectId}`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!screenshot || !parentModule) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">Screenshot not found</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-[95%] mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <Link
+                href={`/screenshots/modules/${parentModule.key}`}
+                className="text-gray-500 hover:text-gray-700 inline-flex items-center transition-colors"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+              </Link>
+
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  {screenshot.name}
+                </h1>
+                <p className="text-sm text-gray-500">{parentModule.name}</p>
+              </div>
+
+              {/* Event Type Legend */}
+              <div className="flex items-center gap-6 ml-8 border-l border-gray-200 pl-8">
+                {EVENT_TYPES.map((type) => (
+                  <div key={type.id} className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: type.color }}
+                    />
+                    <span className="text-sm text-gray-600">{type.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {userRole === 'admin' && (
+              <div className="flex items-center gap-4">
+                {/* Add Event Button */}
+                <button
+                  onClick={() => setShowEventTypeModal(true)}
+                  className="inline-flex items-center h-11 px-5 rounded-md bg-[#0073CF] text-white hover:bg-[#005ba3] transition-colors duration-200 shadow-sm"
+                >
+                  <svg
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium">Add Event</span>
+                </button>
+
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+
+                {/* Replace Image Button */}
+                <button
+                  onClick={handleReplaceClick}
+                  disabled={replaceMutation.isPending}
+                  className="inline-flex items-center h-11 px-5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {replaceMutation.isPending ? (
+                    <svg
+                      className="animate-spin h-5 w-5 mr-2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  )}
+                  <span className="text-sm font-medium">
+                    {replaceMutation.isPending
+                      ? 'Replacing...'
+                      : 'Replace Image'}
+                  </span>
+                </button>
+
+                {/* Drag Switch */}
+                <div className="h-11 px-5 rounded-md border border-gray-300 bg-white flex items-center shadow-sm">
+                  <label className="flex items-center cursor-pointer">
+                    <span className="text-sm font-medium text-gray-700 mr-3">
+                      Drag
+                    </span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={isDraggable}
+                        onChange={(e) => setIsDraggable(e.target.checked)}
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0073CF] rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0073CF]"></div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-[95%] w-full mx-auto py-4">
+        <div className="flex gap-2">
+          <div className="overflow-auto max-h-[calc(100vh-120px)]">
+            <ImageAnnotatorWrapper
+              imageUrl={screenshot.url}
+              width={containerWidth * 0.7}
+              height={containerWidth * 0.7 * 0.6}
+              onRectanglesChange={handleRectanglesChange}
+              isDragMode={isDraggable}
+              isDrawingEnabled={!!selectedEventType}
+              selectedEventType={selectedEventType}
+              onDrawComplete={() => setShowEventForm(true)}
+              initialRectangles={rectangles.map((rect) => ({
+                id: rect.id,
+                startX: rect.startX,
+                startY: rect.startY,
+                width: rect.width,
+                height: rect.height,
+                eventType: rect.eventType,
+                eventAction: rect.action || '',
+              }))}
+              onRectangleClick={handleRectangleClick}
+            />
+          </div>
+
+          {/* Right Panel */}
+          <div className="w-[400px] bg-white rounded-lg shadow-sm border border-gray-200 p-4 overflow-auto max-h-[calc(100vh-120px)]">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white">
+              Event Details
+            </h3>
+
+            {/* Event List */}
+            <div className="space-y-3">
+              {rectangles
+                .sort((a, b) => {
+                  const order = {
+                    pageview: 1,
+                    trackevent_pageview: 2,
+                    trackevent: 3,
+                    outlink: 4,
+                  };
+                  return (
+                    order[a.eventType as keyof typeof order] -
+                    order[b.eventType as keyof typeof order]
+                  );
+                })
+                .map((rect) => {
+                  const eventType = EVENT_TYPES.find(
+                    (t) => t.id === rect.eventType
+                  );
+                  const event = events.find((e: Event) => e.id === rect.id);
+                  return (
+                    <div
+                      key={rect.id}
+                      id={`event-card-${rect.id}`}
+                      className={`p-4 rounded-md border transition-all relative cursor-pointer ${
+                        expandedId === rect.id ? 'bg-gray-50' : ''
+                      } ${
+                        highlightedCardId === rect.id
+                          ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50'
+                          : 'border-gray-200 hover:border-blue-500'
+                      }`}
+                      onClick={() =>
+                        setExpandedId(expandedId === rect.id ? null : rect.id)
+                      }
+                    >
+                      {/* Show category and action for non-pageview events */}
+                      {event?.category && eventType?.id !== 'pageview' && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                          <span className="font-medium min-w-[70px]">
+                            Category:
+                          </span>
+                          <span
+                            className="truncate pr-16"
+                            title={event.category}
+                          >
+                            {event.category}
+                          </span>
+                        </div>
+                      )}
+                      {event?.action && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                          <span className="font-medium min-w-[70px]">
+                            Action:
+                          </span>
+                          <span className="truncate pr-16" title={event.action}>
+                            {event.action}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Show additional fields for pageview */}
+                      {eventType?.id === 'pageview' && (
+                        <>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                            <span className="font-medium min-w-[70px]">
+                              Title:
+                            </span>
+                            <span
+                              className="truncate pr-16"
+                              title={event?.name}
+                            >
+                              {event?.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                            <span className="font-medium min-w-[70px]">
+                              URL:
+                            </span>
+                            <span
+                              className="truncate pr-12"
+                              title={event?.category}
+                            >
+                              {event?.category}
+                            </span>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Action Buttons - Only show when card is expanded AND user is admin */}
+                      {expandedId === rect.id && userRole === 'admin' && (
+                        <div className="absolute top-3 right-3 flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditEvent({
+                                id: rect.id,
+                                startX: rect.startX,
+                                startY: rect.startY,
+                                width: rect.width,
+                                height: rect.height,
+                                eventType: rect.eventType,
+                                eventAction: rect.action || '',
+                              });
+                            }}
+                            className="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteEvent({
+                                id: rect.id,
+                                startX: rect.startX,
+                                startY: rect.startY,
+                                width: rect.width,
+                                height: rect.height,
+                                eventType: rect.eventType,
+                                eventAction: rect.action || '',
+                              });
+                            }}
+                            className="p-1.5 text-gray-500 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Expanded Details */}
+                      {expandedId === rect.id && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          {event?.value && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                              <span className="font-medium min-w-[70px]">
+                                Value:
+                              </span>
+                              <span>{event.value}</span>
+                            </div>
+                          )}
+                          {event?.dimensions && event.dimensions.length > 0 && (
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium">Dimensions:</span>
+                              <div className="mt-2 space-y-1.5">
+                                {event.dimensions.map((dim: string) => {
+                                  const dimension =
+                                    dropdownData.dimensions.find(
+                                      (d) => d.id === dim
+                                    );
+                                  return (
+                                    <div
+                                      key={dim}
+                                      className="text-sm text-gray-600 flex items-center gap-2"
+                                    >
+                                      <span className="text-gray-400 min-w-[30px]">
+                                        {String(dimension?.id || dim).padStart(
+                                          2,
+                                          '0'
+                                        )}
+                                        .
+                                      </span>
+                                      <span>{dimension?.name || dim}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Event Type Selection Modal */}
+      {showEventTypeModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowEventTypeModal(false)}
+            />
+
+            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <div className="absolute right-0 top-0 pr-4 pt-4">
+                <button
+                  type="button"
+                  className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
+                  onClick={() => setShowEventTypeModal(false)}
+                >
+                  <span className="sr-only">Close</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="sm:flex sm:items-start">
+                <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <svg
+                    className="h-6 w-6 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                </div>
+                <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                    Add New Event
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Select the type of event you want to add to this screenshot.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                {EVENT_TYPES.map((type) => (
+                  <button
+                    key={type.id}
+                    onClick={() => handleEventTypeSelect(type)}
+                    className="relative w-full rounded-lg border p-4 hover:border-blue-500 transition-all duration-200 group"
+                  >
+                    <div className="flex items-center">
+                      <div
+                        className="h-4 w-4 rounded-full mr-4"
+                        style={{ backgroundColor: type.color }}
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 group-hover:text-blue-600">
+                          {type.name}
+                        </p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {getEventTypeDescription(type.id)}
+                        </p>
+                      </div>
+                      <svg
+                        className="h-5 w-5 text-gray-400 group-hover:text-blue-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event Form Modal */}
+      {showEventForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowEventForm(false)}
+            />
+
+            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <div className="absolute right-0 top-0 pr-4 pt-4">
+                <button
+                  type="button"
+                  className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
+                  onClick={() => setShowEventForm(false)}
+                >
+                  <span className="sr-only">Close</span>
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                    Event Details
+                  </h3>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      console.log(
+                        'Selected Event Type:',
+                        selectedEventType?.id
+                      );
+                      console.log(
+                        'Form Data:',
+                        Object.fromEntries(formData.entries())
+                      );
+
+                      if (selectedEventType?.id === 'pageview') {
+                        console.log('Handling pageview submission');
+                        handleEventFormSubmit({
+                          name: formData.get('customTitle') as string,
+                          category: formData.get('customUrl') as string,
+                          dimensions: Array.from(
+                            formData.getAll('dimensions')
+                          ) as string[],
+                          action: '', // Not used for pageview
+                          value: '', // Not used for pageview
+                        });
+                      } else if (
+                        selectedEventType?.id === 'trackevent_pageview' ||
+                        selectedEventType?.id === 'trackevent'
+                      ) {
+                        console.log(
+                          'Handling trackevent/trackevent_pageview submission'
+                        );
+                        const eventData = {
+                          name: (formData.get('eventname') as string) || '',
+                          category: formData.get('eventcategory') as string,
+                          action: formData.get('eventactionname') as string,
+                          value: (formData.get('eventvalue') as string) || '',
+                          dimensions: Array.from(
+                            formData.getAll('dimensions')
+                          ) as string[],
+                        };
+                        console.log('Track Event Data:', eventData);
+                        handleEventFormSubmit(eventData);
+                      } else if (selectedEventType?.id === 'outlink') {
+                        console.log('Handling outlink submission');
+                        const eventData = {
+                          name: (formData.get('eventname') as string) || '',
+                          category: 'Common', // Hardcoded for outlink
+                          action: 'Outlink', // Hardcoded for outlink
+                          value: (formData.get('eventvalue') as string) || '',
+                          dimensions: Array.from(
+                            formData.getAll('dimensions')
+                          ) as string[],
+                        };
+                        console.log('Outlink Event Data:', eventData);
+                        handleEventFormSubmit(eventData);
+                      }
+                    }}
+                    className="mt-6 space-y-4"
+                  >
+                    {renderFormFields()}
+
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowEventForm(false)}
+                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        Save Event
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getEventTypeDescription(typeId: string): string {
+  switch (typeId) {
+    case 'pageview':
+      return 'Track when users view specific pages or sections';
+    case 'trackevent_pageview':
+      return 'Combine page view tracking with custom event data';
+    case 'trackevent':
+      return 'Track specific user interactions and custom events';
+    case 'outlink':
+      return 'Monitor clicks on external links and resources';
+    default:
+      return '';
+  }
+}

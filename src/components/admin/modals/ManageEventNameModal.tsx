@@ -1,0 +1,157 @@
+import { useState, useEffect } from 'react';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import { Modal } from '@/components/common/Modal';
+import { Select } from '@/components/common/Select';
+import { Button } from '@/components/common/Button';
+import { Spinner } from '@/components/common/icons/Spinner';
+import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import { adminService } from '@/services/api/adminService';
+import toast from 'react-hot-toast';
+
+interface ManageEventNameModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface EventName {
+  name: string;
+}
+
+function LoadingState() {
+  return (
+    <div className="text-center py-8">
+      <Spinner className="mx-auto" />
+      <div className="mt-2 text-sm text-gray-500">Loading event names...</div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="text-center py-8">
+      <p className="text-gray-500">No event names available</p>
+    </div>
+  );
+}
+
+export default function ManageEventNameModal({
+  isOpen,
+  onClose,
+}: ManageEventNameModalProps) {
+  const [events, setEvents] = useState<EventName[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchEvents();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedEvent('');
+    }
+  }, [isOpen]);
+
+  const fetchEvents = async () => {
+    try {
+      const data = await adminService.fetchEventNames();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching event names:', error);
+      toast.error('Failed to fetch event names');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = () => {
+    if (!selectedEvent) return;
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await adminService.deleteEventName(selectedEvent);
+      setEvents((prevEvents) =>
+        prevEvents.filter((event) => event.name !== selectedEvent)
+      );
+      setSelectedEvent('');
+      toast.success('Event name deleted successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error deleting event name:', error);
+      toast.error('Failed to delete event name');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <LoadingState />;
+    }
+
+    if (events.length === 0) {
+      return <EmptyState />;
+    }
+
+    const eventOptions = events.map((event) => ({
+      value: event.name,
+      label: event.name,
+    }));
+
+    return (
+      <div className="space-y-4">
+        <Select
+          id="event"
+          label="Select Event Name"
+          value={selectedEvent}
+          onChange={(e) => setSelectedEvent(e.target.value)}
+          options={[
+            { value: '', label: 'Select an event name' },
+            ...eventOptions,
+          ]}
+        />
+
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            onClick={handleDelete}
+            disabled={isDeleting || !selectedEvent}
+            className="!text-red-600 !ring-red-300 hover:!bg-red-50 flex items-center justify-center"
+          >
+            <TrashIcon className="h-4 w-4 mr-1" aria-hidden="true" />
+            Delete
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Delete Event Name"
+        showCancelButton={false}
+      >
+        {renderContent()}
+      </Modal>
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Event Name"
+        message={`Are you sure you want to delete the event name "${selectedEvent}"? This action cannot be undone.`}
+        confirmText="Delete Event Name"
+        cancelText="Cancel"
+      />
+    </>
+  );
+}
