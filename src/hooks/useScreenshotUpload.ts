@@ -1,33 +1,18 @@
 import { useState, useRef } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createScreenshot } from '@/services/screenshots';
+import toast from 'react-hot-toast';
 
-export function useScreenshotUpload() {
+interface UseScreenshotUploadProps {
+  onSuccess?: () => void;
+}
+
+export function useScreenshotUpload({
+  onSuccess,
+}: UseScreenshotUploadProps = {}) {
   const [file, setFile] = useState<File | null>(null);
   const [pageName, setPageName] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const queryClient = useQueryClient();
-
-  const uploadMutation = useMutation({
-    mutationFn: createScreenshot,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['screenshots'] });
-      queryClient.invalidateQueries({ queryKey: ['modules'] });
-      resetForm();
-    },
-    onError: (error: any) => {
-      if (error.message.includes('File size exceeds')) {
-        setError('File size is too large. Maximum size is 10MB.');
-      } else if (error.message.includes('Invalid file type')) {
-        setError('Invalid file type. Only JPEG, PNG and GIF are allowed.');
-      } else if (error.message.includes('Module not found')) {
-        setError('Selected module was not found. Please try again.');
-      } else {
-        setError('Failed to upload screenshot. Please try again.');
-      }
-    },
-  });
 
   const resetForm = () => {
     setFile(null);
@@ -72,7 +57,35 @@ export function useScreenshotUpload() {
     formData.append('file', file);
     formData.append('pageName', pageName);
 
-    uploadMutation.mutate(formData);
+    setIsUploading(true);
+    try {
+      const response = await fetch('/api/s3/screenshots', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      toast.success('Screenshot uploaded successfully');
+      resetForm();
+      onSuccess?.();
+    } catch (error: any) {
+      if (error.message.includes('File size exceeds')) {
+        setError('File size is too large. Maximum size is 10MB.');
+      } else if (error.message.includes('Invalid file type')) {
+        setError('Invalid file type. Only JPEG, PNG and GIF are allowed.');
+      } else if (error.message.includes('Module not found')) {
+        setError('Selected module was not found. Please try again.');
+      } else {
+        setError('Failed to upload screenshot. Please try again.');
+        toast.error('Failed to upload screenshot');
+      }
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return {
@@ -82,7 +95,7 @@ export function useScreenshotUpload() {
     setPageName,
     error,
     fileInputRef,
-    isUploading: uploadMutation.isPending,
+    isUploading,
     handleSubmit,
     resetForm,
   };

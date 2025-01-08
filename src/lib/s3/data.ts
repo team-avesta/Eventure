@@ -39,4 +39,24 @@ export class S3DataService {
       throw error;
     }
   }
+
+  async putObject(
+    key: string,
+    body: Buffer,
+    contentType: string
+  ): Promise<void> {
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+      });
+
+      await s3Client.send(command);
+    } catch (error) {
+      console.error(`Error uploading file ${key}:`, error);
+      throw error;
+    }
+  }
 }

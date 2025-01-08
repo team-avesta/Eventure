@@ -41,7 +41,7 @@ export default function ScreenshotsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isAdmin && (
           <div className="mb-8">
-            <ScreenshotUpload modules={modules} />
+            <ScreenshotUpload modules={modules} onSuccess={fetchModules} />
           </div>
         )}
 

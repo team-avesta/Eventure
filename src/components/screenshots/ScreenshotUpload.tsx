@@ -6,7 +6,15 @@ import { Button } from '@/components/common/Button';
 import { useScreenshotUpload } from '@/hooks/useScreenshotUpload';
 import { Module } from '@/services/adminS3Service';
 
-export default function ScreenshotUpload({ modules }: { modules: Module[] }) {
+interface ScreenshotUploadProps {
+  modules: Module[];
+  onSuccess?: () => void;
+}
+
+export default function ScreenshotUpload({
+  modules,
+  onSuccess,
+}: ScreenshotUploadProps) {
   const {
     file,
     setFile,
@@ -16,7 +24,7 @@ export default function ScreenshotUpload({ modules }: { modules: Module[] }) {
     fileInputRef,
     isUploading,
     handleSubmit,
-  } = useScreenshotUpload();
+  } = useScreenshotUpload({ onSuccess });
 
   const moduleOptions = [
     { value: '', label: 'Select a module' },
