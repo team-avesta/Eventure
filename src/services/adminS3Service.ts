@@ -206,4 +206,37 @@ export const adminS3Service = {
       eventNames: names.filter((eventName) => eventName !== name),
     });
   },
+
+  // Screenshots
+  deleteScreenshot: async (screenshotId: string) => {
+    const response = await api.get<{ modules: Module[] }>('modules');
+    const modules = extractData<Module>(response, 'modules');
+
+    // Find the module and screenshot
+    let targetModule: Module | undefined;
+    let screenshot;
+
+    for (const mod of modules) {
+      screenshot = mod.screenshots.find((s) => s.id === screenshotId);
+      if (screenshot) {
+        targetModule = mod;
+        break;
+      }
+    }
+
+    if (!targetModule || !screenshot) {
+      throw new Error('Screenshot not found');
+    }
+
+    // Delete from S3 first
+    await api.delete(`screenshots/${screenshotId}`);
+
+    // Then update modules data
+    const updatedModules = modules.map((module) => ({
+      ...module,
+      screenshots: module.screenshots.filter((s) => s.id !== screenshotId),
+    }));
+
+    return api.update('modules', { modules: updatedModules });
+  },
 };

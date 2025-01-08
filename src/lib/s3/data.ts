@@ -1,4 +1,8 @@
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import { s3Client } from '@/lib/s3/client';
 
 export class S3DataService {
@@ -56,6 +60,20 @@ export class S3DataService {
       await s3Client.send(command);
     } catch (error) {
       console.error(`Error uploading file ${key}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteObject(key: string): Promise<void> {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      await s3Client.send(command);
+    } catch (error) {
+      console.error(`Error deleting file ${key}:`, error);
       throw error;
     }
   }

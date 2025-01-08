@@ -1,19 +1,19 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getModules } from '@/services/modules';
-import { deleteScreenshot } from '@/services/screenshots';
+import { useState, useEffect, useCallback } from 'react';
+import { adminS3Service, Module } from '@/services/adminS3Service';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import toast from 'react-hot-toast';
 
 export default function ModuleScreenshotsPage() {
   const params = useParams();
   const moduleKey = params.key as string;
   const [userRole, setUserRole] = useState<string>('');
-  const queryClient = useQueryClient();
+  const [currentModule, setCurrentModule] = useState<Module | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [screenshotToDelete, setScreenshotToDelete] = useState<string | null>(
     null
   );
@@ -26,19 +26,43 @@ export default function ModuleScreenshotsPage() {
     }
   }, []);
 
-  const { data: modules } = useQuery({
-    queryKey: ['modules'],
-    queryFn: getModules,
-  });
+  const fetchModule = useCallback(async () => {
+    try {
+      const modules = await adminS3Service.fetchModules();
+      const foundModule = modules.find((m) => m.key === moduleKey);
+      setCurrentModule(foundModule || null);
+    } catch (error) {
+      toast.error('Failed to fetch module');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [moduleKey]);
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteScreenshot,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['modules'] });
-    },
-  });
+  useEffect(() => {
+    fetchModule();
+  }, [fetchModule]);
 
-  const currentModule = modules?.find((m) => m.key === moduleKey);
+  const handleDeleteScreenshot = async () => {
+    if (!screenshotToDelete || !currentModule) return;
+
+    try {
+      await adminS3Service.deleteScreenshot(screenshotToDelete);
+      await fetchModule();
+      toast.success('Screenshot deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete screenshot');
+    } finally {
+      setScreenshotToDelete(null);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
 
   if (!currentModule) {
     return (
@@ -92,6 +116,7 @@ export default function ModuleScreenshotsPage() {
                         alt={screenshot.name}
                         fill
                         className="object-cover"
+                        unoptimized
                       />
                     </div>
                     <div className="p-4">
@@ -135,11 +160,7 @@ export default function ModuleScreenshotsPage() {
       <ConfirmationModal
         isOpen={!!screenshotToDelete}
         onClose={() => setScreenshotToDelete(null)}
-        onConfirm={() => {
-          if (screenshotToDelete) {
-            deleteMutation.mutate(screenshotToDelete);
-          }
-        }}
+        onConfirm={handleDeleteScreenshot}
         title="Delete Screenshot"
         message="Are you sure you want to delete this screenshot? This action cannot be undone."
       />

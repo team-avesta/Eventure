@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
 
     // Upload to S3
     const timestamp = Date.now();
-    const fileName = `${timestamp}-${file.name}`;
+    const sanitizedName = file.name.replace(/\s+/g, '-').toLowerCase();
+    const fileName = `${timestamp}-${sanitizedName}`;
     const key = `screenshots/${pageName}/${fileName}`;
 
     await dataService.putObject(key, buffer, file.type);
@@ -60,8 +61,8 @@ export async function POST(request: NextRequest) {
     // Update module with new screenshot
     const screenshot = {
       id: timestamp.toString(),
-      name: file.name,
-      url: `/screenshots/${fileName}`,
+      name: sanitizedName,
+      url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
       pageName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
