@@ -7,7 +7,7 @@
 1. Create bucket:
 
    ```bash
-   Bucket name: eventure-data
+   Bucket name: view-eventure
    Region: your-region
    Access: Private
    ```
@@ -29,14 +29,15 @@
 ## 2. S3 Bucket Structure
 
 ```
-eventure-data/
+view-eventure/
 ├── data/                    # JSON data files
 │   ├── events.json         # Event tracking data
 │   ├── page-data.json      # Page information
 │   ├── dimensions.json     # Tracking dimensions
 │   ├── modules.json        # Module configurations
 │   ├── event-categories.json
-│   └── event-action-names.json
+│   ├── event-actions.json  # Event action definitions
+│   └── event-names.json    # Event name definitions
 └── screenshots/            # Module screenshots
     ├── core/
     │   └── <timestamp>_<filename>.png
@@ -115,11 +116,20 @@ type EventCategories = string[];
 // Example: ["Listings", "P360", "Agent", "AuctionResults", "Blog", "User", "Common", ...]
 ```
 
-### event-action-names.json
+### event-actions.json
 
 ```typescript
-type EventActionNames = string[];
-// Example: ["Search", "ClickSeeAll", "ClickDrawer", "SearchCurrentLocation", ...]
+type EventActions = string[];
+// Example: ["Search", "ClickSeeAll", "ClickDrawer", "SearchCurrentLocation",
+//          "ClickFindAHomeLoan", "ClickExploreHomeLoans", "ViewFeaturedProperty"]
+```
+
+### event-names.json
+
+```typescript
+type EventNames = string[];
+// Example: ["Apple", "Google", "LinkedIn", "Instagram", "Facebook",
+//          "Twitter", "Email", "CopyLink"]
 ```
 
 ### Sample Data
@@ -191,7 +201,8 @@ type EventActionNames = string[];
    - `screenshotId` → Module's screenshots
    - `dimensions` → Dimension IDs
    - `category` → Event Categories
-   - `action` → Event Action Names
+   - `action` → Event Actions
+   - `name` → Event Names
 
 2. Modules contain:
    - Array of screenshots with their metadata
@@ -223,7 +234,7 @@ npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 AWS_REGION=your-region
 AWS_ACCESS_KEY_ID=your-key
 AWS_SECRET_ACCESS_KEY=your-secret
-S3_BUCKET_NAME=eventure-data
+S3_BUCKET_NAME=view-eventure
 ```
 
 ### 5.3 Core Services
