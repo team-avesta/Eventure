@@ -4,15 +4,15 @@ import { Select } from '@/components/common/Select';
 import { FileUpload } from '@/components/common/FileUpload';
 import { Button } from '@/components/common/Button';
 import { useScreenshotUpload } from '@/hooks/useScreenshotUpload';
+import { Module } from '@/services/adminS3Service';
 
-export default function ScreenshotUpload() {
+export default function ScreenshotUpload({ modules }: { modules: Module[] }) {
   const {
     file,
     setFile,
     pageName,
     setPageName,
     error,
-    modules,
     fileInputRef,
     isUploading,
     handleSubmit,

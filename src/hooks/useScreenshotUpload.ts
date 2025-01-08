@@ -1,8 +1,6 @@
 import { useState, useRef } from 'react';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createScreenshot } from '@/services/screenshots';
-import { getModules } from '@/services/modules';
-import type { Module } from '@/types';
 
 export function useScreenshotUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -10,11 +8,6 @@ export function useScreenshotUpload() {
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
-
-  const { data: modules } = useQuery({
-    queryKey: ['modules'],
-    queryFn: getModules,
-  });
 
   const uploadMutation = useMutation({
     mutationFn: createScreenshot,
@@ -88,7 +81,6 @@ export function useScreenshotUpload() {
     pageName,
     setPageName,
     error,
-    modules,
     fileInputRef,
     isUploading: uploadMutation.isPending,
     handleSubmit,

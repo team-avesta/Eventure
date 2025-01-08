@@ -1,21 +1,34 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { getModules } from '@/services/modules';
+import { useState, useEffect } from 'react';
+import { adminS3Service, Module } from '@/services/adminS3Service';
 import ScreenshotUpload from '@/components/screenshots/ScreenshotUpload';
 import { ModuleCard } from '@/components/screenshots/ModuleCard';
 import { useAuth } from '@/hooks/useAuth';
 import { Spinner } from '@/components/common/icons';
+import toast from 'react-hot-toast';
 
 export default function ScreenshotsPage() {
   const { isAdmin, isLoading: isAuthLoading } = useAuth();
+  const [modules, setModules] = useState<Module[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: modules, isLoading: isModulesLoading } = useQuery({
-    queryKey: ['modules'],
-    queryFn: getModules,
-  });
+  useEffect(() => {
+    fetchModules();
+  }, []);
 
-  if (isAuthLoading || isModulesLoading) {
+  const fetchModules = async () => {
+    try {
+      const data = await adminS3Service.fetchModules();
+      setModules(data);
+    } catch (error) {
+      toast.error('Failed to fetch modules');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isAuthLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner size={32} />
@@ -28,7 +41,7 @@ export default function ScreenshotsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isAdmin && (
           <div className="mb-8">
-            <ScreenshotUpload />
+            <ScreenshotUpload modules={modules} />
           </div>
         )}
 
