@@ -5,16 +5,12 @@ import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
 import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import { adminService } from '@/services/api/adminService';
+import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 interface ManageEventCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface EventCategory {
-  name: string;
 }
 
 function LoadingState() {
@@ -40,9 +36,9 @@ export default function ManageEventCategoryModal({
   isOpen,
   onClose,
 }: ManageEventCategoryModalProps) {
-  const [categories, setCategories] = useState<EventCategory[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -59,11 +55,14 @@ export default function ManageEventCategoryModal({
   }, [isOpen]);
 
   const fetchCategories = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminService.fetchEventCategories();
+      const data = await adminS3Service.fetchEventCategories();
+
+      console.log(data);
+
       setCategories(data);
     } catch (error) {
-      console.error('Error fetching event categories:', error);
       toast.error('Failed to fetch event categories');
     } finally {
       setIsLoading(false);
@@ -78,9 +77,9 @@ export default function ManageEventCategoryModal({
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await adminService.deleteEventCategory(selectedCategory);
+      await adminS3Service.deleteEventCategory(selectedCategory);
       setCategories((prevCategories) =>
-        prevCategories.filter((category) => category.name !== selectedCategory)
+        prevCategories.filter((category) => category !== selectedCategory)
       );
       setSelectedCategory('');
       toast.success('Event category deleted successfully');
@@ -103,8 +102,8 @@ export default function ManageEventCategoryModal({
     }
 
     const categoryOptions = categories.map((category) => ({
-      value: category.name,
-      label: category.name,
+      value: category,
+      label: category,
     }));
 
     return (

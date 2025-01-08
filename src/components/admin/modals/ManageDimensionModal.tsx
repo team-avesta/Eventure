@@ -5,17 +5,12 @@ import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
 import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import { adminService } from '@/services/api/adminService';
+import { adminS3Service, Dimension } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 interface ManageDimensionModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface Dimension {
-  id: string;
-  name: string;
 }
 
 function LoadingState() {
@@ -41,7 +36,7 @@ export default function ManageDimensionModal({
 }: ManageDimensionModalProps) {
   const [dimensions, setDimensions] = useState<Dimension[]>([]);
   const [selectedDimension, setSelectedDimension] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -58,10 +53,12 @@ export default function ManageDimensionModal({
   }, [isOpen]);
 
   const fetchDimensions = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminService.fetchDimensions();
+      const data = await adminS3Service.fetchDimensions();
       setDimensions(data);
     } catch (error) {
+      console.error('Error fetching dimensions:', error);
       toast.error('Failed to fetch dimensions');
     } finally {
       setIsLoading(false);
@@ -76,7 +73,7 @@ export default function ManageDimensionModal({
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await adminService.deleteDimension(selectedDimension);
+      await adminS3Service.deleteDimension(selectedDimension);
       setDimensions((prevDimensions) =>
         prevDimensions.filter((dimension) => dimension.id !== selectedDimension)
       );
@@ -84,6 +81,7 @@ export default function ManageDimensionModal({
       toast.success('Dimension deleted successfully');
       onClose();
     } catch (error) {
+      console.error('Error deleting dimension:', error);
       toast.error('Failed to delete dimension');
     } finally {
       setIsDeleting(false);

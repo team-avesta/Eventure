@@ -14,12 +14,12 @@ import ManageEventNameModal from './modals/ManageEventNameModal';
 
 interface AdminModalsProps {
   modalState: {
-    add: Record<ModalType, boolean>;
-    manage: Record<ModalType, boolean>;
+    type: ModalType;
+    isManage: boolean;
   };
   isSubmitting: boolean;
-  closeModal: (type: ModalType, isManage?: boolean) => void;
-  handleSubmit: (type: ModalType, data: any, endpoint: string) => void;
+  closeModal: () => void;
+  handleSubmit: (type: string, data: any) => void;
 }
 
 export function AdminModals({
@@ -31,66 +31,64 @@ export function AdminModals({
   return (
     <>
       <ModuleModal
-        isOpen={modalState.add.module}
-        onClose={() => closeModal('module')}
-        onSubmit={(name) => handleSubmit('module', { name }, 'modules')}
+        isOpen={modalState.type === 'module' && !modalState.isManage}
+        onClose={closeModal}
+        onSubmit={(name) => handleSubmit('module', { name })}
         isSubmitting={isSubmitting}
       />
       <ManageModuleModal
-        isOpen={modalState.manage.module}
-        onClose={() => closeModal('module', true)}
+        isOpen={modalState.type === 'module' && modalState.isManage}
+        onClose={closeModal}
       />
       <PageViewModal
-        isOpen={modalState.add.pageview}
-        onClose={() => closeModal('pageview')}
-        onSubmit={(data) => handleSubmit('pageview', data, 'pageviews')}
+        isOpen={modalState.type === 'pageview' && !modalState.isManage}
+        onClose={closeModal}
+        onSubmit={(data) => handleSubmit('pageview', data)}
         isSubmitting={isSubmitting}
       />
       <ManagePageViewModal
-        isOpen={modalState.manage.pageview}
-        onClose={() => closeModal('pageview', true)}
+        isOpen={modalState.type === 'pageview' && modalState.isManage}
+        onClose={closeModal}
       />
       <DimensionModal
-        isOpen={modalState.add.dimension}
-        onClose={() => closeModal('dimension')}
-        onSubmit={(data) => handleSubmit('dimension', data, 'dimensions')}
+        isOpen={modalState.type === 'dimension' && !modalState.isManage}
+        onClose={closeModal}
+        onSubmit={(data) => handleSubmit('dimension', data)}
         isSubmitting={isSubmitting}
       />
       <ManageDimensionModal
-        isOpen={modalState.manage.dimension}
-        onClose={() => closeModal('dimension', true)}
+        isOpen={modalState.type === 'dimension' && modalState.isManage}
+        onClose={closeModal}
       />
       <EventCategoryModal
-        isOpen={modalState.add.category}
-        onClose={() => closeModal('category')}
-        onSubmit={(name) =>
-          handleSubmit('category', { name }, 'event-categories')
-        }
+        isOpen={modalState.type === 'category' && !modalState.isManage}
+        onClose={closeModal}
+        onSubmit={(name) => handleSubmit('category', { name })}
         isSubmitting={isSubmitting}
       />
       <ManageEventCategoryModal
-        isOpen={modalState.manage.category}
-        onClose={() => closeModal('category', true)}
+        isOpen={modalState.type === 'category' && modalState.isManage}
+        onClose={closeModal}
       />
       <EventActionModal
-        isOpen={modalState.add.action}
-        onClose={() => closeModal('action')}
-        onSubmit={(name) => handleSubmit('action', { name }, 'event-actions')}
+        isOpen={modalState.type === 'action' && !modalState.isManage}
+        onClose={closeModal}
+        onSubmit={(name) => handleSubmit('action', { name })}
         isSubmitting={isSubmitting}
       />
       <ManageEventActionModal
-        isOpen={modalState.manage.action}
-        onClose={() => closeModal('action', true)}
+        isOpen={modalState.type === 'action' && modalState.isManage}
+        onClose={closeModal}
       />
       <EventNameModal
-        isOpen={modalState.add.event}
-        onClose={() => closeModal('event')}
-        onSubmit={(name) => handleSubmit('event', { name }, 'event-names')}
+        isOpen={modalState.type === 'name' && !modalState.isManage}
+        onClose={closeModal}
+        onSubmit={(name) => handleSubmit('name', { name })}
         isSubmitting={isSubmitting}
       />
       <ManageEventNameModal
-        isOpen={modalState.manage.event}
-        onClose={() => closeModal('event', true)}
+        isOpen={modalState.type === 'name' && modalState.isManage}
+        onClose={closeModal}
       />
     </>
   );

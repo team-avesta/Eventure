@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from './useAuth';
+import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 export type ModalType =
@@ -9,86 +8,102 @@ export type ModalType =
   | 'dimension'
   | 'category'
   | 'action'
-  | 'event';
+  | 'name'
+  | null;
 
 interface ModalState {
-  add: Record<ModalType, boolean>;
-  manage: Record<ModalType, boolean>;
+  type: ModalType;
+  isManage: boolean;
 }
 
 export function useAdminState() {
-  const router = useRouter();
-  const { isAdmin, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalState, setModalState] = useState<ModalState>({
-    add: {
-      module: false,
-      pageview: false,
-      dimension: false,
-      category: false,
-      action: false,
-      event: false,
-    },
-    manage: {
-      module: false,
-      pageview: false,
-      dimension: false,
-      category: false,
-      action: false,
-      event: false,
-    },
+    type: null,
+    isManage: false,
   });
 
-  const openModal = (type: ModalType, isManage: boolean = false) => {
-    setModalState((prev) => ({
-      ...prev,
-      [isManage ? 'manage' : 'add']: {
-        ...prev[isManage ? 'manage' : 'add'],
-        [type]: true,
-      },
-    }));
+  const openModal = async (type: ModalType, isManage = false) => {
+    setModalState({ type, isManage });
   };
 
-  const closeModal = (type: ModalType, isManage: boolean = false) => {
-    setModalState((prev) => ({
-      ...prev,
-      [isManage ? 'manage' : 'add']: {
-        ...prev[isManage ? 'manage' : 'add'],
-        [type]: false,
-      },
-    }));
+  const closeModal = () => {
+    setModalState({ type: null, isManage: false });
   };
 
-  const handleSubmit = async (type: ModalType, data: any, endpoint: string) => {
+  const handleSubmit = async (type: string, data: any) => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/admin/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      switch (type) {
+        case 'module':
+          if (!modalState.isManage) {
+            await adminS3Service.createModule(data.name);
+            toast.success('Module added successfully');
+          } else {
+            await adminS3Service.deleteModule(data);
+            toast.success('Module deleted successfully');
+          }
+          break;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to add ${type}`);
+        case 'pageview':
+          if (!modalState.isManage) {
+            await adminS3Service.createPageView(data);
+            toast.success('Page view added successfully');
+          } else {
+            await adminS3Service.deletePageView(data);
+            toast.success('Page view deleted successfully');
+          }
+          break;
+
+        case 'dimension':
+          if (!modalState.isManage) {
+            await adminS3Service.createDimension(data);
+            toast.success('Dimension added successfully');
+          } else {
+            await adminS3Service.deleteDimension(data);
+            toast.success('Dimension deleted successfully');
+          }
+          break;
+
+        case 'category':
+          if (!modalState.isManage) {
+            await adminS3Service.createEventCategory(data);
+            toast.success('Event category added successfully');
+          } else {
+            await adminS3Service.deleteEventCategory(data);
+            toast.success('Event category deleted successfully');
+          }
+          break;
+
+        case 'action':
+          if (!modalState.isManage) {
+            await adminS3Service.createEventAction(data);
+            toast.success('Event action added successfully');
+          } else {
+            await adminS3Service.deleteEventAction(data);
+            toast.success('Event action deleted successfully');
+          }
+          break;
+
+        case 'name':
+          if (!modalState.isManage) {
+            await adminS3Service.createEventName(data);
+            toast.success('Event name added successfully');
+          } else {
+            await adminS3Service.deleteEventName(data);
+            toast.success('Event name deleted successfully');
+          }
+          break;
       }
-
-      toast.success(`${type} added successfully`);
-      closeModal(type);
+      closeModal();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : `Failed to add ${type}`
-      );
+      console.error('Error updating data:', error);
+      toast.error('Failed to update data');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  if (!isAdmin && !isLoading) {
-    router.push('/screenshots');
-  }
 
   return {
     isLoading,

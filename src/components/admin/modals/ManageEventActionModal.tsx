@@ -5,16 +5,12 @@ import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
 import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import { adminService } from '@/services/api/adminService';
+import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 interface ManageEventActionModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface EventAction {
-  name: string;
 }
 
 function LoadingState() {
@@ -38,9 +34,9 @@ export default function ManageEventActionModal({
   isOpen,
   onClose,
 }: ManageEventActionModalProps) {
-  const [actions, setActions] = useState<EventAction[]>([]);
+  const [actions, setActions] = useState<string[]>([]);
   const [selectedAction, setSelectedAction] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -57,8 +53,9 @@ export default function ManageEventActionModal({
   }, [isOpen]);
 
   const fetchActions = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminService.fetchEventActions();
+      const data = await adminS3Service.fetchEventActions();
       setActions(data);
     } catch (error) {
       console.error('Error fetching event actions:', error);
@@ -76,9 +73,9 @@ export default function ManageEventActionModal({
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await adminService.deleteEventAction(selectedAction);
+      await adminS3Service.deleteEventAction(selectedAction);
       setActions((prevActions) =>
-        prevActions.filter((action) => action.name !== selectedAction)
+        prevActions.filter((action) => action !== selectedAction)
       );
       setSelectedAction('');
       toast.success('Event action deleted successfully');
@@ -101,8 +98,8 @@ export default function ManageEventActionModal({
     }
 
     const actionOptions = actions.map((action) => ({
-      value: action.name,
-      label: action.name,
+      value: action,
+      label: action,
     }));
 
     return (

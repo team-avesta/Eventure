@@ -5,16 +5,12 @@ import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
 import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import { adminService } from '@/services/api/adminService';
+import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 interface ManageEventNameModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface EventName {
-  name: string;
 }
 
 function LoadingState() {
@@ -38,9 +34,9 @@ export default function ManageEventNameModal({
   isOpen,
   onClose,
 }: ManageEventNameModalProps) {
-  const [events, setEvents] = useState<EventName[]>([]);
+  const [events, setEvents] = useState<string[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -57,8 +53,10 @@ export default function ManageEventNameModal({
   }, [isOpen]);
 
   const fetchEvents = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminService.fetchEventNames();
+      const data = await adminS3Service.fetchEventNames();
+      console.log(data);
       setEvents(data);
     } catch (error) {
       console.error('Error fetching event names:', error);
@@ -76,9 +74,9 @@ export default function ManageEventNameModal({
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await adminService.deleteEventName(selectedEvent);
+      await adminS3Service.deleteEventName(selectedEvent);
       setEvents((prevEvents) =>
-        prevEvents.filter((event) => event.name !== selectedEvent)
+        prevEvents.filter((event) => event !== selectedEvent)
       );
       setSelectedEvent('');
       toast.success('Event name deleted successfully');
@@ -101,8 +99,8 @@ export default function ManageEventNameModal({
     }
 
     const eventOptions = events.map((event) => ({
-      value: event.name,
-      label: event.name,
+      value: event,
+      label: event,
     }));
 
     return (

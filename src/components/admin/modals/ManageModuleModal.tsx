@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { Modal } from '@/components/common/Modal';
 import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
-import { useModules } from '@/hooks/useModules';
 import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import { adminS3Service, Module } from '@/services/adminS3Service';
+import toast from 'react-hot-toast';
 
 interface ManageModuleModalProps {
   isOpen: boolean;
@@ -21,13 +22,10 @@ function LoadingState() {
   );
 }
 
-function EmptyState({ onClose }: { onClose: () => void }) {
+function EmptyState() {
   return (
     <div className="text-center py-8">
-      <div className="text-sm text-gray-500">No modules found</div>
-      <Button variant="outline" onClick={onClose} className="mt-4">
-        Add a new module
-      </Button>
+      <p className="text-gray-500">No modules available</p>
     </div>
   );
 }
@@ -36,25 +34,57 @@ export default function ManageModuleModal({
   isOpen,
   onClose,
 }: ManageModuleModalProps) {
+  const [modules, setModules] = useState<Module[]>([]);
+  const [selectedModule, setSelectedModule] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const {
-    modules,
-    selectedModule,
-    setSelectedModule,
-    isLoading,
-    isDeleting,
-    deleteModule,
-  } = useModules(isOpen);
 
-  const handleDelete = async () => {
+  useEffect(() => {
+    if (isOpen) {
+      fetchModules();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedModule('');
+    }
+  }, [isOpen]);
+
+  const fetchModules = async () => {
+    setIsLoading(true);
+    try {
+      const data = await adminS3Service.fetchModules();
+      setModules(data);
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+      toast.error('Failed to fetch modules');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = () => {
     if (!selectedModule) return;
     setShowConfirmation(true);
   };
 
   const handleConfirmDelete = async () => {
-    const success = await deleteModule();
-    if (success) {
+    setIsDeleting(true);
+    try {
+      await adminS3Service.deleteModule(selectedModule);
+      setModules((prevModules) =>
+        prevModules.filter((module) => module.key !== selectedModule)
+      );
+      setSelectedModule('');
+      toast.success('Module deleted successfully');
       onClose();
+    } catch (error) {
+      console.error('Error deleting module:', error);
+      toast.error('Failed to delete module');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -64,7 +94,7 @@ export default function ManageModuleModal({
     }
 
     if (modules.length === 0) {
-      return <EmptyState onClose={onClose} />;
+      return <EmptyState />;
     }
 
     const moduleOptions = modules.map((module) => ({

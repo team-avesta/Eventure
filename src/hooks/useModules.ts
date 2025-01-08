@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { adminService } from '@/services/api/adminService';
-
-interface Module {
-  name: string;
-  key: string;
-}
+import { adminS3Service, Module } from '@/services/adminS3Service';
 
 export function useModules(isOpen: boolean) {
   const [modules, setModules] = useState<Module[]>([]);
@@ -27,7 +22,7 @@ export function useModules(isOpen: boolean) {
 
   const fetchModules = async () => {
     try {
-      const data = await adminService.fetchModules();
+      const data = await adminS3Service.fetchModules();
       setModules(data);
     } catch (error) {
       console.error('Error fetching modules:', error);
@@ -41,7 +36,7 @@ export function useModules(isOpen: boolean) {
     if (!selectedModule) return false;
     setIsDeleting(true);
     try {
-      await adminService.deleteModule(selectedModule);
+      await adminS3Service.deleteModule(selectedModule);
       setModules((prevModules) =>
         prevModules.filter((module) => module.key !== selectedModule)
       );
@@ -50,9 +45,7 @@ export function useModules(isOpen: boolean) {
       return true;
     } catch (error) {
       console.error('Error deleting module:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to delete module'
-      );
+      toast.error('Failed to delete module');
       return false;
     } finally {
       setIsDeleting(false);

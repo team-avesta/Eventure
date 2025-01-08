@@ -5,18 +5,12 @@ import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
 import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import { adminService } from '@/services/api/adminService';
+import { adminS3Service, PageView } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 interface ManagePageViewModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface PageView {
-  id: string;
-  url: string;
-  title: string;
 }
 
 function LoadingState() {
@@ -42,7 +36,7 @@ export default function ManagePageViewModal({
 }: ManagePageViewModalProps) {
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [selectedPageView, setSelectedPageView] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -59,8 +53,9 @@ export default function ManagePageViewModal({
   }, [isOpen]);
 
   const fetchPageViews = async () => {
+    setIsLoading(true);
     try {
-      const data = await adminService.fetchPageViews();
+      const data = await adminS3Service.fetchPageViews();
       setPageViews(data);
     } catch (error) {
       console.error('Error fetching page views:', error);
@@ -78,7 +73,7 @@ export default function ManagePageViewModal({
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await adminService.deletePageView(selectedPageView);
+      await adminS3Service.deletePageView(selectedPageView);
       setPageViews((prevPageViews) =>
         prevPageViews.filter((pageView) => pageView.id !== selectedPageView)
       );

@@ -10,7 +10,7 @@ import {
 export interface AdminSection {
   title: string;
   description: string;
-  type: 'module' | 'pageview' | 'dimension' | 'category' | 'action' | 'event';
+  type: 'module' | 'pageview' | 'dimension' | 'category' | 'action' | 'name';
   icon: React.ReactNode;
 }
 
@@ -48,7 +48,7 @@ export const adminSections: AdminSection[] = [
   {
     title: 'Event Names',
     description: 'Manage event names',
-    type: 'event',
+    type: 'name',
     icon: <EventIcon className="w-6 h-6" />,
   },
 ];
