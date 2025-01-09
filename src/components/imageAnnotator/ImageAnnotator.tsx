@@ -158,22 +158,6 @@ export default function ImageAnnotator({
     return 'pointer';
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onImageUpload?.(file);
-      const imageUrl = URL.createObjectURL(file);
-      const img = document.createElement('img');
-      img.onload = () => {
-        const aspectRatio = img.height / img.width;
-        const newHeight = Math.max(height, width * aspectRatio);
-        setImageHeight(newHeight);
-      };
-      img.src = imageUrl;
-      setImage(imageUrl);
-    }
-  };
-
   const isPointInRect = (x: number, y: number, rect: Rectangle) => {
     return (
       x >= rect.startX &&

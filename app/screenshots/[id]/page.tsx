@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getModules } from '@/services/modules';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
@@ -9,16 +8,17 @@ import toast from 'react-hot-toast';
 import { Event } from '@/types';
 import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
 import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
+import { adminS3Service } from '@/services/adminS3Service';
 
 const EVENT_TYPES = [
-  { id: 'pageview', name: 'Page View', color: '#2563EB' }, // Bright Blue - stands out, professional
+  { id: 'pageview', name: 'Page View', color: '#2563EB' },
   {
     id: 'trackevent_pageview',
     name: 'TrackEvent with PageView',
     color: '#16A34A',
-  }, // Green - success, action
-  { id: 'trackevent', name: 'TrackEvent', color: '#9333EA' }, // Purple - distinct, engaging
-  { id: 'outlink', name: 'Outlink', color: '#DC2626' }, // Red - external action, attention
+  },
+  { id: 'trackevent', name: 'TrackEvent', color: '#9333EA' },
+  { id: 'outlink', name: 'Outlink', color: '#DC2626' },
 ];
 
 type RectangleState = {
@@ -82,6 +82,8 @@ export default function ScreenshotDetailPage() {
     dimensions?: string[];
   }>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [modules, setModules] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
@@ -91,10 +93,21 @@ export default function ScreenshotDetailPage() {
     }
   }, []);
 
-  const { data: modules, isLoading } = useQuery({
-    queryKey: ['modules'],
-    queryFn: getModules,
-  });
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const modules = await adminS3Service.fetchModules();
+        setModules(modules);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching modules:', error);
+        toast.error('Failed to fetch modules');
+        setIsLoading(false);
+      }
+    };
+
+    fetchModules();
+  }, []);
 
   const { data: events = [], refetch: refetchEvents } = useQuery({
     queryKey: ['events', screenshotId],
@@ -155,11 +168,11 @@ export default function ScreenshotDetailPage() {
   // Find screenshot in any module
   const screenshot = modules
     ?.flatMap((mod) => mod.screenshots)
-    .find((s) => s?.id === screenshotId);
+    .find((s: any) => s?.id === screenshotId);
 
   // Find the module containing this screenshot
   const parentModule = modules?.find((m) =>
-    m.screenshots.some((s) => s.id === screenshotId)
+    m.screenshots.some((s: any) => s.id === screenshotId)
   );
 
   const handleReplaceClick = () => {
@@ -207,29 +220,6 @@ export default function ScreenshotDetailPage() {
     setIsEditing(false); // Reset editing state
     toast.success(`Click and drag on the image to add a ${type.name} event`);
   };
-
-  // Add mutation to save events
-  const saveEventMutation = useMutation({
-    mutationFn: async (event: Event) => {
-      const response = await fetch('/api/screenshots/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(event),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to save event');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      // Refetch events to get the latest data
-      refetchEvents();
-    },
-    onError: (error) => {
-      console.error('Error saving event:', error);
-      toast.error('Failed to update event position');
-    },
-  });
 
   // Handle form submission
   const handleEventFormSubmit = async (formData: {
@@ -1425,17 +1415,8 @@ export default function ScreenshotDetailPage() {
                     onSubmit={(e) => {
                       e.preventDefault();
                       const formData = new FormData(e.currentTarget);
-                      console.log(
-                        'Selected Event Type:',
-                        selectedEventType?.id
-                      );
-                      console.log(
-                        'Form Data:',
-                        Object.fromEntries(formData.entries())
-                      );
 
                       if (selectedEventType?.id === 'pageview') {
-                        console.log('Handling pageview submission');
                         handleEventFormSubmit({
                           name: formData.get('customTitle') as string,
                           category: formData.get('customUrl') as string,
@@ -1449,9 +1430,6 @@ export default function ScreenshotDetailPage() {
                         selectedEventType?.id === 'trackevent_pageview' ||
                         selectedEventType?.id === 'trackevent'
                       ) {
-                        console.log(
-                          'Handling trackevent/trackevent_pageview submission'
-                        );
                         const eventData = {
                           name: (formData.get('eventname') as string) || '',
                           category: formData.get('eventcategory') as string,
@@ -1461,10 +1439,8 @@ export default function ScreenshotDetailPage() {
                             formData.getAll('dimensions')
                           ) as string[],
                         };
-                        console.log('Track Event Data:', eventData);
                         handleEventFormSubmit(eventData);
                       } else if (selectedEventType?.id === 'outlink') {
-                        console.log('Handling outlink submission');
                         const eventData = {
                           name: (formData.get('eventname') as string) || '',
                           category: 'Common', // Hardcoded for outlink
@@ -1474,7 +1450,6 @@ export default function ScreenshotDetailPage() {
                             formData.getAll('dimensions')
                           ) as string[],
                         };
-                        console.log('Outlink Event Data:', eventData);
                         handleEventFormSubmit(eventData);
                       }
                     }}
