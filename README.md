@@ -2,7 +2,7 @@
 
 > Event Mapping Made Simple
 
-Eventure is a powerful event mapping tool that helps you visualize, track, and manage events on your website. It provides an intuitive interface for mapping events, tracking user interactions, and managing analytics dimensions.
+Eventure is a powerful event mapping tool that helps you visualize, track, and manage events on your webapp. It provides an intuitive interface for mapping events, tracking user interactions, and managing analytics dimensions.
 
 ## Features
 
