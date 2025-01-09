@@ -16,6 +16,23 @@ export interface Module {
   screenshots: Screenshot[];
 }
 
+export interface Event {
+  id: string;
+  coordinates: {
+    startX: number;
+    startY: number;
+    width: number;
+    height: number;
+  };
+  screenshotId: string;
+  eventType: string;
+  name: string;
+  category: string;
+  action: string;
+  value: string;
+  dimensions: string[];
+}
+
 export interface PageView {
   id: string;
   url: string;
@@ -238,5 +255,73 @@ export const adminS3Service = {
     }));
 
     return api.update('modules', { modules: updatedModules });
+  },
+  replaceScreenshot: async (
+    screenshotId: string,
+    file: File
+  ): Promise<void> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('screenshotId', screenshotId);
+
+    const response = await fetch('/api/s3/screenshots/replace', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || 'Failed to replace image');
+    }
+  },
+
+  // Events
+  fetchEvents: async (screenshotId: string): Promise<Event[]> => {
+    const data = await api.get<{ events: Event[] }>('events');
+    const events = data.events || [];
+    return events.filter((event) => event.screenshotId === screenshotId);
+  },
+
+  createEvent: async (event: Event): Promise<Event> => {
+    const data = await api.get<{ events: Event[] }>('events');
+    const events = data.events || [];
+    events.push(event);
+    await api.update('events', { events });
+    return event;
+  },
+
+  updateEvent: async (event: Event): Promise<Event> => {
+    const data = await api.get<{ events: Event[] }>('events');
+    const events = data.events || [];
+    const updatedEvents = events.map((e) => (e.id === event.id ? event : e));
+    await api.update('events', { events: updatedEvents });
+    return event;
+  },
+
+  deleteEvent: async (eventId: string): Promise<void> => {
+    const data = await api.get<{ events: Event[] }>('events');
+    const events = data.events || [];
+    const updatedEvents = events.filter((e) => e.id !== eventId);
+    await api.update('events', { events: updatedEvents });
+  },
+
+  // Dropdowns
+  fetchDropdownData: async () => {
+    const [pageViews, dimensions, eventCategories, eventActions, eventNames] =
+      await Promise.all([
+        adminS3Service.fetchPageViews(),
+        adminS3Service.fetchDimensions(),
+        adminS3Service.fetchEventCategories(),
+        adminS3Service.fetchEventActions(),
+        adminS3Service.fetchEventNames(),
+      ]);
+
+    return {
+      pageData: pageViews,
+      dimensions: dimensions,
+      eventCategories: eventCategories,
+      eventActionNames: eventActions,
+      eventNames: eventNames,
+    };
   },
 };

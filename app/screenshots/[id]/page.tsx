@@ -1,9 +1,8 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Event } from '@/types';
 import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
@@ -45,7 +44,6 @@ export default function ScreenshotDetailPage() {
   } | null>(null);
   const [userRole, setUserRole] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const queryClient = useQueryClient();
   const [showEventForm, setShowEventForm] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<Event> | null>(null);
   const [dropdownData, setDropdownData] = useState<{
@@ -84,6 +82,7 @@ export default function ScreenshotDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [modules, setModules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
@@ -100,7 +99,6 @@ export default function ScreenshotDetailPage() {
         setModules(modules);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching modules:', error);
         toast.error('Failed to fetch modules');
         setIsLoading(false);
       }
@@ -109,74 +107,40 @@ export default function ScreenshotDetailPage() {
     fetchModules();
   }, []);
 
-  const { data: events = [], refetch: refetchEvents } = useQuery({
-    queryKey: ['events', screenshotId],
-    queryFn: async () => {
-      const response = await fetch(
-        `/api/screenshots/events?screenshotId=${screenshotId}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch events');
-      const data = await response.json();
-      // Update rectangles state when events are loaded
-      const savedRectangles = data.map((event: Event) => ({
-        id: event.id,
-        startX: event.coordinates.startX,
-        startY: event.coordinates.startY,
-        width: event.coordinates.width,
-        height: event.coordinates.height,
-        color:
-          EVENT_TYPES.find((type) => type.id === event.eventType)?.color ||
-          '#000000',
-        eventType: event.eventType,
-        action: event.action || 'No Action',
-      }));
-      setRectangles(savedRectangles);
-      return data;
-    },
-  });
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const data = await adminS3Service.fetchEvents(screenshotId);
+        setEvents(data);
 
-  const replaceMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('screenshotId', screenshotId);
-
-      const response = await fetch('/api/screenshots/replace', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to replace image');
+        // Update rectangles state when events are loaded
+        const savedRectangles = data.map((event: Event) => ({
+          id: event.id,
+          startX: event.coordinates.startX,
+          startY: event.coordinates.startY,
+          width: event.coordinates.width,
+          height: event.coordinates.height,
+          color:
+            EVENT_TYPES.find((type) => type.id === event.eventType)?.color ||
+            '#000000',
+          eventType: event.eventType,
+          action: event.action || 'No Action',
+        }));
+        setRectangles(savedRectangles);
+      } catch (error) {
+        toast.error('Failed to fetch events');
       }
+    };
 
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['modules'] });
-      toast.success('Image replaced successfully');
-    },
-    onError: (error: Error) => {
-      console.error('Failed to replace image:', error);
-      toast.error(
-        error.message || 'Failed to replace image. Please try again.'
-      );
-    },
-  });
+    if (screenshotId) {
+      fetchEvents();
+    }
+  }, [screenshotId]);
 
-  // Find screenshot in any module
-  const screenshot = modules
-    ?.flatMap((mod) => mod.screenshots)
-    .find((s: any) => s?.id === screenshotId);
-
-  // Find the module containing this screenshot
-  const parentModule = modules?.find((m) =>
-    m.screenshots.some((s: any) => s.id === screenshotId)
-  );
-
-  const handleReplaceClick = () => {
-    fileInputRef.current?.click();
+  // Add refetch function for use in other parts of the component
+  const refetchEvents = async () => {
+    const data = await adminS3Service.fetchEvents(screenshotId);
+    setEvents(data);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,15 +160,35 @@ export default function ScreenshotDetailPage() {
     }
 
     try {
-      await replaceMutation.mutateAsync(file);
+      await adminS3Service.replaceScreenshot(screenshotId, file);
+      // Refetch modules to get updated screenshot
+      const updatedModules = await adminS3Service.fetchModules();
+      setModules(updatedModules);
+      toast.success('Image replaced successfully');
     } catch (error) {
-      // Error is handled by mutation's onError
+      console.error('Failed to replace image:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to replace image'
+      );
     } finally {
-      // Clear the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
+  };
+
+  // Find screenshot in any module
+  const screenshot = modules
+    ?.flatMap((mod) => mod.screenshots)
+    .find((s: any) => s?.id === screenshotId);
+
+  // Find the module containing this screenshot
+  const parentModule = modules?.find((m) =>
+    m.screenshots.some((s: any) => s.id === screenshotId)
+  );
+
+  const handleReplaceClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleEventTypeSelect = (type: {
@@ -248,21 +232,11 @@ export default function ScreenshotDetailPage() {
     };
 
     try {
-      const response = await fetch(
-        '/api/screenshots/events' + (isEditing ? `/${newEvent.id}` : ''),
-        {
-          method: isEditing ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(eventData),
-        }
-      );
-
-      if (!response.ok)
-        throw new Error(
-          isEditing ? 'Failed to update event' : 'Failed to save event'
-        );
+      if (isEditing) {
+        await adminS3Service.updateEvent(eventData);
+      } else {
+        await adminS3Service.createEvent(eventData);
+      }
 
       // Update rectangles state with the new/updated event details
       setRectangles((prev) =>
@@ -284,7 +258,7 @@ export default function ScreenshotDetailPage() {
       setShowEventForm(false);
       setNewEvent(null);
       setSelectedEventType(null);
-      setIsEditing(false); // Reset editing state
+      setIsEditing(false);
       toast.success(
         isEditing ? 'Event updated successfully' : 'Event saved successfully'
       );
@@ -300,9 +274,7 @@ export default function ScreenshotDetailPage() {
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const response = await fetch('/api/dropdowns');
-        if (!response.ok) throw new Error('Failed to fetch dropdown data');
-        const data = await response.json();
+        const data = await adminS3Service.fetchDropdownData();
         setDropdownData(data);
       } catch (error) {
         console.error('Error fetching dropdown data:', error);
@@ -702,24 +674,8 @@ export default function ScreenshotDetailPage() {
               },
             };
 
-            // Update the event in the database
             try {
-              const response = await fetch(
-                `/api/screenshots/events/${rect.id}`,
-                {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(updatedEvent),
-                }
-              );
-
-              if (!response.ok) {
-                throw new Error('Failed to update event position');
-              }
-
-              // Refetch events to ensure sync with database
+              await adminS3Service.updateEvent(updatedEvent);
               await refetchEvents();
 
               // Return updated rectangle with new position
@@ -800,7 +756,6 @@ export default function ScreenshotDetailPage() {
   };
 
   const handleDeleteEvent = async (rect: Rectangle) => {
-    // Find the event in rectangles array
     const event = rectangles.find(
       (r) =>
         r.startX === rect.startX &&
@@ -811,50 +766,13 @@ export default function ScreenshotDetailPage() {
 
     if (event) {
       try {
-        const response = await fetch(`/api/screenshots/events/${event.id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) throw new Error('Failed to delete event');
-
-        // Update local state
+        await adminS3Service.deleteEvent(event.id);
         setRectangles((prev) => prev.filter((r) => r.id !== event.id));
         toast.success('Event deleted successfully');
       } catch (error) {
         console.error('Error deleting event:', error);
         toast.error('Failed to delete event');
       }
-    }
-  };
-
-  const handleGetEventDetails = async (rectId: string) => {
-    const event = events.find((e: Event) => e.id === rectId);
-    if (!event) return null;
-
-    // Map dimension IDs to their names while keeping the IDs
-    const dimensionNames = event.dimensions.map((dimId: string) => {
-      const dimension = dropdownData.dimensions.find((d) => d.id === dimId);
-      return dimension?.name || dimId;
-    });
-
-    if (event.eventType === 'pageview') {
-      const pageInfo = dropdownData.pageData.find((p) => p.id === event.name);
-      return {
-        ...event,
-        name: pageInfo?.title || event.name,
-        dimensionNames,
-      };
-    }
-    return {
-      ...event,
-      dimensionNames,
-    };
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      replaceMutation.mutate(file);
     }
   };
 
@@ -974,49 +892,22 @@ export default function ScreenshotDetailPage() {
                 {/* Replace Image Button */}
                 <button
                   onClick={handleReplaceClick}
-                  disabled={replaceMutation.isPending}
-                  className="inline-flex items-center h-11 px-5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center h-11 px-5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
                 >
-                  {replaceMutation.isPending ? (
-                    <svg
-                      className="animate-spin h-5 w-5 mr-2"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  )}
-                  <span className="text-sm font-medium">
-                    {replaceMutation.isPending
-                      ? 'Replacing...'
-                      : 'Replace Image'}
-                  </span>
+                  <svg
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium">Replace Image</span>
                 </button>
 
                 {/* Drag Switch */}
@@ -1399,7 +1290,7 @@ export default function ScreenshotDetailPage() {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth="2"
                       d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
