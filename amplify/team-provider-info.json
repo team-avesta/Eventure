@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-eventure-dev-b7927-authRole",
+      "UnauthRoleArn": "arn:aws:iam::761018854156:role/amplify-eventure-dev-b7927-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::761018854156:role/amplify-eventure-dev-b7927-authRole",
+      "Region": "ap-south-1",
+      "DeploymentBucketName": "amplify-eventure-dev-b7927-deployment",
+      "UnauthRoleName": "amplify-eventure-dev-b7927-unauthRole",
+      "StackName": "amplify-eventure-dev-b7927",
+      "StackId": "arn:aws:cloudformation:ap-south-1:761018854156:stack/amplify-eventure-dev-b7927/2563eaf0-ce77-11ef-90d6-0adcad07538b",
+      "AmplifyAppId": "d2mfw9kykt2pt3"
+    }
+  }
+}

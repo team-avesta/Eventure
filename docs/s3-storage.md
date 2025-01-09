@@ -231,9 +231,9 @@ npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ### 5.2 Environment Setup
 
 ```env
-AWS_REGION=your-region
-AWS_ACCESS_KEY_ID=your-key
-AWS_SECRET_ACCESS_KEY=your-secret
+REGION=your-region
+ACCESS_KEY_ID=your-key
+SECRET_ACCESS_KEY=your-secret
 S3_BUCKET_NAME=view-eventure
 ```
 
@@ -246,7 +246,7 @@ S3_BUCKET_NAME=view-eventure
 import { S3Client } from '@aws-sdk/client-s3';
 
 export const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.REGION,
 });
 ```
 
@@ -320,7 +320,7 @@ export class ScreenshotService {
 
     await s3Client.send(command);
     return {
-      url: `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+      url: `https://${this.bucket}.s3.${process.env.REGION}.amazonaws.com/${key}`,
       key,
     };
   }

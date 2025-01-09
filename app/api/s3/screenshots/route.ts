@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const screenshot = {
       id: timestamp.toString(),
       name: sanitizedName,
-      url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+      url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.REGION}.amazonaws.com/${key}`,
       pageName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

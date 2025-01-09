@@ -70,9 +70,9 @@ cp .env.example .env.local
 4. Configure AWS credentials
 
 ```env
-AWS_REGION=your-region
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
+REGION=your-region
+ACCESS_KEY_ID=your-access-key
+SECRET_ACCESS_KEY=your-secret-key
 S3_BUCKET_NAME=your-bucket-name
 ```
 
