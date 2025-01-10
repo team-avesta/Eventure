@@ -16,7 +16,7 @@ export default function ClientLayout({
     <>
       {showNav && <Navigation />}
       {children}
-      <Toaster position="top-right" />
+      <Toaster position="top-center" />
     </>
   );
 }

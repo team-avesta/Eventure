@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
+import { Textarea } from '@/components/common/Textarea';
 
 interface DimensionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (value: { id: string; name: string }) => void;
+  onSubmit: (value: { id: string; name: string; description?: string }) => void;
   isSubmitting: boolean;
 }
 
@@ -17,15 +18,18 @@ export default function DimensionModal({
 }: DimensionModalProps) {
   const [dimensionNumber, setDimensionNumber] = useState('');
   const [dimensionName, setDimensionName] = useState('');
+  const [description, setDescription] = useState('');
 
   const handleSubmit = () => {
     if (!dimensionNumber.trim() || !dimensionName.trim()) return;
     onSubmit({
       id: dimensionNumber.trim(),
       name: dimensionName.trim(),
+      description: description.trim() || '',
     });
     setDimensionNumber('');
     setDimensionName('');
+    setDescription('');
   };
 
   return (
@@ -56,6 +60,15 @@ export default function DimensionModal({
           onChange={(e) => setDimensionName(e.target.value)}
           placeholder="Enter dimension name"
           disabled={isSubmitting}
+        />
+        <Textarea
+          id="dimension-description"
+          label="Description (Optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Enter dimension description"
+          disabled={isSubmitting}
+          rows={3}
         />
       </div>
     </Modal>

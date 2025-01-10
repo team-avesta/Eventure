@@ -42,6 +42,7 @@ export interface PageView {
 export interface Dimension {
   id: string;
   name: string;
+  description?: string;
 }
 
 const ensureArray = <T>(data: any): T[] => {
@@ -128,7 +129,11 @@ export const adminS3Service = {
     const data = await api.get<{ dimensions: Dimension[] }>('dimensions');
     return extractData<Dimension>(data, 'dimensions');
   },
-  createDimension: async (data: { id: string; name: string }) => {
+  createDimension: async (data: {
+    id: string;
+    name: string;
+    description?: string;
+  }) => {
     const response = await api.get<{ dimensions: Dimension[] }>('dimensions');
     const existingData = await api.get<any>('dimensions');
     const dimensions = extractData<Dimension>(response, 'dimensions');
@@ -136,6 +141,7 @@ export const adminS3Service = {
     const newDimension: Dimension = {
       id: data.id,
       name: data.name,
+      description: data.description,
     };
 
     return api.update<any>('dimensions', {

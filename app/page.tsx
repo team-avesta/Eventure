@@ -1,17 +1,12 @@
 'use client';
 
 import { LoginForm } from '@/components/auth/LoginForm';
-import { ChartBarIcon, CursorArrowRaysIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col justify-center">
       <div className="sm:mx-auto sm:w-full sm:max-w-md mb-16">
         <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <ChartBarIcon className="h-16 w-16 text-indigo-600 transform rotate-45" />
-            <CursorArrowRaysIcon className="h-8 w-8 text-indigo-500 absolute -bottom-1 -right-1 animate-bounce" />
-          </div>
           <h1 className="text-5xl font-extrabold text-gray-900 tracking-tight">
             Eventure
           </h1>

@@ -41,7 +41,6 @@ interface ImageAnnotatorProps {
   height?: number;
   onRectanglesChange?: (rectangles: Rectangle[]) => void;
   className?: string;
-  onImageUpload?: (file: File) => void;
   isDragMode: boolean;
   isDrawingEnabled: boolean;
   selectedEventType: {
@@ -62,7 +61,6 @@ export default function ImageAnnotator({
   width = 800,
   height = 600,
   onRectanglesChange,
-  onImageUpload,
   className = '',
   isDragMode,
   isDrawingEnabled,
@@ -84,7 +82,6 @@ export default function ImageAnnotator({
   const [selectedRectIndex, setSelectedRectIndex] = useState<number>(-1);
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
   const [imageHeight, setImageHeight] = useState<number>(height);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedInfo, setSelectedInfo] = useState<{
     x: number;
