@@ -311,7 +311,7 @@ export default function ScreenshotDetailPage() {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Dimensions
         </label>
-        <div className="max-h-[400px] overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+        <div className="max-h-[300px] overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
           {dropdownData.dimensions.map((dimension) => (
             <label
               key={dimension.id}
