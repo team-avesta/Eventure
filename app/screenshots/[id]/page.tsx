@@ -976,8 +976,8 @@ export default function ScreenshotDetailPage() {
           </div>
 
           {/* Right Panel */}
-          <div className="w-[400px] bg-white rounded-lg shadow-sm border border-gray-200 p-4 overflow-auto max-h-[calc(100vh-120px)]">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 sticky top-0 bg-white">
+          <div className="w-[400px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto max-h-[calc(100vh-120px)]">
+            <h3 className="text-lg font-semibold text-gray-900 sticky top-0 bg-white p-4 border-b border-gray-200">
               Event Details
             </h3>
 
@@ -988,7 +988,7 @@ export default function ScreenshotDetailPage() {
             />
 
             {/* Event List */}
-            <div className="space-y-3">
+            <div className="space-y-3  p-4">
               {filteredRectangles
                 .sort((a, b) => {
                   const order = {

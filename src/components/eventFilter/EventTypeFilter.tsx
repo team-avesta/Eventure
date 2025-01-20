@@ -36,7 +36,7 @@ export default function EventTypeFilter({
   const totalCount = rectangles.length;
 
   return (
-    <div className="mb-4 sticky top-0 bg-white z-10 pb-3 border-b border-gray-200">
+    <div className="mb-4 sticky top-0 bg-white z-10 pb-3 border-b border-gray-200 p-4">
       <div className="flex flex-wrap gap-1.5">
         {EVENT_TYPES.map((type) => (
           <button
