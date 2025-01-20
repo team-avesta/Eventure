@@ -8,6 +8,7 @@ import { Event } from '@/types';
 import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
 import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
 import { adminS3Service } from '@/services/adminS3Service';
+import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 
 const EVENT_TYPES = [
   { id: 'pageview', name: 'Page View', color: '#2563EB' },
@@ -30,6 +31,11 @@ type RectangleState = {
   eventType: string;
   action: string;
 };
+
+function getEventTypeBorderColor(eventType: string): string {
+  const type = EVENT_TYPES.find((t) => t.id === eventType);
+  return type ? type.color : '#3B82F6';
+}
 
 export default function ScreenshotDetailPage() {
   const params = useParams();
@@ -84,6 +90,7 @@ export default function ScreenshotDetailPage() {
   const [modules, setModules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
+  const [selectedEventFilter, setSelectedEventFilter] = useState<string>('all');
 
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
@@ -778,9 +785,9 @@ export default function ScreenshotDetailPage() {
   };
 
   useEffect(() => {
-    setContainerWidth(window.innerWidth - 32);
+    setContainerWidth(window.innerWidth - 0);
     const handleResize = () => {
-      setContainerWidth(window.innerWidth - 32);
+      setContainerWidth(window.innerWidth - 0);
     };
 
     window.addEventListener('resize', handleResize);
@@ -788,13 +795,33 @@ export default function ScreenshotDetailPage() {
   }, []);
 
   const handleRectangleClick = (rectId: string) => {
-    setHighlightedCardId(rectId);
-    // Find and scroll to the card
-    const card = document.getElementById(`event-card-${rectId}`);
-    if (card) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const clickedRect = rectangles.find((r) => r.id === rectId);
+    if (clickedRect) {
+      // Auto-switch filter if needed
+      if (
+        selectedEventFilter !== 'all' &&
+        selectedEventFilter !== clickedRect.eventType
+      ) {
+        setSelectedEventFilter(clickedRect.eventType);
+        toast.success(
+          `Switched to ${
+            EVENT_TYPES.find((t) => t.id === clickedRect.eventType)?.name
+          } filter`
+        );
+      }
+      setHighlightedCardId(rectId);
+      const card = document.getElementById(`event-card-${rectId}`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
   };
+
+  // Filter rectangles for right panel display
+  const filteredRectangles = rectangles.filter(
+    (rect) =>
+      selectedEventFilter === 'all' || rect.eventType === selectedEventFilter
+  );
 
   if (isLoading) {
     return (
@@ -939,8 +966,8 @@ export default function ScreenshotDetailPage() {
           <div className="overflow-auto max-h-[calc(100vh-120px)]">
             <ImageAnnotatorWrapper
               imageUrl={screenshot.url}
-              width={containerWidth * 0.7}
-              height={containerWidth * 0.7 * 0.6}
+              width={containerWidth * 0.729}
+              height={containerWidth * 0.729 * 0.6}
               onRectanglesChange={handleRectanglesChange}
               isDragMode={isDraggable}
               isDrawingEnabled={!!selectedEventType}
@@ -965,9 +992,15 @@ export default function ScreenshotDetailPage() {
               Event Details
             </h3>
 
+            <EventTypeFilter
+              selectedFilter={selectedEventFilter}
+              onFilterChange={setSelectedEventFilter}
+              rectangles={rectangles}
+            />
+
             {/* Event List */}
             <div className="space-y-3">
-              {rectangles
+              {filteredRectangles
                 .sort((a, b) => {
                   const order = {
                     pageview: 1,
@@ -989,13 +1022,25 @@ export default function ScreenshotDetailPage() {
                     <div
                       key={rect.id}
                       id={`event-card-${rect.id}`}
-                      className={`p-4 rounded-md border transition-all relative cursor-pointer ${
+                      className={`p-4 rounded-md transition-all relative cursor-pointer ${
                         expandedId === rect.id ? 'bg-gray-50' : ''
                       } ${
                         highlightedCardId === rect.id
-                          ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50'
-                          : 'border-gray-200 hover:border-blue-500'
+                          ? 'border ring-1 ring-opacity-50'
+                          : 'border border-gray-200 hover:border-blue-500'
                       }`}
+                      style={
+                        highlightedCardId === rect.id
+                          ? ({
+                              borderColor: getEventTypeBorderColor(
+                                rect.eventType
+                              ),
+                              '--tw-ring-color': getEventTypeBorderColor(
+                                rect.eventType
+                              ),
+                            } as React.CSSProperties)
+                          : undefined
+                      }
                       onClick={() =>
                         setExpandedId(expandedId === rect.id ? null : rect.id)
                       }

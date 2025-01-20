@@ -1,5 +1,4 @@
 import { Inter } from 'next/font/google';
-import { Metadata } from 'next';
 import './globals.css';
 import { metadata } from './metadata';
 import ClientLayout from '@/components/layouts/ClientLayout';
