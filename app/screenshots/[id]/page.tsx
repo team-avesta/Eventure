@@ -244,21 +244,21 @@ export default function ScreenshotDetailPage() {
         await adminS3Service.updateEvent(eventData);
       } else {
         await adminS3Service.createEvent(eventData);
+        // Add to rectangles only after successful creation
+        setRectangles((prev) => [
+          ...prev,
+          {
+            id: eventData.id,
+            startX: eventData.coordinates.startX,
+            startY: eventData.coordinates.startY,
+            width: eventData.coordinates.width,
+            height: eventData.coordinates.height,
+            color: selectedEventType?.color || '#000000',
+            eventType: eventData.eventType,
+            action: eventData.action || 'No Action',
+          },
+        ]);
       }
-
-      // Update rectangles state with the new/updated event details
-      setRectangles((prev) =>
-        isEditing
-          ? prev.map((rect) =>
-              rect.id === eventData.id
-                ? {
-                    ...rect,
-                    action: formData.action,
-                  }
-                : rect
-            )
-          : [...prev]
-      );
 
       // Refetch events to get the latest data
       await refetchEvents();
@@ -625,6 +625,7 @@ export default function ScreenshotDetailPage() {
       if (lastRect) {
         const newEventId = Date.now().toString();
 
+        // Only set newEvent for the form, don't add to rectangles yet
         setNewEvent({
           id: newEventId,
           coordinates: {
@@ -637,20 +638,8 @@ export default function ScreenshotDetailPage() {
           eventType: selectedEventType.id,
         });
 
-        // Update rectangles state with the new rectangle including event type
-        setRectangles((prev) => [
-          ...prev,
-          {
-            id: newEventId,
-            startX: lastRect.startX,
-            startY: lastRect.startY,
-            width: lastRect.width,
-            height: lastRect.height,
-            color: selectedEventType.color,
-            eventType: selectedEventType.id,
-            action: '',
-          },
-        ]);
+        // Don't update rectangles here, wait for form submission
+        setShowEventForm(true);
       }
     } else if (isDraggable) {
       // If rectangles are being dragged/resized, update only the changed rectangle
