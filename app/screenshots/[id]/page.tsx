@@ -628,7 +628,7 @@ export default function ScreenshotDetailPage() {
       if (lastRect) {
         const newEventId = Date.now().toString();
 
-        // Only set newEvent for the form, don't add to rectangles yet
+        // Only set newEvent for the form
         setNewEvent({
           id: newEventId,
           coordinates: {
@@ -641,7 +641,6 @@ export default function ScreenshotDetailPage() {
           eventType: selectedEventType.id,
         });
 
-        // Don't update rectangles here, wait for form submission
         setShowEventForm(true);
       }
     } else if (isDraggable) {
@@ -699,6 +698,15 @@ export default function ScreenshotDetailPage() {
       // Update local state with new positions
       setRectangles(updatedRectangles);
     }
+  };
+
+  const handleCancelEventForm = () => {
+    setShowEventForm(false);
+    setNewEvent(null);
+    setSelectedEventType(null);
+    // Reset any form data
+    setFormData({});
+    setSelectedPageId('');
   };
 
   const handleEditEvent = (rect: Rectangle) => {
@@ -1341,7 +1349,7 @@ export default function ScreenshotDetailPage() {
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div
               className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              onClick={() => setShowEventForm(false)}
+              onClick={handleCancelEventForm}
             />
 
             <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
@@ -1349,7 +1357,7 @@ export default function ScreenshotDetailPage() {
                 <button
                   type="button"
                   className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
-                  onClick={() => setShowEventForm(false)}
+                  onClick={handleCancelEventForm}
                 >
                   <span className="sr-only">Close</span>
                   <svg
@@ -1422,7 +1430,7 @@ export default function ScreenshotDetailPage() {
                     <div className="mt-6 flex justify-end space-x-3">
                       <button
                         type="button"
-                        onClick={() => setShowEventForm(false)}
+                        onClick={handleCancelEventForm}
                         className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       >
                         Cancel
