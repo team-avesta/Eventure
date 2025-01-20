@@ -97,10 +97,12 @@ export default function ManageDimensionModal({
       return <EmptyState />;
     }
 
-    const dimensionOptions = dimensions.map((dimension) => ({
-      value: dimension.id,
-      label: `${dimension.id}. ${dimension.name}`,
-    }));
+    const dimensionOptions = dimensions
+      .sort((a, b) => parseInt(a.id) - parseInt(b.id))
+      .map((dimension) => ({
+        value: dimension.id,
+        label: `${dimension.id}. ${dimension.name}`,
+      }));
 
     return (
       <div className="space-y-4">
