@@ -9,6 +9,7 @@ import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWra
 import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
 import { adminS3Service } from '@/services/adminS3Service';
 import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
+import ConfirmationModal from '@/components/shared/ConfirmationModal';
 
 const EVENT_TYPES = [
   { id: 'pageview', name: 'Page View', color: '#2563EB' },
@@ -91,6 +92,8 @@ export default function ScreenshotDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventFilter, setSelectedEventFilter] = useState<string>('all');
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<Rectangle | null>(null);
 
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
@@ -752,13 +755,20 @@ export default function ScreenshotDetailPage() {
     }
   };
 
-  const handleDeleteEvent = async (rect: Rectangle) => {
+  const handleDeleteEvent = (rect: Rectangle) => {
+    setEventToDelete(rect);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete) return;
+
     const event = rectangles.find(
       (r) =>
-        r.startX === rect.startX &&
-        r.startY === rect.startY &&
-        r.width === rect.width &&
-        r.height === rect.height
+        r.startX === eventToDelete.startX &&
+        r.startY === eventToDelete.startY &&
+        r.width === eventToDelete.width &&
+        r.height === eventToDelete.height
     );
 
     if (event) {
@@ -769,6 +779,9 @@ export default function ScreenshotDetailPage() {
       } catch (error) {
         console.error('Error deleting event:', error);
         toast.error('Failed to delete event');
+      } finally {
+        setShowDeleteConfirmation(false);
+        setEventToDelete(null);
       }
     }
   };
@@ -1428,6 +1441,19 @@ export default function ScreenshotDetailPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirmation}
+        onClose={() => {
+          setShowDeleteConfirmation(false);
+          setEventToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Event"
+        message="Are you sure you want to delete this event? This action cannot be undone."
+        confirmText="Delete Event"
+        cancelText="Cancel"
+      />
     </div>
   );
 }
