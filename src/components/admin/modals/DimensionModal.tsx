@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
@@ -10,6 +10,7 @@ interface DimensionModalProps {
   onClose: () => void;
   onSubmit: (value: { id: string; name: string; description?: string }) => void;
   isSubmitting: boolean;
+  initialData?: { id: string; name: string; description?: string } | null;
 }
 
 export default function DimensionModal({
@@ -17,6 +18,7 @@ export default function DimensionModal({
   onClose,
   onSubmit,
   isSubmitting,
+  initialData,
 }: DimensionModalProps) {
   const [dimensionNumber, setDimensionNumber] = useState('');
   const [dimensionName, setDimensionName] = useState('');
@@ -26,21 +28,39 @@ export default function DimensionModal({
   >([]);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchExistingDimensions();
-    }
-  }, [isOpen]);
-
-  const fetchExistingDimensions = async () => {
+  const fetchExistingDimensions = useCallback(async () => {
     try {
       const dimensions = await adminS3Service.fetchDimensions();
-      setExistingDimensions(dimensions);
+      setExistingDimensions(
+        dimensions
+          .filter((d) => !initialData || d.id !== initialData.id)
+          .sort((a, b) => parseInt(a.id) - parseInt(b.id))
+      );
     } catch (error) {
       console.error('Error fetching dimensions:', error);
       toast.error('Failed to fetch existing dimensions');
     }
-  };
+  }, [initialData]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchExistingDimensions();
+    }
+  }, [isOpen, fetchExistingDimensions]);
+
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setDimensionNumber(initialData.id);
+      setDimensionName(initialData.name);
+      setDescription(initialData.description || '');
+      setError('');
+    } else if (isOpen) {
+      setDimensionNumber('');
+      setDimensionName('');
+      setDescription('');
+      setError('');
+    }
+  }, [isOpen, initialData]);
 
   const validateDimensionNumber = (value: string) => {
     const num = parseInt(value);
@@ -57,8 +77,11 @@ export default function DimensionModal({
       return false;
     }
 
-    // Check for duplicates
-    if (existingDimensions.some((dim) => dim.id === value)) {
+    // Check for duplicates (skip when editing the same dimension)
+    if (
+      !initialData?.id &&
+      existingDimensions.some((dim) => dim.id === value)
+    ) {
       setError('This dimension number already exists');
       return false;
     }
@@ -87,19 +110,16 @@ export default function DimensionModal({
       name: dimensionName.trim(),
       description: description.trim() || '',
     });
-
-    setDimensionNumber('');
-    setDimensionName('');
-    setDescription('');
-    setError('');
   };
+
+  const isEdit = !!initialData;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Dimension"
-      submitLabel="Add Dimension"
+      title={isEdit ? 'Edit Dimension' : 'Add New Dimension'}
+      submitLabel={isEdit ? 'Save Changes' : 'Add Dimension'}
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
       isSubmitDisabled={
@@ -114,7 +134,7 @@ export default function DimensionModal({
           value={dimensionNumber}
           onChange={handleDimensionNumberChange}
           placeholder="Enter dimension number"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isEdit}
           min="0"
           step="1"
           error={error}

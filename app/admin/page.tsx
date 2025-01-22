@@ -1,20 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import { Spinner } from '@/components/common/icons';
 import { AdminCard } from '@/components/admin/AdminCard';
-import { AdminModals } from '@/components/admin/AdminModals';
+import { AdminListView } from '@/components/admin/AdminListView';
 import { adminSections } from '@/data/adminSections';
 import { useAdminState } from '@/hooks/useAdminState';
 
 export default function AdminPage() {
-  const {
-    isLoading,
-    isSubmitting,
-    modalState,
-    openModal,
-    closeModal,
-    handleSubmit,
-  } = useAdminState();
+  const { isLoading } = useAdminState();
+  const [selectedSection, setSelectedSection] = useState<{
+    type: string;
+    title: string;
+  } | null>(null);
 
   if (isLoading) {
     return (
@@ -42,18 +40,24 @@ export default function AdminPage() {
             <AdminCard
               key={section.type}
               {...section}
-              onAdd={() => openModal(section.type)}
-              onManage={() => openModal(section.type, true)}
+              onClick={() =>
+                setSelectedSection({
+                  type: section.type,
+                  title: section.title,
+                })
+              }
             />
           ))}
         </div>
       </div>
-      <AdminModals
-        modalState={modalState}
-        isSubmitting={isSubmitting}
-        closeModal={closeModal}
-        handleSubmit={handleSubmit}
-      />
+
+      {selectedSection && (
+        <AdminListView
+          type={selectedSection.type as any}
+          title={selectedSection.title}
+          onClose={() => setSelectedSection(null)}
+        />
+      )}
     </div>
   );
 }

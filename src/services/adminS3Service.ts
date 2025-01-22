@@ -90,6 +90,16 @@ export const adminS3Service = {
       modules: filteredModules,
     });
   },
+  updateModule: async (key: string, name: string) => {
+    const response = await api.get<{ modules: Module[] }>('modules');
+    const modules = extractData<Module>(response, 'modules');
+    const updatedModules = modules.map((module) =>
+      module.key === key ? { ...module, name } : module
+    );
+    return api.update<{ modules: Module[] }>('modules', {
+      modules: updatedModules,
+    });
+  },
 
   // Page Views
   fetchPageViews: async () => {
@@ -121,6 +131,16 @@ export const adminS3Service = {
     );
     return api.update<{ pageViews: PageView[] }>('page-data', {
       pageViews: filteredPageViews,
+    });
+  },
+  updatePageView: async (id: string, data: { title: string; url: string }) => {
+    const response = await api.get<{ pageViews: PageView[] }>('page-data');
+    const pageViews = extractData<PageView>(response, 'pageViews');
+    const updatedPageViews = pageViews.map((pageView) =>
+      pageView.id === id ? { ...pageView, ...data } : pageView
+    );
+    return api.update<{ pageViews: PageView[] }>('page-data', {
+      pageViews: updatedPageViews,
     });
   },
 
@@ -159,6 +179,19 @@ export const adminS3Service = {
       dimensions: filteredDimensions,
     });
   },
+  updateDimension: async (
+    id: string,
+    data: { name: string; description?: string }
+  ) => {
+    const response = await api.get<{ dimensions: Dimension[] }>('dimensions');
+    const dimensions = extractData<Dimension>(response, 'dimensions');
+    const updatedDimensions = dimensions.map((dimension) =>
+      dimension.id === id ? { ...dimension, ...data } : dimension
+    );
+    return api.update<{ dimensions: Dimension[] }>('dimensions', {
+      dimensions: updatedDimensions,
+    });
+  },
 
   // Event Categories
   fetchEventCategories: async () => {
@@ -185,6 +218,16 @@ export const adminS3Service = {
       eventCategory: categories.filter((category) => category !== name),
     });
   },
+  updateEventCategory: async (oldName: string, newName: string) => {
+    const response = await api.get<{ eventCategory: string[] }>(
+      'event-categories'
+    );
+    const categories = response?.eventCategory || [];
+    const updatedCategories = categories.map((category) =>
+      category === oldName ? newName : category
+    );
+    return api.update('event-categories', { eventCategory: updatedCategories });
+  },
 
   // Event Actions
   fetchEventActions: async () => {
@@ -207,6 +250,14 @@ export const adminS3Service = {
       eventAction: actions.filter((action) => action !== name),
     });
   },
+  updateEventAction: async (oldName: string, newName: string) => {
+    const response = await api.get<{ eventAction: string[] }>('event-actions');
+    const actions = response?.eventAction || [];
+    const updatedActions = actions.map((action) =>
+      action === oldName ? newName : action
+    );
+    return api.update('event-actions', { eventAction: updatedActions });
+  },
 
   // Event Names
   fetchEventNames: async () => {
@@ -228,6 +279,14 @@ export const adminS3Service = {
     return api.update('event-names', {
       eventNames: names.filter((eventName) => eventName !== name),
     });
+  },
+  updateEventName: async (oldName: string, newName: string) => {
+    const response = await api.get<{ eventNames: string[] }>('event-names');
+    const names = response?.eventNames || [];
+    const updatedNames = names.map((name) =>
+      name === oldName ? newName : name
+    );
+    return api.update('event-names', { eventNames: updatedNames });
   },
 
   // Screenshots

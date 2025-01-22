@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 
@@ -7,6 +7,7 @@ interface EventActionModalProps {
   onClose: () => void;
   onSubmit: (value: string) => void;
   isSubmitting: boolean;
+  initialData?: string | null;
 }
 
 export default function EventActionModal({
@@ -14,21 +15,31 @@ export default function EventActionModal({
   onClose,
   onSubmit,
   isSubmitting,
+  initialData,
 }: EventActionModalProps) {
   const [actionName, setActionName] = useState('');
+
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setActionName(initialData);
+    } else {
+      setActionName('');
+    }
+  }, [isOpen, initialData]);
 
   const handleSubmit = () => {
     if (!actionName.trim()) return;
     onSubmit(actionName.trim());
-    setActionName('');
   };
+
+  const isEdit = !!initialData;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Event Action"
-      submitLabel="Add Action"
+      title={isEdit ? 'Edit Event Action' : 'Add New Event Action'}
+      submitLabel={isEdit ? 'Save Changes' : 'Add Action'}
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
       isSubmitDisabled={!actionName.trim()}

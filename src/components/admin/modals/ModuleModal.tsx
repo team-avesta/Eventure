@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 
@@ -7,6 +7,7 @@ interface ModuleModalProps {
   onClose: () => void;
   onSubmit: (value: string) => void;
   isSubmitting: boolean;
+  initialData?: { name: string } | null;
 }
 
 export default function ModuleModal({
@@ -14,21 +15,31 @@ export default function ModuleModal({
   onClose,
   onSubmit,
   isSubmitting,
+  initialData,
 }: ModuleModalProps) {
   const [inputValue, setInputValue] = useState('');
+
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setInputValue(initialData.name);
+    } else {
+      setInputValue('');
+    }
+  }, [isOpen, initialData]);
 
   const handleSubmit = () => {
     if (!inputValue.trim()) return;
     onSubmit(inputValue.trim());
-    setInputValue('');
   };
+
+  const isEdit = !!initialData;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Module"
-      submitLabel="Add Module"
+      title={isEdit ? 'Edit Module' : 'Add New Module'}
+      submitLabel={isEdit ? 'Save Changes' : 'Add Module'}
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
       isSubmitDisabled={!inputValue.trim()}
