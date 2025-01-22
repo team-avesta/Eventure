@@ -226,7 +226,7 @@ export default function ScreenshotDetailPage() {
   }) => {
     if (!newEvent) return;
 
-    let eventData: Event = {
+    let eventData: any = {
       id: newEvent.id || Date.now().toString(),
       coordinates: newEvent.coordinates!,
       screenshotId,
@@ -663,7 +663,7 @@ export default function ScreenshotDetailPage() {
             if (!originalEvent) return rect;
 
             // Create updated event with new coordinates
-            const updatedEvent = {
+            const updatedEvent: any = {
               ...originalEvent,
               coordinates: {
                 startX: newRect.startX,
