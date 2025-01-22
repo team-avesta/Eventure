@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const pageName = formData.get('pageName') as string;
+    const customName = formData.get('customName') as string;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -52,7 +53,12 @@ export async function POST(request: NextRequest) {
 
     // Upload to S3
     const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/\s+/g, '-').toLowerCase();
+    let sanitizedName;
+    if (customName?.trim()) {
+      sanitizedName = customName.trim().replace(/\s+/g, '-').toLowerCase();
+    } else {
+      sanitizedName = file.name.replace(/\s+/g, '-').toLowerCase();
+    }
     const fileName = `${timestamp}-${sanitizedName}`;
     const key = `screenshots/${pageName}/${fileName}`;
 

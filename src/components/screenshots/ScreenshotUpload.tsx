@@ -5,6 +5,7 @@ import { FileUpload } from '@/components/common/FileUpload';
 import { Button } from '@/components/common/Button';
 import { useScreenshotUpload } from '@/hooks/useScreenshotUpload';
 import { Module } from '@/services/adminS3Service';
+import { Input } from '@/components/common/Input';
 
 interface ScreenshotUploadProps {
   modules: Module[];
@@ -20,6 +21,8 @@ export default function ScreenshotUpload({
     setFile,
     pageName,
     setPageName,
+    customName,
+    setCustomName,
     error,
     fileInputRef,
     isUploading,
@@ -43,6 +46,14 @@ export default function ScreenshotUpload({
           value={pageName}
           onChange={(e) => setPageName(e.target.value)}
           options={moduleOptions}
+        />
+
+        <Input
+          id="customName"
+          label="Custom Name (Optional)"
+          value={customName}
+          onChange={(e) => setCustomName(e.target.value)}
+          placeholder="Enter custom name for the screenshot"
         />
 
         <FileUpload

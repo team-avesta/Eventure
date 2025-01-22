@@ -10,6 +10,7 @@ export function useScreenshotUpload({
 }: UseScreenshotUploadProps = {}) {
   const [file, setFile] = useState<File | null>(null);
   const [pageName, setPageName] = useState<string>('');
+  const [customName, setCustomName] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -17,6 +18,7 @@ export function useScreenshotUpload({
   const resetForm = () => {
     setFile(null);
     setPageName('');
+    setCustomName('');
     setError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -56,6 +58,9 @@ export function useScreenshotUpload({
     const formData = new FormData();
     formData.append('file', file);
     formData.append('pageName', pageName);
+    if (customName.trim()) {
+      formData.append('customName', customName.trim());
+    }
 
     setIsUploading(true);
     try {
@@ -93,6 +98,8 @@ export function useScreenshotUpload({
     setFile,
     pageName,
     setPageName,
+    customName,
+    setCustomName,
     error,
     fileInputRef,
     isUploading,
