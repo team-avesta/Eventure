@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import {
+  PencilIcon,
+  TrashIcon,
+  ArrowLeftIcon,
+} from '@heroicons/react/24/outline';
 import { Button } from '@/components/common/Button';
 import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
@@ -228,137 +232,144 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
   };
 
   const renderHeader = () => (
-    <div className="flex items-center justify-between pb-4 border-b border-gray-200 pr-8">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your {title.toLowerCase()}
-        </p>
+    <div className="bg-white shadow">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <ArrowLeftIcon className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
+              <p className="mt-1 text-sm text-gray-500">
+                Manage your {title.toLowerCase()}
+              </p>
+            </div>
+          </div>
+          <Button onClick={handleAdd} className="flex items-center gap-2">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add {title}
+          </Button>
+        </div>
       </div>
-      <Button onClick={handleAdd} className="flex items-center gap-2">
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <span>Add New</span>
-      </Button>
     </div>
   );
-
-  const renderItem = (item: any) => {
-    const itemName =
-      type === 'module'
-        ? item.name
-        : type === 'pageview'
-        ? item.title
-        : type === 'dimension'
-        ? `${item.id}. ${item.name}`
-        : item;
-
-    return (
-      <div
-        key={
-          type === 'module'
-            ? item.key
-            : type === 'pageview'
-            ? item.id
-            : type === 'dimension'
-            ? item.id
-            : item
-        }
-        className="flex items-center justify-between py-3 hover:bg-gray-50/80 px-4 rounded-lg border border-gray-100"
-      >
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
-            {itemName}
-          </p>
-          {type === 'pageview' && (
-            <p className="text-sm text-gray-500 truncate">{item.url}</p>
-          )}
-          {type === 'dimension' && item.description && (
-            <p className="text-sm text-gray-500 truncate">{item.description}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 ml-4">
-          <button
-            onClick={() => handleEdit(item)}
-            className="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors border border-gray-200"
-          >
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(item)}
-            className="p-1.5 text-gray-500 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors border border-gray-200"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   const renderContent = () => {
     if (isLoading) {
       return <LoadingState />;
     }
 
-    if (items.length === 0) {
+    if (!items.length) {
       return <EmptyState />;
     }
 
-    return <div className="space-y-2">{items.map(renderItem)}</div>;
+    const getItemName = (item: any) => {
+      switch (type) {
+        case 'pageview':
+          return item.title;
+        case 'module':
+          return item.name;
+        case 'dimension':
+          return `${item.id}. ${item.name}`;
+        case 'category':
+        case 'action':
+        case 'name':
+          return item;
+        default:
+          return item.name;
+      }
+    };
+
+    const getExtraInfo = (item: any) => {
+      switch (type) {
+        case 'pageview':
+          return item.url;
+        case 'dimension':
+          return item.description;
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="mt-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {type === 'pageview' ? 'Title' : 'Name'}
+                </th>
+                {(type === 'pageview' || type === 'dimension') && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {type === 'pageview' ? 'URL' : 'Description'}
+                  </th>
+                )}
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {items.map((item) => (
+                <tr key={item.id || item.key}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {getItemName(item)}
+                  </td>
+                  {(type === 'pageview' || type === 'dimension') && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {getExtraInfo(item)}
+                    </td>
+                  )}
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleEdit(item)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-2"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDelete(item)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity"
-          onClick={onClose}
-        />
-
-        <div className="relative transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all w-full max-w-2xl">
-          <div className="absolute right-0 top-0 hidden md:block">
-            <button
-              type="button"
-              className="m-2 rounded-lg bg-white text-gray-400 hover:text-gray-500 focus:outline-none p-1 hover:bg-gray-50 border border-gray-200"
-              onClick={onClose}
-            >
-              <span className="sr-only">Close</span>
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div className="p-6">
-            {renderHeader()}
-            <div className="mt-6 max-h-[calc(100vh-16rem)] overflow-y-auto">
-              {renderContent()}
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50">
+      {renderHeader()}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {renderContent()}
+      </main>
+      {renderModal()}
       <ConfirmationModal
         isOpen={showConfirmation}
         onClose={() => {
@@ -371,8 +382,6 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         confirmText={`Delete ${title}`}
         cancelText="Cancel"
       />
-
-      {renderModal()}
     </div>
   );
 }

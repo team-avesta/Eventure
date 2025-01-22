@@ -106,7 +106,7 @@ export default function Navigation() {
           </div>
         </div>
       </nav>
-      <footer className="fixed bottom-0 w-full bg-gradient-to-r from-white via-blue-50 to-white shadow-lg border-t border-gray-200 py-4 transition-all duration-300">
+      <footer className="fixed bottom-0 w-full bg-gradient-to-r from-white via-blue-50 to-white shadow-lg border-t border-gray-200 py-4 transition-all duration-300 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-600 flex items-center justify-center space-x-1">
             <span>Made with</span>

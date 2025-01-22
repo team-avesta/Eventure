@@ -50,10 +50,10 @@ export default function ScreenshotUpload({
 
         <Input
           id="customName"
-          label="Custom Name (Optional)"
+          label="Screenshot Name"
           value={customName}
           onChange={(e) => setCustomName(e.target.value)}
-          placeholder="Enter custom name for the screenshot"
+          placeholder="Enter a descriptive name for this screenshot"
         />
 
         <FileUpload

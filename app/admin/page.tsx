@@ -1,18 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/common/icons';
 import { AdminCard } from '@/components/admin/AdminCard';
-import { AdminListView } from '@/components/admin/AdminListView';
 import { adminSections } from '@/data/adminSections';
 import { useAdminState } from '@/hooks/useAdminState';
 
 export default function AdminPage() {
+  const router = useRouter();
   const { isLoading } = useAdminState();
-  const [selectedSection, setSelectedSection] = useState<{
-    type: string;
-    title: string;
-  } | null>(null);
 
   if (isLoading) {
     return (
@@ -40,24 +36,11 @@ export default function AdminPage() {
             <AdminCard
               key={section.type}
               {...section}
-              onClick={() =>
-                setSelectedSection({
-                  type: section.type,
-                  title: section.title,
-                })
-              }
+              onClick={() => router.push(`/admin/${section.type}`)}
             />
           ))}
         </div>
       </div>
-
-      {selectedSection && (
-        <AdminListView
-          type={selectedSection.type as any}
-          title={selectedSection.title}
-          onClose={() => setSelectedSection(null)}
-        />
-      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ImageIcon, ArrowRightIcon } from '@/components/common/icons/index';
+import { ArrowRightIcon } from '@/components/common/icons/index';
 
 interface ModuleCardProps {
   name: string;
@@ -14,7 +14,10 @@ export function ModuleCard({
 }: ModuleCardProps) {
   const renderModuleInfo = () => (
     <div className="relative z-10">
-      <h2 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600">
+      <h2
+        className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 truncate max-w-[250px]"
+        title={name}
+      >
         {name}
       </h2>
       <div className="flex items-center gap-1.5 mt-1">
@@ -23,12 +26,6 @@ export function ModuleCard({
           {screenshotsCount} captures
         </span>
       </div>
-    </div>
-  );
-
-  const renderModuleIcon = () => (
-    <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-      <ImageIcon className="w-6 h-6 text-blue-500" />
     </div>
   );
 
@@ -46,7 +43,6 @@ export function ModuleCard({
       <div className="bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-xl shadow hover:shadow-md transition-all duration-300 h-[180px] flex flex-col overflow-hidden group border border-gray-100/50">
         <div className="px-6 py-5 flex items-center justify-between relative">
           {renderModuleInfo()}
-          {renderModuleIcon()}
         </div>
 
         <div className="flex-1 flex items-end p-6">{renderViewButton()}</div>

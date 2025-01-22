@@ -73,7 +73,7 @@ export const adminS3Service = {
     const newModule: Module = {
       id: (modules.length + 1).toString(),
       name,
-      key: name.toLowerCase().replace(/\s+/g, '_'),
+      key: name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
       screenshots: [],
     };
 
@@ -94,7 +94,13 @@ export const adminS3Service = {
     const response = await api.get<{ modules: Module[] }>('modules');
     const modules = extractData<Module>(response, 'modules');
     const updatedModules = modules.map((module) =>
-      module.key === key ? { ...module, name } : module
+      module.key === key
+        ? {
+            ...module,
+            name,
+            key: name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+          }
+        : module
     );
     return api.update<{ modules: Module[] }>('modules', {
       modules: updatedModules,

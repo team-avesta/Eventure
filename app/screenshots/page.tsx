@@ -37,7 +37,7 @@ export default function ScreenshotsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-[calc(100vh-4rem)] bg-gray-50 py-8 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isAdmin && (
           <div className="mb-8">

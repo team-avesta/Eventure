@@ -120,7 +120,10 @@ export default function ModuleScreenshotsPage() {
                       />
                     </div>
                     <div className="p-4">
-                      <h3 className="text-lg font-medium text-gray-900">
+                      <h3
+                        className="text-lg font-medium text-gray-900 truncate"
+                        title={screenshot.name}
+                      >
                         {screenshot.name}
                       </h3>
                       <p className="mt-2 text-sm text-gray-500">
