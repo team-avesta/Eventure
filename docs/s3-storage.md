@@ -404,7 +404,6 @@ await dataService.updateEvents([...events, newEvent]);
 <ImageUpload
   module="core"
   onUpload={({ url, key }) => {
-    console.log('Screenshot uploaded:', url);
     // Update module data with new screenshot reference
     updateModuleData(module, { screenshotUrl: url, key });
   }}

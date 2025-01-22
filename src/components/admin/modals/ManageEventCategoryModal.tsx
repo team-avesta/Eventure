@@ -59,8 +59,6 @@ export default function ManageEventCategoryModal({
     try {
       const data = await adminS3Service.fetchEventCategories();
 
-      console.log(data);
-
       setCategories(data);
     } catch (error) {
       toast.error('Failed to fetch event categories');

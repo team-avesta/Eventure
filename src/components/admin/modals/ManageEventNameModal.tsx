@@ -56,7 +56,6 @@ export default function ManageEventNameModal({
     setIsLoading(true);
     try {
       const data = await adminS3Service.fetchEventNames();
-      console.log(data);
       setEvents(data);
     } catch (error) {
       console.error('Error fetching event names:', error);
