@@ -1,8 +1,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { ChartBarIcon } from '@heroicons/react/24/outline';
 
-export default function Navigation() {
+interface NavigationProps {
+  onShowAnalytics?: () => void;
+}
+
+export default function Navigation({ onShowAnalytics }: NavigationProps) {
   const [userRole, setUserRole] = useState<string>('');
   const pathname = usePathname();
 
@@ -79,7 +84,16 @@ export default function Navigation() {
                 )}
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              {pathname === '/screenshots' && (
+                <button
+                  onClick={onShowAnalytics}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 hover:scale-105"
+                >
+                  <ChartBarIcon className="w-4 h-4 mr-2" />
+                  View Analytics
+                </button>
+              )}
               <button
                 onClick={() => {
                   sessionStorage.removeItem('auth');

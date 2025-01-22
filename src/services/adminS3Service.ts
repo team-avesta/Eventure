@@ -1,5 +1,12 @@
 import { api } from './api';
 
+export enum EventType {
+  PageView = 'pageview',
+  TrackEventWithPageView = 'trackevent_pageview',
+  TrackEvent = 'trackevent',
+  Outlink = 'outlink',
+}
+
 export interface Screenshot {
   id: string;
   name: string;
@@ -7,6 +14,7 @@ export interface Screenshot {
   pageName: string;
   createdAt: string;
   updatedAt: string;
+  events?: Event[];
 }
 
 export interface Module {
@@ -14,6 +22,12 @@ export interface Module {
   name: string;
   key: string;
   screenshots: Screenshot[];
+  eventCounts?: {
+    [EventType.PageView]: number;
+    [EventType.TrackEventWithPageView]: number;
+    [EventType.TrackEvent]: number;
+    [EventType.Outlink]: number;
+  };
 }
 
 export interface Event {
@@ -25,7 +39,7 @@ export interface Event {
     height: number;
   };
   screenshotId: string;
-  eventType: string;
+  eventType: EventType;
   name: string;
   category: string;
   action: string;
@@ -59,12 +73,68 @@ const extractData = <T>(data: any, key: string): T[] => {
   return [];
 };
 
+const calculateEventCounts = (screenshots: Screenshot[]) => {
+  let pageView = 0;
+  let trackEventWithPageView = 0;
+  let trackEvent = 0;
+  let outlink = 0;
+
+  screenshots.forEach((screenshot) => {
+    const events = screenshot.events || [];
+    events.forEach((event) => {
+      switch (event.eventType) {
+        case EventType.PageView:
+          pageView++;
+          break;
+        case EventType.TrackEventWithPageView:
+          trackEventWithPageView++;
+          break;
+        case EventType.TrackEvent:
+          trackEvent++;
+          break;
+        case EventType.Outlink:
+          outlink++;
+          break;
+      }
+    });
+  });
+
+  return {
+    [EventType.PageView]: pageView,
+    [EventType.TrackEventWithPageView]: trackEventWithPageView,
+    [EventType.TrackEvent]: trackEvent,
+    [EventType.Outlink]: outlink,
+  };
+};
+
 export const adminS3Service = {
   // Modules
   fetchModules: async () => {
     const data = await api.get<{ modules: Module[] }>('modules');
     return extractData<Module>(data, 'modules');
   },
+
+  fetchModuleEventCounts: async (modules: Module[]) => {
+    const eventsData = await api.get<{ events: Event[] }>('events');
+    const events = extractData<Event>(eventsData, 'events');
+
+    return modules.map((module) => ({
+      ...module,
+      screenshots: module.screenshots.map((screenshot) => ({
+        ...screenshot,
+        events: events.filter((event) => event.screenshotId === screenshot.id),
+      })),
+      eventCounts: calculateEventCounts(
+        module.screenshots.map((screenshot) => ({
+          ...screenshot,
+          events: events.filter(
+            (event) => event.screenshotId === screenshot.id
+          ),
+        }))
+      ),
+    }));
+  },
+
   createModule: async (name: string) => {
     const response = await api.get<{ modules: Module[] }>('modules');
     const existingData = await api.get<any>('modules');
