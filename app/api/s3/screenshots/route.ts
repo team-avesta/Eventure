@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3DataService } from '@/lib/s3/data';
-import { Module } from '@/services/adminS3Service';
+import { Module, ScreenshotStatus } from '@/services/adminS3Service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       pageName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      status: ScreenshotStatus.TODO,
     };
 
     targetModule.screenshots = [
