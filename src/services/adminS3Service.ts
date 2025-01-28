@@ -5,6 +5,7 @@ export enum EventType {
   TrackEventWithPageView = 'trackevent_pageview',
   TrackEvent = 'trackevent',
   Outlink = 'outlink',
+  BackendEvent = 'backendevent',
 }
 
 export enum ScreenshotStatus {
@@ -29,12 +30,6 @@ export interface Module {
   name: string;
   key: string;
   screenshots: Screenshot[];
-  eventCounts?: {
-    [EventType.PageView]: number;
-    [EventType.TrackEventWithPageView]: number;
-    [EventType.TrackEvent]: number;
-    [EventType.Outlink]: number;
-  };
 }
 
 export interface Event {
@@ -97,6 +92,7 @@ const calculateEventCounts = (screenshots: Screenshot[]) => {
           trackEventWithPageView++;
           break;
         case EventType.TrackEvent:
+        case EventType.BackendEvent:
           trackEvent++;
           break;
         case EventType.Outlink:

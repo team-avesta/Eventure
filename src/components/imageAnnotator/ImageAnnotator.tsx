@@ -12,6 +12,7 @@ const EVENT_TYPES = [
   },
   { id: 'trackevent', name: 'TrackEvent', color: '#9333EA' },
   { id: 'outlink', name: 'Outlink', color: '#DC2626' },
+  { id: 'backendevent', name: 'Backend Event', color: '#F59E0B' },
 ];
 
 export type Rectangle = {

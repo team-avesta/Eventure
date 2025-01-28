@@ -20,6 +20,7 @@ const EVENT_TYPES = [
   },
   { id: 'trackevent', name: 'TrackEvent', color: '#9333EA' },
   { id: 'outlink', name: 'Outlink', color: '#DC2626' },
+  { id: 'backendevent', name: 'Backend Event', color: '#F59E0B' },
 ];
 
 type RectangleState = {
@@ -410,6 +411,7 @@ export default function ScreenshotDetailPage() {
 
       case 'trackevent':
       case 'trackevent_pageview':
+      case 'backendevent':
         return (
           <>
             <div>
@@ -734,6 +736,7 @@ export default function ScreenshotDetailPage() {
 
         case 'trackevent':
         case 'trackevent_pageview':
+        case 'backendevent':
           setFormData({
             eventcategory: event.category,
             eventactionname: event.action,
@@ -1009,14 +1012,15 @@ export default function ScreenshotDetailPage() {
             />
 
             {/* Event List */}
-            <div className="space-y-3  p-4">
+            <div className="space-y-3 p-4">
               {filteredRectangles
                 .sort((a, b) => {
                   const order = {
                     pageview: 1,
                     trackevent_pageview: 2,
                     trackevent: 3,
-                    outlink: 4,
+                    backendevent: 4,
+                    outlink: 5,
                   };
                   return (
                     order[a.eventType as keyof typeof order] -
@@ -1413,7 +1417,8 @@ export default function ScreenshotDetailPage() {
                         });
                       } else if (
                         selectedEventType?.id === 'trackevent_pageview' ||
-                        selectedEventType?.id === 'trackevent'
+                        selectedEventType?.id === 'trackevent' ||
+                        selectedEventType?.id === 'backendevent'
                       ) {
                         const eventData = {
                           name: (formData.get('eventname') as string) || '',
@@ -1491,6 +1496,8 @@ function getEventTypeDescription(typeId: string): string {
       return 'Track specific user interactions and custom events';
     case 'outlink':
       return 'Monitor clicks on external links and resources';
+    case 'backendevent':
+      return 'Track backend-specific events and operations';
     default:
       return '';
   }

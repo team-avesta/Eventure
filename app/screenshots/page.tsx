@@ -31,7 +31,11 @@ const getEventCounts = (events: Event[]): EventCounts => {
 
   events.forEach((event) => {
     if (event?.eventType) {
-      counts[event.eventType]++;
+      if (event.eventType === EventType.BackendEvent) {
+        counts[EventType.TrackEvent]++; // Count BackendEvent as TrackEvent
+      } else {
+        counts[event.eventType]++;
+      }
     }
   });
 

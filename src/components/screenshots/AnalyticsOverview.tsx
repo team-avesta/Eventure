@@ -87,6 +87,25 @@ const EVENT_TYPE_INFO = {
       </svg>
     ),
   },
+  [EventType.BackendEvent]: {
+    name: 'Backend Event',
+    color: '#F59E0B',
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
 };
 
 const calculateEventTotals = (modules: Module[]) => {
@@ -95,6 +114,7 @@ const calculateEventTotals = (modules: Module[]) => {
     [EventType.TrackEventWithPageView]: 0,
     [EventType.TrackEvent]: 0,
     [EventType.Outlink]: 0,
+    [EventType.BackendEvent]: 0,
   };
 
   modules.forEach((module) => {

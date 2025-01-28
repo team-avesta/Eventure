@@ -61,7 +61,12 @@ interface Event {
     height: number;
   };
   screenshotId: string;
-  eventType: 'trackevent' | 'trackevent_pageview' | 'outlink';
+  eventType:
+    | 'pageview'
+    | 'trackevent'
+    | 'trackevent_pageview'
+    | 'outlink'
+    | 'backendevent';
   name: string;
   category: string;
   action: string;
