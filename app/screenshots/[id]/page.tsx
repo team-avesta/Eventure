@@ -1175,6 +1175,19 @@ export default function ScreenshotDetailPage() {
                       {/* Expanded Details */}
                       {expandedId === rect.id && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
+                          {event?.name && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                              <span className="font-medium min-w-[70px]">
+                                Name:
+                              </span>
+                              <span
+                                className="truncate pr-8"
+                                title={event.name}
+                              >
+                                {event.name}
+                              </span>
+                            </div>
+                          )}
                           {event?.value && (
                             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                               <span className="font-medium min-w-[70px]">
