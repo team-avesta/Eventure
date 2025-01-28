@@ -1057,9 +1057,9 @@ export default function ScreenshotDetailPage() {
                     >
                       {/* Show category and action for non-pageview events */}
                       {event?.category && eventType?.id !== 'pageview' && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                          <span className="font-medium min-w-[70px]">
-                            Category:
+                        <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                          <span className="font-medium min-w-[90px] whitespace-nowrap">
+                            Event Category:
                           </span>
                           <span
                             className="truncate pr-16"
@@ -1070,9 +1070,9 @@ export default function ScreenshotDetailPage() {
                         </div>
                       )}
                       {event?.action && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                          <span className="font-medium min-w-[70px]">
-                            Action:
+                        <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                          <span className="font-medium min-w-[90px] whitespace-nowrap">
+                            Event Action:
                           </span>
                           <span className="truncate pr-16" title={event.action}>
                             {event.action}
@@ -1083,23 +1083,20 @@ export default function ScreenshotDetailPage() {
                       {/* Show additional fields for pageview */}
                       {eventType?.id === 'pageview' && (
                         <>
-                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                            <span className="font-medium min-w-[70px]">
-                              Title:
+                          <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                            <span className="font-medium min-w-[90px] whitespace-nowrap">
+                              Custom Title:
                             </span>
-                            <span
-                              className="truncate pr-16"
-                              title={event?.name}
-                            >
+                            <span className="truncate pr-4" title={event?.name}>
                               {event?.name}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                            <span className="font-medium min-w-[70px]">
-                              URL:
+                          <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                            <span className="font-medium min-w-[90px] whitespace-nowrap">
+                              Custom URL:
                             </span>
                             <span
-                              className="truncate pr-8"
+                              className="truncate pr-4"
                               title={event?.category}
                             >
                               {event?.category}
@@ -1176,12 +1173,12 @@ export default function ScreenshotDetailPage() {
                       {expandedId === rect.id && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           {event?.name && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                              <span className="font-medium min-w-[70px]">
-                                Name:
+                            <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                              <span className="font-medium min-w-[90px] whitespace-nowrap">
+                                Event Name:
                               </span>
                               <span
-                                className="truncate pr-8"
+                                className="truncate pr-4"
                                 title={event.name}
                               >
                                 {event.name}
@@ -1189,12 +1186,12 @@ export default function ScreenshotDetailPage() {
                             </div>
                           )}
                           {event?.value && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                              <span className="font-medium min-w-[70px]">
-                                Value:
+                            <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                              <span className="font-medium min-w-[90px] whitespace-nowrap">
+                                Event Value:
                               </span>
                               <span
-                                className="truncate pr-8"
+                                className="truncate pr-4"
                                 title={event.value}
                               >
                                 {event.value}
