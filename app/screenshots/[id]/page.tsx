@@ -1099,7 +1099,7 @@ export default function ScreenshotDetailPage() {
                               URL:
                             </span>
                             <span
-                              className="truncate pr-12"
+                              className="truncate pr-8"
                               title={event?.category}
                             >
                               {event?.category}
@@ -1180,7 +1180,12 @@ export default function ScreenshotDetailPage() {
                               <span className="font-medium min-w-[70px]">
                                 Value:
                               </span>
-                              <span>{event.value}</span>
+                              <span
+                                className="truncate pr-8"
+                                title={event.value}
+                              >
+                                {event.value}
+                              </span>
                             </div>
                           )}
                           {event?.dimensions && event.dimensions.length > 0 && (
