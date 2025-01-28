@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { adminS3Service, Module } from '@/services/adminS3Service';
-import Image from 'next/image';
+import {
+  adminS3Service,
+  Module,
+  ScreenshotStatus,
+} from '@/services/adminS3Service';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import toast from 'react-hot-toast';
+import ScreenshotCard from '@/components/screenshots/ScreenshotCard';
 
 export default function ModuleScreenshotsPage() {
   const params = useParams();
@@ -53,6 +57,19 @@ export default function ModuleScreenshotsPage() {
       toast.error('Failed to delete screenshot');
     } finally {
       setScreenshotToDelete(null);
+    }
+  };
+
+  const handleStatusChange = async (
+    screenshotId: string,
+    newStatus: ScreenshotStatus
+  ) => {
+    try {
+      await adminS3Service.updateScreenshotStatus(screenshotId, newStatus);
+      await fetchModule();
+      toast.success('Status updated successfully');
+    } catch (error) {
+      toast.error('Failed to update status');
     }
   };
 
@@ -107,54 +124,13 @@ export default function ModuleScreenshotsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentModule.screenshots.map((screenshot) => (
-              <div key={screenshot.id} className="relative group">
-                <Link href={`/screenshots/${screenshot.id}`} className="block">
-                  <div className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
-                    <div className="relative h-48">
-                      <Image
-                        src={screenshot.url}
-                        alt={screenshot.name}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3
-                        className="text-lg font-medium text-gray-900 truncate"
-                        title={screenshot.name}
-                      >
-                        {screenshot.name}
-                      </h3>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Added{' '}
-                        {new Date(screenshot.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-                {userRole === 'admin' && (
-                  <button
-                    onClick={() => setScreenshotToDelete(screenshot.id)}
-                    className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-700"
-                    title="Delete screenshot"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
+              <ScreenshotCard
+                key={screenshot.id}
+                screenshot={screenshot}
+                userRole={userRole}
+                onStatusChange={handleStatusChange}
+                onDelete={setScreenshotToDelete}
+              />
             ))}
           </div>
         )}

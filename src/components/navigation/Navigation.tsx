@@ -30,10 +30,10 @@ export default function Navigation({ onShowAnalytics }: NavigationProps) {
               <div className="flex space-x-8">
                 <Link
                   href="/screenshots"
-                  className={`inline-flex items-center px-4 pt-1 border-b-2 text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                  className={`inline-flex items-center px-4 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
                     isActive('/screenshots')
                       ? 'border-blue-500 text-blue-600 bg-blue-50 rounded-t-lg'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 rounded-lg'
+                      : 'border-transparent text-gray-500 rounded-lg'
                   }`}
                 >
                   <svg
@@ -54,10 +54,10 @@ export default function Navigation({ onShowAnalytics }: NavigationProps) {
                 {userRole === 'admin' && (
                   <Link
                     href="/admin"
-                    className={`inline-flex items-center px-4 pt-1 border-b-2 text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    className={`inline-flex items-center px-4 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
                       pathname.startsWith('/admin')
                         ? 'border-blue-500 text-blue-600 bg-blue-50 rounded-t-lg'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:bg-gray-50 rounded-lg'
+                        : 'border-transparent text-gray-500 rounded-lg'
                     }`}
                   >
                     <svg

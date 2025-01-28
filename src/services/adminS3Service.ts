@@ -7,6 +7,12 @@ export enum EventType {
   Outlink = 'outlink',
 }
 
+export enum ScreenshotStatus {
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  DONE = 'DONE',
+}
+
 export interface Screenshot {
   id: string;
   name: string;
@@ -14,6 +20,7 @@ export interface Screenshot {
   pageName: string;
   createdAt: string;
   updatedAt: string;
+  status: ScreenshotStatus;
   events?: Event[];
 }
 
@@ -393,6 +400,25 @@ export const adminS3Service = {
     const updatedModules = modules.map((module) => ({
       ...module,
       screenshots: module.screenshots.filter((s) => s.id !== screenshotId),
+    }));
+
+    return api.update('modules', { modules: updatedModules });
+  },
+  updateScreenshotStatus: async (
+    screenshotId: string,
+    status: ScreenshotStatus
+  ) => {
+    const response = await api.get<{ modules: Module[] }>('modules');
+    const modules = extractData<Module>(response, 'modules');
+
+    // Find and update the screenshot status
+    const updatedModules = modules.map((module) => ({
+      ...module,
+      screenshots: module.screenshots.map((screenshot) =>
+        screenshot.id === screenshotId
+          ? { ...screenshot, status, updatedAt: new Date().toISOString() }
+          : screenshot
+      ),
     }));
 
     return api.update('modules', { modules: updatedModules });
