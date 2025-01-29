@@ -11,6 +11,7 @@ import { adminS3Service } from '@/services/adminS3Service';
 import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import Breadcrumb from '@/components/common/Breadcrumb';
+import DimensionDisplay from '@/components/common/DimensionDisplay';
 
 const EVENT_TYPES = [
   { id: 'pageview', name: 'Page View', color: '#2563EB' },
@@ -65,6 +66,7 @@ export default function ScreenshotDetailPage() {
       id: string;
       name: string;
       description?: string;
+      type: string;
     }>;
     eventCategories: string[];
     eventActionNames: string[];
@@ -1022,6 +1024,7 @@ export default function ScreenshotDetailPage() {
                       (t) => t.id === rect.eventType
                     );
                     const event = events.find((e: Event) => e.id === rect.id);
+                    const tooltipId = `dimension-tooltip-${rect.id}-${rect.eventType}`;
                     return (
                       <div
                         key={rect.id}
@@ -1210,43 +1213,13 @@ export default function ScreenshotDetailPage() {
                                         dropdownData.dimensions.find(
                                           (d) => d.id === dim
                                         );
-                                      return (
-                                        <div
+                                      return dimension ? (
+                                        <DimensionDisplay
                                           key={dim}
-                                          className="text-sm text-gray-600 flex items-center gap-2 group relative py-1"
-                                        >
-                                          <span className="text-gray-400 min-w-[24px]">
-                                            {String(
-                                              dimension?.id || dim
-                                            ).padStart(2, '0')}
-                                            .
-                                          </span>
-                                          <span className="flex items-center gap-2">
-                                            {dimension?.name || dim}
-                                            {dimension?.description && (
-                                              <span className="relative">
-                                                <svg
-                                                  className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer peer"
-                                                  fill="none"
-                                                  viewBox="0 0 24 24"
-                                                  stroke="currentColor"
-                                                >
-                                                  <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                  />
-                                                </svg>
-                                                <div className="absolute invisible peer-hover:visible bg-gray-800/95 text-white text-xs rounded-md py-1.5 px-3 -top-1 left-[calc(100%+8px)] w-auto whitespace-nowrap z-50 shadow-xl ring-1 ring-gray-700/20">
-                                                  <div className="absolute w-1.5 h-1.5 bg-gray-800/95 transform rotate-45 -left-[3px] top-[10px] ring-1 ring-gray-700/20"></div>
-                                                  {dimension.description}
-                                                </div>
-                                              </span>
-                                            )}
-                                          </span>
-                                        </div>
-                                      );
+                                          dimension={dimension}
+                                          eventId={event.id}
+                                        />
+                                      ) : null;
                                     })}
                                   </div>
                                 </div>
