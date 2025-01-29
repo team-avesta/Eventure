@@ -993,15 +993,18 @@ export default function ScreenshotDetailPage() {
 
           {/* Right Panel */}
           <div className="w-[400px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-            <h3 className="text-lg font-semibold text-gray-900 sticky top-0 bg-white p-4 border-b border-gray-200">
-              Event Details
-            </h3>
-
-            <EventTypeFilter
-              selectedFilter={selectedEventFilter}
-              onFilterChange={setSelectedEventFilter}
-              rectangles={rectangles}
-            />
+            <div className="sticky top-0 bg-white z-10 border-b border-gray-200">
+              <div className="flex items-center justify-between p-3">
+                <h3 className="text-base font-semibold text-gray-900">
+                  Event Details
+                </h3>
+                <EventTypeFilter
+                  selectedFilter={selectedEventFilter}
+                  onFilterChange={setSelectedEventFilter}
+                  rectangles={rectangles}
+                />
+              </div>
+            </div>
 
             <div className="flex-1 overflow-auto">
               <div className="space-y-3 p-4">
