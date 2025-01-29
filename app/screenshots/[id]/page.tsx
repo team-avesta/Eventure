@@ -10,6 +10,7 @@ import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
 import { adminS3Service } from '@/services/adminS3Service';
 import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import Breadcrumb from '@/components/common/Breadcrumb';
 
 const EVENT_TYPES = [
   { id: 'pageview', name: 'Page View', color: '#2563EB' },
@@ -856,36 +857,98 @@ export default function ScreenshotDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-[95%] mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <Link
-                href={`/screenshots/modules/${parentModule.key}`}
-                className="text-gray-500 hover:text-gray-700 inline-flex items-center transition-colors"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          <div className="flex flex-col space-y-4">
+            {/* Top row with breadcrumb */}
+            <div className="flex items-center justify-between">
+              <Breadcrumb
+                items={[
+                  {
+                    label: parentModule.name,
+                    href: `/screenshots/modules/${parentModule.key}`,
+                  },
+                  {
+                    label: screenshot.name,
+                  },
+                ]}
+              />
+
+              {userRole === 'admin' && (
+                <div className="flex items-center gap-4">
+                  {/* Add Event Button */}
+                  <button
+                    onClick={() => setShowEventTypeModal(true)}
+                    className="inline-flex items-center h-11 px-5 rounded-md bg-[#0073CF] text-white hover:bg-[#005ba3] transition-colors duration-200 shadow-sm"
+                  >
+                    <svg
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">Add Event</span>
+                  </button>
+
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
                   />
-                </svg>
-              </Link>
 
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">
-                  {screenshot.name}
-                </h1>
-                <p className="text-sm text-gray-500">{parentModule.name}</p>
-              </div>
+                  {/* Replace Image Button */}
+                  <button
+                    onClick={handleReplaceClick}
+                    className="inline-flex items-center h-11 px-5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+                  >
+                    <svg
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">Replace Image</span>
+                  </button>
 
-              {/* Event Type Legend */}
-              <div className="flex items-center gap-6 ml-8 border-l border-gray-200 pl-8">
+                  {/* Drag Switch */}
+                  <div className="h-11 px-5 rounded-md border border-gray-300 bg-white flex items-center shadow-sm">
+                    <label className="flex items-center cursor-pointer">
+                      <span className="text-sm font-medium text-gray-700 mr-3">
+                        Drag
+                      </span>
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={isDraggable}
+                          onChange={(e) => setIsDraggable(e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0073CF] rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0073CF]"></div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom row with legend */}
+            <div className="flex items-center border-t border-gray-100 pt-3">
+              <div className="flex items-center gap-6">
                 {EVENT_TYPES.map((type) => (
                   <div key={type.id} className="flex items-center gap-2">
                     <div
@@ -897,79 +960,6 @@ export default function ScreenshotDetailPage() {
                 ))}
               </div>
             </div>
-
-            {userRole === 'admin' && (
-              <div className="flex items-center gap-4">
-                {/* Add Event Button */}
-                <button
-                  onClick={() => setShowEventTypeModal(true)}
-                  className="inline-flex items-center h-11 px-5 rounded-md bg-[#0073CF] text-white hover:bg-[#005ba3] transition-colors duration-200 shadow-sm"
-                >
-                  <svg
-                    className="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">Add Event</span>
-                </button>
-
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-
-                {/* Replace Image Button */}
-                <button
-                  onClick={handleReplaceClick}
-                  className="inline-flex items-center h-11 px-5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
-                >
-                  <svg
-                    className="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">Replace Image</span>
-                </button>
-
-                {/* Drag Switch */}
-                <div className="h-11 px-5 rounded-md border border-gray-300 bg-white flex items-center shadow-sm">
-                  <label className="flex items-center cursor-pointer">
-                    <span className="text-sm font-medium text-gray-700 mr-3">
-                      Drag
-                    </span>
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={isDraggable}
-                        onChange={(e) => setIsDraggable(e.target.checked)}
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0073CF] rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0073CF]"></div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
