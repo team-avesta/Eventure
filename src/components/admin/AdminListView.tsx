@@ -17,9 +17,18 @@ import DimensionModal from './modals/DimensionModal';
 import EventCategoryModal from './modals/EventCategoryModal';
 import EventActionModal from './modals/EventActionModal';
 import EventNameModal from './modals/EventNameModal';
+import EventTypeModal from './modals/EventTypeModal';
+import DimensionTypeModal from './modals/DimensionTypeModal';
 
 interface AdminListViewProps {
-  type: 'module' | 'pageview' | 'dimension' | 'category' | 'action' | 'name';
+  type:
+    | 'module'
+    | 'pageview'
+    | 'dimension'
+    | 'category'
+    | 'action'
+    | 'name'
+    | 'dimensionType';
   title: string;
   onClose: () => void;
 }
@@ -73,6 +82,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         case 'name':
           data = await adminS3Service.fetchEventNames();
           break;
+        case 'dimensionType':
+          data = await adminS3Service.fetchDimensionTypes();
+          break;
       }
       setItems(data);
     } catch (error) {
@@ -110,6 +122,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
           case 'name':
             await adminS3Service.updateEventName(selectedItem, data);
             break;
+          case 'dimensionType':
+            await adminS3Service.updateDimensionType(selectedItem.id, data);
+            break;
         }
         toast.success(`${title} updated successfully`);
       } else {
@@ -132,6 +147,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
             break;
           case 'name':
             await adminS3Service.createEventName(data);
+            break;
+          case 'dimensionType':
+            await adminS3Service.createDimensionType(data);
             break;
         }
         toast.success(`${title} added successfully`);
@@ -178,6 +196,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
           break;
         case 'name':
           await adminS3Service.deleteEventName(selectedItem);
+          break;
+        case 'dimensionType':
+          await adminS3Service.deleteDimensionType(selectedItem.id);
           break;
       }
       await fetchItems();
@@ -226,6 +247,8 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         return <EventActionModal {...modalProps} />;
       case 'name':
         return <EventNameModal {...modalProps} />;
+      case 'dimensionType':
+        return <DimensionTypeModal {...modalProps} />;
       default:
         return null;
     }
@@ -287,11 +310,15 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         case 'module':
           return item.name;
         case 'dimension':
-          return `${item.id}. ${item.name}`;
+          return `${item.id}. ${item.name} ${
+            item.type ? `(${item.type})` : ''
+          }`;
         case 'category':
         case 'action':
         case 'name':
           return item;
+        case 'dimensionType':
+          return item.name;
         default:
           return item.name;
       }

@@ -2,15 +2,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
+import { Select } from '@/components/common/Select';
 import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 interface DimensionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (value: { id: string; name: string; description?: string }) => void;
+  onSubmit: (value: {
+    id: string;
+    name: string;
+    description?: string;
+    type: string;
+  }) => void;
   isSubmitting: boolean;
-  initialData?: { id: string; name: string; description?: string } | null;
+  initialData?: {
+    id: string;
+    name: string;
+    description?: string;
+    type: string;
+  } | null;
 }
 
 export default function DimensionModal({
@@ -23,6 +34,10 @@ export default function DimensionModal({
   const [dimensionNumber, setDimensionNumber] = useState('');
   const [dimensionName, setDimensionName] = useState('');
   const [description, setDescription] = useState('');
+  const [dimensionType, setDimensionType] = useState('');
+  const [dimensionTypes, setDimensionTypes] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const [existingDimensions, setExistingDimensions] = useState<
     Array<{ id: string }>
   >([]);
@@ -42,22 +57,35 @@ export default function DimensionModal({
     }
   }, [initialData]);
 
+  const fetchDimensionTypes = useCallback(async () => {
+    try {
+      const types = await adminS3Service.fetchDimensionTypes();
+      setDimensionTypes(types);
+    } catch (error) {
+      console.error('Error fetching dimension types:', error);
+      toast.error('Failed to fetch dimension types');
+    }
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       fetchExistingDimensions();
+      fetchDimensionTypes();
     }
-  }, [isOpen, fetchExistingDimensions]);
+  }, [isOpen, fetchExistingDimensions, fetchDimensionTypes]);
 
   useEffect(() => {
     if (isOpen && initialData) {
       setDimensionNumber(initialData.id);
       setDimensionName(initialData.name);
       setDescription(initialData.description || '');
+      setDimensionType(initialData.type || '');
       setError('');
     } else if (isOpen) {
       setDimensionNumber('');
       setDimensionName('');
       setDescription('');
+      setDimensionType('');
       setError('');
     }
   }, [isOpen, initialData]);
@@ -99,7 +127,8 @@ export default function DimensionModal({
   };
 
   const handleSubmit = () => {
-    if (!dimensionNumber.trim() || !dimensionName.trim()) return;
+    if (!dimensionNumber.trim() || !dimensionName.trim() || !dimensionType)
+      return;
 
     if (!validateDimensionNumber(dimensionNumber)) {
       return;
@@ -109,6 +138,7 @@ export default function DimensionModal({
       id: dimensionNumber.trim(),
       name: dimensionName.trim(),
       description: description.trim() || '',
+      type: dimensionType,
     });
   };
 
@@ -123,7 +153,10 @@ export default function DimensionModal({
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
       isSubmitDisabled={
-        !dimensionNumber.trim() || !dimensionName.trim() || !!error
+        !dimensionNumber.trim() ||
+        !dimensionName.trim() ||
+        !dimensionType ||
+        !!error
       }
     >
       <div className="space-y-4">
@@ -146,6 +179,20 @@ export default function DimensionModal({
           value={dimensionName}
           onChange={(e) => setDimensionName(e.target.value)}
           placeholder="Enter dimension name"
+          disabled={isSubmitting}
+        />
+        <Select
+          id="dimension-type"
+          label="Dimension Type"
+          value={dimensionType}
+          onChange={(e) => setDimensionType(e.target.value)}
+          options={[
+            { value: '', label: 'Select a type' },
+            ...dimensionTypes.map((type) => ({
+              value: type.id,
+              label: type.name,
+            })),
+          ]}
           disabled={isSubmitting}
         />
         <Textarea

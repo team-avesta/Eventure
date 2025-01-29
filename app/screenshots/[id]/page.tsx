@@ -854,7 +854,7 @@ export default function ScreenshotDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50">
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-[95%] mx-auto px-6 py-3">
           <div className="flex flex-col space-y-4">
@@ -964,9 +964,9 @@ export default function ScreenshotDetailPage() {
         </div>
       </div>
 
-      <div className="max-w-[95%] w-full mx-auto py-4">
-        <div className="flex gap-2">
-          <div className="overflow-auto max-h-[calc(100vh-120px)]">
+      <div className="flex-1 max-w-[95%] w-full mx-auto py-4 overflow-hidden">
+        <div className="flex gap-2 h-full">
+          <div className="overflow-auto flex-1">
             <ImageAnnotatorWrapper
               imageUrl={screenshot.url}
               width={containerWidth * 0.729}
@@ -990,7 +990,7 @@ export default function ScreenshotDetailPage() {
           </div>
 
           {/* Right Panel */}
-          <div className="w-[400px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto max-h-[calc(100vh-120px)]">
+          <div className="w-[400px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
             <h3 className="text-lg font-semibold text-gray-900 sticky top-0 bg-white p-4 border-b border-gray-200">
               Event Details
             </h3>
@@ -1001,253 +1001,262 @@ export default function ScreenshotDetailPage() {
               rectangles={rectangles}
             />
 
-            {/* Event List */}
-            <div className="space-y-3 p-4">
-              {filteredRectangles
-                .sort((a, b) => {
-                  const order = {
-                    pageview: 1,
-                    trackevent_pageview: 2,
-                    trackevent: 3,
-                    backendevent: 4,
-                    outlink: 5,
-                  };
-                  return (
-                    order[a.eventType as keyof typeof order] -
-                    order[b.eventType as keyof typeof order]
-                  );
-                })
-                .map((rect) => {
-                  const eventType = EVENT_TYPES.find(
-                    (t) => t.id === rect.eventType
-                  );
-                  const event = events.find((e: Event) => e.id === rect.id);
-                  return (
-                    <div
-                      key={rect.id}
-                      id={`event-card-${rect.id}`}
-                      className={`p-4 rounded-md transition-all relative cursor-pointer ${
-                        expandedId === rect.id ? 'bg-gray-50' : ''
-                      } ${
-                        highlightedCardId === rect.id
-                          ? 'border ring-1 ring-opacity-50'
-                          : 'border border-gray-200 hover:border-blue-500'
-                      }`}
-                      style={
-                        highlightedCardId === rect.id
-                          ? ({
-                              borderColor: getEventTypeBorderColor(
-                                rect.eventType
-                              ),
-                              '--tw-ring-color': getEventTypeBorderColor(
-                                rect.eventType
-                              ),
-                            } as React.CSSProperties)
-                          : undefined
-                      }
-                      onClick={() =>
-                        setExpandedId(expandedId === rect.id ? null : rect.id)
-                      }
-                    >
-                      {/* Show category and action for non-pageview events */}
-                      {event?.category && eventType?.id !== 'pageview' && (
-                        <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                          <span className="font-medium min-w-[90px] whitespace-nowrap">
-                            Event Category:
-                          </span>
-                          <span
-                            className="truncate pr-16"
-                            title={event.category}
-                          >
-                            {event.category}
-                          </span>
-                        </div>
-                      )}
-                      {event?.action && (
-                        <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                          <span className="font-medium min-w-[90px] whitespace-nowrap">
-                            Event Action:
-                          </span>
-                          <span className="truncate pr-16" title={event.action}>
-                            {event.action}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Show additional fields for pageview */}
-                      {eventType?.id === 'pageview' && (
-                        <>
+            <div className="flex-1 overflow-auto">
+              <div className="space-y-3 p-4">
+                {filteredRectangles
+                  .sort((a, b) => {
+                    const order = {
+                      pageview: 1,
+                      trackevent_pageview: 2,
+                      trackevent: 3,
+                      backendevent: 4,
+                      outlink: 5,
+                    };
+                    return (
+                      order[a.eventType as keyof typeof order] -
+                      order[b.eventType as keyof typeof order]
+                    );
+                  })
+                  .map((rect) => {
+                    const eventType = EVENT_TYPES.find(
+                      (t) => t.id === rect.eventType
+                    );
+                    const event = events.find((e: Event) => e.id === rect.id);
+                    return (
+                      <div
+                        key={rect.id}
+                        id={`event-card-${rect.id}`}
+                        className={`p-4 rounded-md transition-all relative cursor-pointer ${
+                          expandedId === rect.id ? 'bg-gray-50' : ''
+                        } ${
+                          highlightedCardId === rect.id
+                            ? 'border ring-1 ring-opacity-50'
+                            : 'border border-gray-200 hover:border-blue-500'
+                        }`}
+                        style={
+                          highlightedCardId === rect.id
+                            ? ({
+                                borderColor: getEventTypeBorderColor(
+                                  rect.eventType
+                                ),
+                                '--tw-ring-color': getEventTypeBorderColor(
+                                  rect.eventType
+                                ),
+                              } as React.CSSProperties)
+                            : undefined
+                        }
+                        onClick={() =>
+                          setExpandedId(expandedId === rect.id ? null : rect.id)
+                        }
+                      >
+                        {/* Show category and action for non-pageview events */}
+                        {event?.category && eventType?.id !== 'pageview' && (
                           <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
                             <span className="font-medium min-w-[90px] whitespace-nowrap">
-                              Custom Title:
-                            </span>
-                            <span className="truncate pr-4" title={event?.name}>
-                              {event?.name}
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                            <span className="font-medium min-w-[90px] whitespace-nowrap">
-                              Custom URL:
+                              Event Category:
                             </span>
                             <span
-                              className="truncate pr-4"
-                              title={event?.category}
+                              className="truncate pr-16"
+                              title={event.category}
                             >
-                              {event?.category}
+                              {event.category}
                             </span>
                           </div>
-                        </>
-                      )}
-
-                      {/* Action Buttons - Only show when card is expanded AND user is admin */}
-                      {expandedId === rect.id && userRole === 'admin' && (
-                        <div className="absolute top-3 right-3 flex gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditEvent({
-                                id: rect.id,
-                                startX: rect.startX,
-                                startY: rect.startY,
-                                width: rect.width,
-                                height: rect.height,
-                                eventType: rect.eventType,
-                                eventAction: rect.action || '',
-                              });
-                            }}
-                            className="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                        )}
+                        {event?.action && (
+                          <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                            <span className="font-medium min-w-[90px] whitespace-nowrap">
+                              Event Action:
+                            </span>
+                            <span
+                              className="truncate pr-16"
+                              title={event.action}
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteEvent({
-                                id: rect.id,
-                                startX: rect.startX,
-                                startY: rect.startY,
-                                width: rect.width,
-                                height: rect.height,
-                                eventType: rect.eventType,
-                                eventAction: rect.action || '',
-                              });
-                            }}
-                            className="p-1.5 text-gray-500 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      )}
+                              {event.action}
+                            </span>
+                          </div>
+                        )}
 
-                      {/* Expanded Details */}
-                      {expandedId === rect.id && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          {event?.name && (
+                        {/* Show additional fields for pageview */}
+                        {eventType?.id === 'pageview' && (
+                          <>
                             <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
                               <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                Event Name:
+                                Custom Title:
                               </span>
                               <span
                                 className="truncate pr-4"
-                                title={event.name}
+                                title={event?.name}
                               >
-                                {event.name}
+                                {event?.name}
                               </span>
                             </div>
-                          )}
-                          {event?.value && (
                             <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
                               <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                Event Value:
+                                Custom URL:
                               </span>
                               <span
                                 className="truncate pr-4"
-                                title={event.value}
+                                title={event?.category}
                               >
-                                {event.value}
+                                {event?.category}
                               </span>
                             </div>
-                          )}
-                          {event?.dimensions && event.dimensions.length > 0 && (
-                            <div className="text-sm text-gray-600">
-                              <span className="font-medium">Dimensions:</span>
-                              <div className="mt-2 space-y-1.5">
-                                {event.dimensions.map((dim: string) => {
-                                  const dimension =
-                                    dropdownData.dimensions.find(
-                                      (d) => d.id === dim
-                                    );
-                                  return (
-                                    <div
-                                      key={dim}
-                                      className="text-sm text-gray-600 flex items-center gap-3 group relative py-1"
-                                    >
-                                      <span className="text-gray-400 min-w-[30px]">
-                                        {String(dimension?.id || dim).padStart(
-                                          2,
-                                          '0'
-                                        )}
-                                        .
-                                      </span>
-                                      <span className="flex items-center gap-2">
-                                        {dimension?.name || dim}
-                                        {dimension?.description && (
-                                          <span className="relative">
-                                            <svg
-                                              className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer peer"
-                                              fill="none"
-                                              viewBox="0 0 24 24"
-                                              stroke="currentColor"
-                                            >
-                                              <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                              />
-                                            </svg>
-                                            <div className="absolute invisible peer-hover:visible bg-gray-800/95 text-white text-xs rounded-md py-1.5 px-3 -top-1 left-[calc(100%+8px)] w-auto whitespace-nowrap z-50 shadow-xl ring-1 ring-gray-700/20">
-                                              <div className="absolute w-1.5 h-1.5 bg-gray-800/95 transform rotate-45 -left-[3px] top-[10px] ring-1 ring-gray-700/20"></div>
-                                              {dimension.description}
-                                            </div>
-                                          </span>
-                                        )}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
+                          </>
+                        )}
+
+                        {/* Action Buttons - Only show when card is expanded AND user is admin */}
+                        {expandedId === rect.id && userRole === 'admin' && (
+                          <div className="absolute top-3 right-3 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditEvent({
+                                  id: rect.id,
+                                  startX: rect.startX,
+                                  startY: rect.startY,
+                                  width: rect.width,
+                                  height: rect.height,
+                                  eventType: rect.eventType,
+                                  eventAction: rect.action || '',
+                                });
+                              }}
+                              className="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteEvent({
+                                  id: rect.id,
+                                  startX: rect.startX,
+                                  startY: rect.startY,
+                                  width: rect.width,
+                                  height: rect.height,
+                                  eventType: rect.eventType,
+                                  eventAction: rect.action || '',
+                                });
+                              }}
+                              className="p-1.5 text-gray-500 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Expanded Details */}
+                        {expandedId === rect.id && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            {event?.name && (
+                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                                <span className="font-medium min-w-[90px] whitespace-nowrap">
+                                  Event Name:
+                                </span>
+                                <span
+                                  className="truncate pr-4"
+                                  title={event.name}
+                                >
+                                  {event.name}
+                                </span>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                            )}
+                            {event?.value && (
+                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                                <span className="font-medium min-w-[90px] whitespace-nowrap">
+                                  Event Value:
+                                </span>
+                                <span
+                                  className="truncate pr-4"
+                                  title={event.value}
+                                >
+                                  {event.value}
+                                </span>
+                              </div>
+                            )}
+                            {event?.dimensions &&
+                              event.dimensions.length > 0 && (
+                                <div className="text-sm text-gray-600">
+                                  <span className="font-medium">
+                                    Dimensions:
+                                  </span>
+                                  <div className="mt-2 space-y-1.5">
+                                    {event.dimensions.map((dim: string) => {
+                                      const dimension =
+                                        dropdownData.dimensions.find(
+                                          (d) => d.id === dim
+                                        );
+                                      return (
+                                        <div
+                                          key={dim}
+                                          className="text-sm text-gray-600 flex items-center gap-2 group relative py-1"
+                                        >
+                                          <span className="text-gray-400 min-w-[24px]">
+                                            {String(
+                                              dimension?.id || dim
+                                            ).padStart(2, '0')}
+                                            .
+                                          </span>
+                                          <span className="flex items-center gap-2">
+                                            {dimension?.name || dim}
+                                            {dimension?.description && (
+                                              <span className="relative">
+                                                <svg
+                                                  className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer peer"
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                  />
+                                                </svg>
+                                                <div className="absolute invisible peer-hover:visible bg-gray-800/95 text-white text-xs rounded-md py-1.5 px-3 -top-1 left-[calc(100%+8px)] w-auto whitespace-nowrap z-50 shadow-xl ring-1 ring-gray-700/20">
+                                                  <div className="absolute w-1.5 h-1.5 bg-gray-800/95 transform rotate-45 -left-[3px] top-[10px] ring-1 ring-gray-700/20"></div>
+                                                  {dimension.description}
+                                                </div>
+                                              </span>
+                                            )}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
             </div>
           </div>
         </div>

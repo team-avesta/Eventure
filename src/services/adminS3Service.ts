@@ -59,6 +59,12 @@ export interface Dimension {
   id: string;
   name: string;
   description?: string;
+  type: string;
+}
+
+export interface DimensionType {
+  id: string;
+  name: string;
 }
 
 const ensureArray = <T>(data: any): T[] => {
@@ -232,6 +238,7 @@ export const adminS3Service = {
     id: string;
     name: string;
     description?: string;
+    type: string;
   }) => {
     const response = await api.get<{ dimensions: Dimension[] }>('dimensions');
     const existingData = await api.get<any>('dimensions');
@@ -241,6 +248,7 @@ export const adminS3Service = {
       id: data.id,
       name: data.name,
       description: data.description,
+      type: data.type,
     };
 
     return api.update<any>('dimensions', {
@@ -260,7 +268,7 @@ export const adminS3Service = {
   },
   updateDimension: async (
     id: string,
-    data: { name: string; description?: string }
+    data: { name: string; description?: string; type: string }
   ) => {
     const response = await api.get<{ dimensions: Dimension[] }>('dimensions');
     const dimensions = extractData<Dimension>(response, 'dimensions');
@@ -486,5 +494,55 @@ export const adminS3Service = {
       eventActionNames: eventActions,
       eventNames: eventNames,
     };
+  },
+
+  // Dimension Types
+  fetchDimensionTypes: async () => {
+    try {
+      const data = await api.get<{ types: DimensionType[] }>('dimension-types');
+      return data?.types || [];
+    } catch (error) {
+      // If file doesn't exist, return empty array
+      return [];
+    }
+  },
+
+  createDimensionType: async (type: DimensionType) => {
+    try {
+      const response = await api.get<{ types: DimensionType[] }>(
+        'dimension-types'
+      );
+      const types = response?.types || [];
+      return api.update('dimension-types', {
+        types: [...types, type],
+      });
+    } catch (error) {
+      // If file doesn't exist, create it with the new type
+      return api.update('dimension-types', {
+        types: [type],
+      });
+    }
+  },
+
+  deleteDimensionType: async (typeId: string) => {
+    const response = await api.get<{ types: DimensionType[] }>(
+      'dimension-types'
+    );
+    const types = response?.types || [];
+
+    return api.update('dimension-types', {
+      types: types.filter((t) => t.id !== typeId),
+    });
+  },
+
+  updateDimensionType: async (oldTypeId: string, type: DimensionType) => {
+    const response = await api.get<{ types: DimensionType[] }>(
+      'dimension-types'
+    );
+    const types = response?.types || [];
+    const updatedTypes = types.map((t) => (t.id === oldTypeId ? type : t));
+    return api.update('dimension-types', {
+      types: updatedTypes,
+    });
   },
 };

@@ -10,7 +10,14 @@ import {
 export interface AdminSection {
   title: string;
   description: string;
-  type: 'module' | 'pageview' | 'dimension' | 'category' | 'action' | 'name';
+  type:
+    | 'module'
+    | 'pageview'
+    | 'dimension'
+    | 'category'
+    | 'action'
+    | 'name'
+    | 'dimensionType';
   icon: React.ReactNode;
 }
 
@@ -31,6 +38,12 @@ export const adminSections: AdminSection[] = [
     title: 'Dimensions',
     description: 'Manage tracking dimensions',
     type: 'dimension',
+    icon: <DimensionIcon className="w-6 h-6" />,
+  },
+  {
+    title: 'Dimension Types',
+    description: 'Manage dimension data types',
+    type: 'dimensionType',
     icon: <DimensionIcon className="w-6 h-6" />,
   },
   {
