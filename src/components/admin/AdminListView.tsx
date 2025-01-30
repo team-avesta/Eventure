@@ -310,9 +310,12 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         case 'module':
           return item.name;
         case 'dimension':
-          return `${item.id}. ${item.name} ${
-            item.type ? `(${item.type})` : ''
-          }`;
+          return (
+            <span>
+              {item.id}. {item.name}{' '}
+              {item.type && <i className="text-gray-500">({item.type})</i>}
+            </span>
+          );
         case 'category':
         case 'action':
         case 'name':
