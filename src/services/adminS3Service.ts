@@ -427,6 +427,26 @@ export const adminS3Service = {
 
     return api.update('modules', { modules: updatedModules });
   },
+  updateScreenshotName: async (screenshotId: string, newName: string) => {
+    const response = await api.get<{ modules: Module[] }>('modules');
+    const modules = extractData<Module>(response, 'modules');
+
+    // Find and update the screenshot name
+    const updatedModules = modules.map((module) => ({
+      ...module,
+      screenshots: module.screenshots.map((screenshot) =>
+        screenshot.id === screenshotId
+          ? {
+              ...screenshot,
+              name: newName,
+              updatedAt: new Date().toISOString(),
+            }
+          : screenshot
+      ),
+    }));
+
+    return api.update('modules', { modules: updatedModules });
+  },
   replaceScreenshot: async (
     screenshotId: string,
     file: File

@@ -74,6 +74,16 @@ export default function ModuleScreenshotsPage() {
     }
   };
 
+  const handleNameChange = async (screenshotId: string, newName: string) => {
+    try {
+      await adminS3Service.updateScreenshotName(screenshotId, newName);
+      await fetchModule();
+      toast.success('Screenshot name updated successfully');
+    } catch (error) {
+      toast.error('Failed to update screenshot name');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -119,6 +129,7 @@ export default function ModuleScreenshotsPage() {
                 userRole={userRole}
                 onStatusChange={handleStatusChange}
                 onDelete={setScreenshotToDelete}
+                onNameChange={handleNameChange}
               />
             ))}
           </div>

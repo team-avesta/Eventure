@@ -1,6 +1,8 @@
 import { Screenshot, ScreenshotStatus } from '@/services/adminS3Service';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
+import EditScreenshotNameModal from './modals/EditScreenshotNameModal';
 
 const statusColors = {
   [ScreenshotStatus.TODO]: 'bg-orange-500 text-white',
@@ -61,6 +63,7 @@ interface ScreenshotCardProps {
   userRole: string;
   onStatusChange: (screenshotId: string, status: ScreenshotStatus) => void;
   onDelete: (screenshotId: string) => void;
+  onNameChange: (screenshotId: string, newName: string) => void;
 }
 
 export default function ScreenshotCard({
@@ -68,7 +71,10 @@ export default function ScreenshotCard({
   userRole,
   onStatusChange,
   onDelete,
+  onNameChange,
 }: ScreenshotCardProps) {
+  const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
+
   return (
     <div className="relative group">
       <Link href={`/screenshots/${screenshot.id}`} className="block">
@@ -85,7 +91,7 @@ export default function ScreenshotCard({
           <div className="p-4">
             <div className="flex items-center space-x-2">
               <h3
-                className="text-lg font-medium text-gray-900 truncate flex-1"
+                className="text-lg font-medium text-gray-900 truncate flex-1 group-hover:text-gray-700"
                 title={screenshot.name}
               >
                 {screenshot.name}
@@ -128,7 +134,29 @@ export default function ScreenshotCard({
         </div>
       </Link>
       {userRole === 'admin' && (
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex gap-2">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setIsEditNameModalOpen(true);
+            }}
+            className="p-2 bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-700"
+            title="Edit name"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -153,6 +181,13 @@ export default function ScreenshotCard({
           </button>
         </div>
       )}
+
+      <EditScreenshotNameModal
+        isOpen={isEditNameModalOpen}
+        onClose={() => setIsEditNameModalOpen(false)}
+        onSave={(newName) => onNameChange(screenshot.id, newName)}
+        currentName={screenshot.name}
+      />
     </div>
   );
 }
