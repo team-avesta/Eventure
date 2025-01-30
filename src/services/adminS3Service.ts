@@ -525,24 +525,54 @@ export const adminS3Service = {
   },
 
   deleteDimensionType: async (typeId: string) => {
+    // First, get and update dimension types
     const response = await api.get<{ types: DimensionType[] }>(
       'dimension-types'
     );
     const types = response?.types || [];
-
-    return api.update('dimension-types', {
-      types: types.filter((t) => t.id !== typeId),
+    const updatedTypes = types.filter((t) => t.id !== typeId);
+    await api.update('dimension-types', {
+      types: updatedTypes,
     });
+
+    // Then, update all dimensions that use this type (set their type to empty string or null)
+    const dimensionsResponse = await api.get<{ dimensions: Dimension[] }>(
+      'dimensions'
+    );
+    const dimensions = dimensionsResponse?.dimensions || [];
+    const updatedDimensions = dimensions.map((dimension) =>
+      dimension.type === typeId ? { ...dimension, type: '' } : dimension
+    );
+    await api.update('dimensions', {
+      dimensions: updatedDimensions,
+    });
+
+    return { types: updatedTypes, dimensions: updatedDimensions };
   },
 
   updateDimensionType: async (oldTypeId: string, type: DimensionType) => {
+    // First, update the dimension type
     const response = await api.get<{ types: DimensionType[] }>(
       'dimension-types'
     );
     const types = response?.types || [];
     const updatedTypes = types.map((t) => (t.id === oldTypeId ? type : t));
-    return api.update('dimension-types', {
+    await api.update('dimension-types', {
       types: updatedTypes,
     });
+
+    // Then, update all dimensions that use this type
+    const dimensionsResponse = await api.get<{ dimensions: Dimension[] }>(
+      'dimensions'
+    );
+    const dimensions = dimensionsResponse?.dimensions || [];
+    const updatedDimensions = dimensions.map((dimension) =>
+      dimension.type === oldTypeId ? { ...dimension, type: type.id } : dimension
+    );
+    await api.update('dimensions', {
+      dimensions: updatedDimensions,
+    });
+
+    return { types: updatedTypes, dimensions: updatedDimensions };
   },
 };
