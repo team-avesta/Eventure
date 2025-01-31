@@ -364,8 +364,8 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
                     {getItemName(item)}
                   </td>
                   {(type === 'pageview' || type === 'dimension') && (
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getExtraInfo(item)}
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-md">
+                      <div className="break-words">{getExtraInfo(item)}</div>
                     </td>
                   )}
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
