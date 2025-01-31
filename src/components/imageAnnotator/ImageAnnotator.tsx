@@ -574,6 +574,7 @@ export default function ImageAnnotator({
             fill
             className="object-contain rounded-lg"
             priority
+            unoptimized
           />
           <canvas
             ref={canvasRef}
