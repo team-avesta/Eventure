@@ -540,15 +540,26 @@ export default function ScreenshotDetailPage() {
               >
                 Event Category *
               </label>
-              <input
-                type="text"
+              <select
                 name="eventcategory"
                 id="eventcategory"
-                value="Common"
-                readOnly
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
-              />
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                value={formData.eventcategory || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventcategory: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select Event Category</option>
+                {dropdownData.eventCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -740,17 +751,10 @@ export default function ScreenshotDetailPage() {
         case 'trackevent':
         case 'trackevent_pageview':
         case 'backendevent':
+        case 'outlink':
           setFormData({
             eventcategory: event.category,
             eventactionname: event.action,
-            eventname: event.name || '',
-            eventvalue: event.value || '',
-            dimensions: event.dimensions,
-          });
-          break;
-
-        case 'outlink':
-          setFormData({
             eventname: event.name || '',
             eventvalue: event.value || '',
             dimensions: event.dimensions,
@@ -1408,7 +1412,7 @@ export default function ScreenshotDetailPage() {
                       } else if (selectedEventType?.id === 'outlink') {
                         const eventData = {
                           name: (formData.get('eventname') as string) || '',
-                          category: 'Common', // Hardcoded for outlink
+                          category: formData.get('eventcategory') as string, // Hardcoded for outlink
                           action: 'Outlink', // Hardcoded for outlink
                           value: (formData.get('eventvalue') as string) || '',
                           dimensions: Array.from(
