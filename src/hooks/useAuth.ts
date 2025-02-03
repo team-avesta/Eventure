@@ -13,9 +13,14 @@ export function useAuth() {
       router.push('/');
       return;
     }
-    const { role } = JSON.parse(auth) as AuthState;
-    setUserRole(role);
-    setIsLoading(false);
+
+    try {
+      const { role } = JSON.parse(auth) as AuthState;
+      setUserRole(role);
+      setIsLoading(false);
+    } catch (error) {
+      router.push('/');
+    }
   }, [router]);
 
   return {
