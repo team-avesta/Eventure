@@ -33,6 +33,14 @@ src/
     │   │   ├── auth/        # Auth component tests
     │   │   ├── admin/       # Admin component tests
     │   │   └── screenshots/ # Screenshot component tests
+    │   ├── pages/           # Page component tests [⚪ Not Started]
+    │   │   ├── page.test.tsx              # Home page tests
+    │   │   ├── docs/
+    │   │   │   └── page.test.tsx          # Documentation page tests
+    │   │   └── screenshots/
+    │   │       └── modules/
+    │   │           └── [key]/
+    │   │               └── page.test.tsx   # Module screenshots page tests
     │   ├── hooks/           # Custom hooks tests [✅ Completed]
     │   │   ├── useAuth.test.ts
     │   │   ├── useAdminState.test.ts
