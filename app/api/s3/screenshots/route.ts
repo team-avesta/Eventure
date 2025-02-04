@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3DataService } from '@/lib/s3/data';
 import { Module, ScreenshotStatus } from '@/services/adminS3Service';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
