@@ -20,4 +20,4 @@ frontend:
     - pattern: '**/*'
       headers:
         - key: 'nginx_client_max_body_size'
-          value: '10m'
+          value: '15m'
