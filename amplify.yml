@@ -12,6 +12,11 @@ frontend:
     baseDirectory: .next
     files:
       - '**/*'
+    customHeaders:
+      - pattern: '**/*'
+        headers:
+          - key: 'nginx_client_max_body_size'
+            value: '20M'
   cache:
     paths:
       - node_modules/**/*
