@@ -16,3 +16,8 @@ frontend:
     paths:
       - node_modules/**/*
       - .next/cache/**/*
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'nginx_client_max_body_size'
+          value: '10m'
