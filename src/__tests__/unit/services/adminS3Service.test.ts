@@ -44,6 +44,7 @@ describe('adminS3Service', () => {
         ],
       },
     ],
+    screenshotOrder: ['1'],
   };
 
   const mockPageView: PageView = {
@@ -700,6 +701,7 @@ describe('adminS3Service', () => {
       name: 'Test Module',
       key: 'test_module',
       screenshots: [mockScreenshot],
+      screenshotOrder: ['1'],
     };
 
     describe('deleteScreenshot', () => {
@@ -802,6 +804,110 @@ describe('adminS3Service', () => {
         await expect(
           adminS3Service.replaceScreenshot('1', mockFile)
         ).rejects.toThrow('Error message');
+      });
+    });
+
+    describe('updateScreenshotOrder', () => {
+      it('should update screenshot order successfully', async () => {
+        const mockScreenshots = [
+          { ...mockScreenshot, id: '1' },
+          { ...mockScreenshot, id: '2' },
+          { ...mockScreenshot, id: '3' },
+        ];
+        const mockModuleWithMultipleScreenshots = {
+          ...mockModule,
+          screenshots: mockScreenshots,
+          screenshotOrder: ['1', '2', '3'],
+        };
+
+        (api.get as jest.Mock).mockResolvedValueOnce({
+          modules: [mockModuleWithMultipleScreenshots],
+        });
+
+        const newOrder = ['3', '1', '2'];
+        await adminS3Service.updateScreenshotOrder('test_module', newOrder);
+
+        expect(api.update).toHaveBeenCalledWith('modules', {
+          modules: [
+            {
+              ...mockModuleWithMultipleScreenshots,
+              screenshotOrder: newOrder,
+              screenshots: [
+                mockScreenshots[2],
+                mockScreenshots[0],
+                mockScreenshots[1],
+              ],
+            },
+          ],
+        });
+      });
+
+      it('should not affect other modules when updating order', async () => {
+        const otherModule = {
+          ...mockModule,
+          key: 'other_module',
+          id: '2',
+        };
+
+        const mockScreenshots = [
+          { ...mockScreenshot, id: '1' },
+          { ...mockScreenshot, id: '2' },
+        ];
+        const mockModuleWithMultipleScreenshots = {
+          ...mockModule,
+          screenshots: mockScreenshots,
+          screenshotOrder: ['1', '2'],
+        };
+
+        (api.get as jest.Mock).mockResolvedValueOnce({
+          modules: [mockModuleWithMultipleScreenshots, otherModule],
+        });
+
+        const newOrder = ['2', '1'];
+        await adminS3Service.updateScreenshotOrder('test_module', newOrder);
+
+        expect(api.update).toHaveBeenCalledWith('modules', {
+          modules: [
+            {
+              ...mockModuleWithMultipleScreenshots,
+              screenshotOrder: newOrder,
+              screenshots: [mockScreenshots[1], mockScreenshots[0]],
+            },
+            otherModule,
+          ],
+        });
+      });
+
+      it('should maintain screenshot data integrity when reordering', async () => {
+        const mockScreenshots = [
+          { ...mockScreenshot, id: '1', name: 'First' },
+          { ...mockScreenshot, id: '2', name: 'Second' },
+        ];
+        const mockModuleWithMultipleScreenshots = {
+          ...mockModule,
+          screenshots: mockScreenshots,
+          screenshotOrder: ['1', '2'],
+        };
+
+        (api.get as jest.Mock).mockResolvedValueOnce({
+          modules: [mockModuleWithMultipleScreenshots],
+        });
+
+        const newOrder = ['2', '1'];
+        await adminS3Service.updateScreenshotOrder('test_module', newOrder);
+
+        expect(api.update).toHaveBeenCalledWith('modules', {
+          modules: [
+            {
+              ...mockModuleWithMultipleScreenshots,
+              screenshotOrder: newOrder,
+              screenshots: [
+                { ...mockScreenshot, id: '2', name: 'Second' },
+                { ...mockScreenshot, id: '1', name: 'First' },
+              ],
+            },
+          ],
+        });
       });
     });
   });

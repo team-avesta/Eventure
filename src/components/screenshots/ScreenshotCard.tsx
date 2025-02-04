@@ -3,6 +3,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import EditScreenshotNameModal from './modals/EditScreenshotNameModal';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const statusColors = {
   [ScreenshotStatus.TODO]: 'bg-orange-500 text-white',
@@ -64,6 +66,7 @@ interface ScreenshotCardProps {
   onStatusChange: (screenshotId: string, status: ScreenshotStatus) => void;
   onDelete: (screenshotId: string) => void;
   onNameChange: (screenshotId: string, newName: string) => void;
+  isDragModeEnabled: boolean;
 }
 
 export default function ScreenshotCard({
@@ -72,12 +75,50 @@ export default function ScreenshotCard({
   onStatusChange,
   onDelete,
   onNameChange,
+  isDragModeEnabled,
 }: ScreenshotCardProps) {
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: screenshot.id,
+    disabled: userRole !== 'admin' || !isDragModeEnabled,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+    cursor: userRole === 'admin' && isDragModeEnabled ? 'grab' : undefined,
+  };
+
   return (
-    <div className="relative group">
-      <Link href={`/screenshots/${screenshot.id}`} className="block">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`group relative ${
+        isDragModeEnabled
+          ? 'ring-2 ring-blue-500 ring-opacity-50 rounded-lg'
+          : ''
+      }`}
+    >
+      {isDragModeEnabled && (
+        <div
+          {...listeners}
+          className="absolute inset-0 z-10 bg-transparent cursor-grab active:cursor-grabbing"
+        />
+      )}
+      <Link
+        href={`/screenshots/${screenshot.id}`}
+        className={`block ${isDragModeEnabled ? 'pointer-events-none' : ''}`}
+      >
         <div className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
           <div className="relative h-48">
             <Image
@@ -110,7 +151,7 @@ export default function ScreenshotCard({
                   }}
                   className={`px-2 py-1 rounded-full text-xs font-medium flex items-center whitespace-nowrap transition-colors duration-200 ${
                     statusColors[screenshot.status || ScreenshotStatus.TODO]
-                  } hover:opacity-80`}
+                  } hover:opacity-80 pointer-events-auto`}
                   title="Click to change status"
                 >
                   {statusIcons[screenshot.status || ScreenshotStatus.TODO]}
@@ -134,13 +175,13 @@ export default function ScreenshotCard({
         </div>
       </Link>
       {userRole === 'admin' && (
-        <div className="absolute top-2 right-2 flex gap-2">
+        <div className="absolute top-2 right-2 flex gap-2 z-20">
           <button
             onClick={(e) => {
               e.preventDefault();
               setIsEditNameModalOpen(true);
             }}
-            className="p-2 bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-700"
+            className="p-2 bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-blue-700 pointer-events-auto"
             title="Edit name"
           >
             <svg
@@ -162,7 +203,7 @@ export default function ScreenshotCard({
               e.preventDefault();
               onDelete(screenshot.id);
             }}
-            className="p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-700"
+            className="p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-700 pointer-events-auto"
             title="Delete screenshot"
           >
             <svg

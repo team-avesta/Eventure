@@ -320,11 +320,34 @@ export default function DocumentationPage() {
                   <li>Click Upload</li>
                 </ol>
               </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  Reordering Screenshots
+                </h3>
+                <p className="text-gray-600 mb-2">
+                  Admin users can reorder screenshots within a module:
+                </p>
+                <ol className="list-decimal pl-6 space-y-2 text-gray-600">
+                  <li>Click the &ldquo;Reorder Screenshots&rdquo; button</li>
+                  <li>When in reorder mode, screenshots will be highlighted</li>
+                  <li>Click and drag screenshots to their new positions</li>
+                  <li>The order is automatically saved after each move</li>
+                  <li>Click &ldquo;Exit Reorder Mode&rdquo; when finished</li>
+                </ol>
+                <div className="mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                  <p className="font-semibold">Note:</p>
+                  <p>
+                    Reordering is only available to admin users and requires at
+                    least two screenshots in the module.
+                  </p>
+                </div>
+              </div>
               <div className="bg-green-50 border-l-4 border-green-500 p-4">
                 <p className="font-semibold">Pro Tip:</p>
                 <p>
                   Use meaningful names for screenshots to make them easily
-                  identifiable later.
+                  identifiable later. Organize screenshots in a logical order to
+                  improve workflow efficiency.
                 </p>
               </div>
             </div>

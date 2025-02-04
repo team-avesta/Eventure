@@ -15,6 +15,9 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.485.0",
     "@aws-sdk/s3-request-presigner": "^3.485.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
     "next": "14.0.4",
@@ -43,8 +46,8 @@
     "lint-staged": "^15.2.0",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5",
-    "ts-jest": "^29.1.1"
+    "ts-jest": "^29.1.1",
+    "typescript": "^5"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

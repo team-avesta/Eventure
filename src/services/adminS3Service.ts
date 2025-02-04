@@ -30,6 +30,7 @@ export interface Module {
   name: string;
   key: string;
   screenshots: Screenshot[];
+  screenshotOrder?: string[]; // Array of screenshot IDs in order
 }
 
 export interface Event {
@@ -120,7 +121,17 @@ export const adminS3Service = {
   // Modules
   fetchModules: async () => {
     const data = await api.get<{ modules: Module[] }>('modules');
-    return extractData<Module>(data, 'modules');
+    const modules = extractData<Module>(data, 'modules');
+
+    // Sort screenshots based on screenshotOrder if it exists
+    return modules.map((module) => ({
+      ...module,
+      screenshots: module.screenshotOrder
+        ? module.screenshotOrder
+            .map((id) => module.screenshots.find((s) => s.id === id))
+            .filter((s): s is Screenshot => s !== undefined)
+        : module.screenshots,
+    }));
   },
 
   fetchModuleEventCounts: async (modules: Module[]) => {
@@ -594,5 +605,26 @@ export const adminS3Service = {
     });
 
     return { types: updatedTypes, dimensions: updatedDimensions };
+  },
+
+  updateScreenshotOrder: async (moduleKey: string, newOrder: string[]) => {
+    const response = await api.get<{ modules: Module[] }>('modules');
+    const modules = extractData<Module>(response, 'modules');
+
+    const updatedModules = modules.map((module) =>
+      module.key === moduleKey
+        ? {
+            ...module,
+            screenshotOrder: newOrder,
+            screenshots: newOrder.map(
+              (id) => module.screenshots.find((s) => s.id === id)!
+            ),
+          }
+        : module
+    );
+
+    return api.update<{ modules: Module[] }>('modules', {
+      modules: updatedModules,
+    });
   },
 };
