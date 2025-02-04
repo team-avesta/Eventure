@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3DataService } from '@/lib/s3/data';
 import { Module, ScreenshotStatus } from '@/services/adminS3Service';
 
-// Set the maximum request body size to 10MB
-export const maxDuration = 60; // 60 seconds timeout
-export const dynamic = 'force-dynamic';
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
