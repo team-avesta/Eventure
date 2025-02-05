@@ -92,6 +92,11 @@ npm run dev
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Make your changes
+   - The project uses pre-commit hooks that will:
+     - Run ESLint and fix auto-fixable issues
+     - Run tests related to your changes
+   - Commits will be blocked if tests fail
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request

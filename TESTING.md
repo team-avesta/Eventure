@@ -430,7 +430,10 @@ Configuration in package.json:
     "prepare": "husky install"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["eslint --fix", "jest --bail --findRelatedTests"]
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "jest --bail --findRelatedTests --passWithNoTests"
+    ]
   }
 }
 ```
@@ -438,8 +441,9 @@ Configuration in package.json:
 The pre-commit hook will:
 
 1. Run ESLint on staged files and fix auto-fixable issues
-2. Run Jest tests related to the changed files
-3. Block the commit if any tests fail
+2. Run Jest tests only on files related to the changes
+3. Pass if there are no tests related to the changes (--passWithNoTests)
+4. Block the commit if any tests fail (--bail)
 
 ### CI Pipeline
 
