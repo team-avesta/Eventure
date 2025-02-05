@@ -4,88 +4,22 @@ import { Module, ScreenshotStatus } from '@/services/adminS3Service';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const pageName = formData.get('pageName') as string;
-    const customName = formData.get('customName') as string;
+    const { key, pageName, customName } = await request.json();
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
-    }
-
-    if (!pageName) {
-      return NextResponse.json(
-        { error: 'No module selected' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file size
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'File size exceeds 10MB limit' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file type
-    if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Invalid file type. Only JPEG, PNG and GIF are allowed' },
-        { status: 400 }
-      );
-    }
-
-    const dataService = new S3DataService();
-
-    // Get existing modules to validate module exists
-    const data = await dataService.getData<{ modules: Module[] }>('modules');
-    const modules = data?.modules || [];
-    const targetModule = modules.find((m: Module) => m.key === pageName);
-
-    if (!targetModule) {
-      return NextResponse.json({ error: 'Module not found' }, { status: 404 });
-    }
-
-    // Convert file to buffer for S3 upload
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Upload to S3
-    const timestamp = Date.now();
-    let sanitizedName;
-    if (customName?.trim()) {
-      sanitizedName = customName.trim().replace(/\s+/g, '-').toLowerCase();
-    } else {
-      sanitizedName = file.name.replace(/\s+/g, '-').toLowerCase();
-    }
-    const fileName = `${timestamp}-${sanitizedName}`;
-    const key = `screenshots/${pageName}/${fileName}`;
-
-    await dataService.putObject(key, buffer, file.type);
-
-    // Update module with new screenshot
-    const screenshot = {
-      id: timestamp.toString(),
-      name: sanitizedName,
-      url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.REGION}.amazonaws.com/${key}`,
+    // Validate the upload and update database/metadata
+    const s3Service = new S3DataService();
+    await s3Service.processScreenshotUpload({
+      key,
       pageName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      customName,
       status: ScreenshotStatus.TODO,
-    };
-
-    targetModule.screenshots = [
-      ...(targetModule.screenshots || []),
-      screenshot,
-    ];
-    await dataService.updateData('modules', { modules });
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error uploading screenshot:', error);
+    console.error('Error processing screenshot:', error);
     return NextResponse.json(
-      { error: 'Failed to upload screenshot' },
+      { error: 'Failed to process screenshot' },
       { status: 500 }
     );
   }

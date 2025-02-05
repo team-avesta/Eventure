@@ -4,6 +4,14 @@ import {
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { s3Client } from '@/lib/s3/client';
+import { Module, ScreenshotStatus } from '@/services/adminS3Service';
+
+interface ScreenshotUploadParams {
+  key: string;
+  pageName: string;
+  customName?: string;
+  status: ScreenshotStatus;
+}
 
 export class S3DataService {
   constructor(private bucket: string = process.env.S3_BUCKET_NAME || '') {
@@ -76,5 +84,45 @@ export class S3DataService {
       console.error(`Error deleting file ${key}:`, error);
       throw error;
     }
+  }
+
+  async processScreenshotUpload({
+    key,
+    pageName,
+    customName,
+    status,
+  }: ScreenshotUploadParams) {
+    // Get existing modules to validate module exists
+    const data = await this.getData<{ modules: Module[] }>('modules');
+    const modules = data?.modules || [];
+    const targetModule = modules.find((m: Module) => m.key === pageName);
+
+    if (!targetModule) {
+      throw new Error('Module not found');
+    }
+
+    // Create screenshot metadata
+    const timestamp = Date.now();
+    const sanitizedName = customName
+      ? customName.trim().replace(/\s+/g, '-').toLowerCase()
+      : key.split('/').pop()!;
+
+    const screenshot = {
+      id: timestamp.toString(),
+      name: sanitizedName,
+      url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.REGION}.amazonaws.com/${key}`,
+      pageName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status,
+    };
+
+    targetModule.screenshots = [
+      ...(targetModule.screenshots || []),
+      screenshot,
+    ];
+    await this.updateData('modules', { modules });
+
+    return screenshot;
   }
 }

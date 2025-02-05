@@ -55,39 +55,58 @@ export function useScreenshotUpload({
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('pageName', pageName);
-    if (customName.trim()) {
-      formData.append('customName', customName.trim());
-    }
-
     setIsUploading(true);
     try {
-      const response = await fetch('/api/s3/screenshots', {
-        method: 'POST',
-        body: formData,
+      // 1. Get presigned URL
+      const presignedUrlResponse = await fetch(
+        `/api/s3/presigned?fileType=${encodeURIComponent(
+          file.type
+        )}&moduleKey=${encodeURIComponent(pageName)}`
+      );
+
+      if (!presignedUrlResponse.ok) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      const { presignedUrl, key } = await presignedUrlResponse.json();
+
+      // 2. Upload to S3 directly
+      const uploadResponse = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      // 3. Notify backend of successful upload
+      const finalizeResponse = await fetch('/api/s3/screenshots', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key,
+          pageName,
+          customName: customName.trim(),
+        }),
+      });
+
+      if (!finalizeResponse.ok) {
+        throw new Error('Failed to process upload');
       }
 
       toast.success('Screenshot uploaded successfully');
       resetForm();
       onSuccess?.();
     } catch (error: any) {
-      if (error.message.includes('File size exceeds')) {
-        setError('File size is too large. Maximum size is 10MB.');
-      } else if (error.message.includes('Invalid file type')) {
-        setError('Invalid file type. Only JPEG, PNG and GIF are allowed.');
-      } else if (error.message.includes('Module not found')) {
-        setError('Selected module was not found. Please try again.');
-      } else {
-        setError('Failed to upload screenshot. Please try again.');
-        toast.error('Failed to upload screenshot');
-      }
+      console.error('Upload error:', error);
+      setError('Failed to upload screenshot. Please try again.');
+      toast.error('Failed to upload screenshot');
     } finally {
       setIsUploading(false);
     }

@@ -168,14 +168,55 @@ export default function ScreenshotDetailPage() {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size should be less than 10MB');
       return;
     }
 
     try {
-      await adminS3Service.replaceScreenshot(screenshotId, file);
+      // 1. Get presigned URL
+      const presignedUrlResponse = await fetch(
+        `/api/s3/presigned?fileType=${encodeURIComponent(
+          file.type
+        )}&moduleKey=${encodeURIComponent(parentModule.key)}`
+      );
+
+      if (!presignedUrlResponse.ok) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      const { presignedUrl, key } = await presignedUrlResponse.json();
+
+      // 2. Upload to S3 directly
+      const uploadResponse = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      // 3. Update screenshot metadata
+      const response = await fetch('/api/s3/screenshots/replace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          screenshotId,
+          key,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update screenshot metadata');
+      }
+
       // Refetch modules to get updated screenshot
       const updatedModules = await adminS3Service.fetchModules();
       setModules(updatedModules);

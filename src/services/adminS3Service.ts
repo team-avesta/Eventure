@@ -130,6 +130,12 @@ export const adminS3Service = {
         ? module.screenshotOrder
             .map((id) => module.screenshots.find((s) => s.id === id))
             .filter((s): s is Screenshot => s !== undefined)
+            .concat(
+              // Add any screenshots not in the order at the end
+              module.screenshots.filter(
+                (s) => !module.screenshotOrder?.includes(s.id)
+              )
+            )
         : module.screenshots,
     }));
   },

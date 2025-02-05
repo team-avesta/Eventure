@@ -1,107 +1,56 @@
-import { NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { NextRequest, NextResponse } from 'next/server';
 import { S3DataService } from '@/lib/s3/data';
+import { Module } from '@/services/adminS3Service';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const screenshotId = formData.get('screenshotId') as string;
+    const { screenshotId, key } = await request.json();
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
-    }
-
-    if (!screenshotId) {
+    if (!screenshotId || !key) {
       return NextResponse.json(
-        { error: 'No screenshot ID provided' },
+        { error: 'Screenshot ID and key are required' },
         { status: 400 }
       );
     }
 
-    // Validate file size
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'File size exceeds 10MB limit' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file type
-    if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Invalid file type. Only JPEG, PNG and GIF are allowed' },
-        { status: 400 }
-      );
-    }
-
-    // Convert the file to a Buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Get and update modules using S3DataService
-    const dataService = new S3DataService();
-    const data = await dataService.getData<{ modules: any[] }>('modules');
+    const s3Service = new S3DataService();
+    const data = await s3Service.getData<{ modules: Module[] }>('modules');
     const modules = data?.modules || [];
 
-    // Find the module containing the screenshot
-    let targetModule;
-    let existingScreenshot;
+    // Find the module and screenshot
+    let targetModule: Module | undefined;
+    let screenshot;
+
     for (const mod of modules) {
-      existingScreenshot = mod.screenshots.find(
-        (s: any) => s.id === screenshotId
-      );
-      if (existingScreenshot) {
+      screenshot = mod.screenshots.find((s) => s.id === screenshotId);
+      if (screenshot) {
         targetModule = mod;
         break;
       }
     }
 
-    if (!targetModule || !existingScreenshot) {
+    if (!targetModule || !screenshot) {
       return NextResponse.json(
         { error: 'Screenshot not found' },
         { status: 404 }
       );
     }
 
-    // Create filename with timestamp
-    const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/\s+/g, '-').toLowerCase();
-    const fileName = `${timestamp}-${sanitizedName}`;
-    const key = `screenshots/${targetModule.key}/${fileName}`;
-
-    // Upload to S3
-    await dataService.putObject(key, buffer, file.type);
-
-    // Delete old file if it exists
-    const oldKey = existingScreenshot.url.split('.com/')[1];
-    if (oldKey) {
-      try {
-        await dataService.deleteObject(oldKey);
-      } catch (error) {
-        console.error('Error deleting old file:', error);
-        // Continue even if delete fails
-      }
-    }
-
-    // Update the screenshot URL in the modules
+    // Update screenshot URL
     const updatedModules = modules.map((module) => ({
       ...module,
-      screenshots: module.screenshots.map((screenshot: any) => {
-        if (screenshot.id === screenshotId) {
-          return {
-            ...screenshot,
-            name: sanitizedName,
-            url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.REGION}.amazonaws.com/${key}`,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return screenshot;
-      }),
+      screenshots: module.screenshots.map((s) =>
+        s.id === screenshotId
+          ? {
+              ...s,
+              url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.REGION}.amazonaws.com/${key}`,
+              updatedAt: new Date().toISOString(),
+            }
+          : s
+      ),
     }));
 
-    // Save the updated modules
-    await dataService.updateData('modules', { modules: updatedModules });
+    await s3Service.updateData('modules', { modules: updatedModules });
 
     return NextResponse.json({ success: true });
   } catch (error) {
