@@ -279,8 +279,9 @@ export default function ScreenshotDetailPage() {
       eventType: selectedEventType?.id || '',
       name:
         selectedEventType?.id === 'pageview'
-          ? dropdownData.pageData.find((p) => p.id === formData.name)?.title ||
-            ''
+          ? dropdownData.pageData.find(
+              (p) => p.title.toLowerCase() === formData.name.toLowerCase()
+            )?.title || ''
           : formData.name,
       category: formData.category,
       action: formData.action,
@@ -1373,7 +1374,6 @@ export default function ScreenshotDetailPage() {
                     onSubmit={(e) => {
                       e.preventDefault();
                       const formData = new FormData(e.currentTarget);
-
                       if (selectedEventType?.id === 'pageview') {
                         handleEventFormSubmit({
                           name: formData.get('customTitle') as string,
