@@ -104,7 +104,6 @@ export function useScreenshotUpload({
       resetForm();
       onSuccess?.();
     } catch (error: any) {
-      console.error('Upload error:', error);
       setError('Failed to upload screenshot. Please try again.');
       toast.error('Failed to upload screenshot');
     } finally {

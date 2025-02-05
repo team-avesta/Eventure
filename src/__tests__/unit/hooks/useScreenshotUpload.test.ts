@@ -128,6 +128,19 @@ describe('useScreenshotUpload', () => {
       const onSuccess = jest.fn();
       const { result } = renderHook(() => useScreenshotUpload({ onSuccess }));
 
+      // Mock presigned URL response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ presignedUrl: 'test-url', key: 'test-key' }),
+      });
+
+      // Mock S3 upload response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      });
+
+      // Mock finalize response
       mockFetch.mockResolvedValueOnce({
         ok: true,
       });
@@ -142,10 +155,36 @@ describe('useScreenshotUpload', () => {
         await result.current.handleSubmit(mockEvent);
       });
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/s3/screenshots', {
-        method: 'POST',
-        body: expect.any(FormData),
+      // Verify presigned URL request
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        `/api/s3/presigned?fileType=${encodeURIComponent(
+          mockFile.type
+        )}&moduleKey=${encodeURIComponent('test-page')}`
+      );
+
+      // Verify S3 upload request
+      expect(mockFetch).toHaveBeenNthCalledWith(2, 'test-url', {
+        method: 'PUT',
+        body: mockFile,
+        headers: {
+          'Content-Type': mockFile.type,
+        },
       });
+
+      // Verify finalize request
+      expect(mockFetch).toHaveBeenNthCalledWith(3, '/api/s3/screenshots', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: 'test-key',
+          pageName: 'test-page',
+          customName: 'test-name',
+        }),
+      });
+
       expect(toast.success).toHaveBeenCalledWith(
         'Screenshot uploaded successfully'
       );
@@ -159,7 +198,7 @@ describe('useScreenshotUpload', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        text: () => Promise.resolve('Module not found'),
+        text: () => Promise.resolve('Failed to get upload URL'),
       });
 
       act(() => {
@@ -172,7 +211,7 @@ describe('useScreenshotUpload', () => {
       });
 
       expect(result.current.error).toBe(
-        'Selected module was not found. Please try again.'
+        'Failed to upload screenshot. Please try again.'
       );
       expect(result.current.isUploading).toBe(false);
     });

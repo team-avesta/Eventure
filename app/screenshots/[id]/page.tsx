@@ -12,6 +12,7 @@ import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import Breadcrumb from '@/components/common/Breadcrumb';
 import DimensionDisplay from '@/components/common/DimensionDisplay';
+import { Autocomplete } from '@/components/common/Autocomplete';
 
 const EVENT_TYPES = [
   { id: 'pageview', name: 'Page View', color: '#2563EB' },
@@ -404,27 +405,30 @@ export default function ScreenshotDetailPage() {
         return (
           <>
             <div>
-              <label
-                htmlFor="customTitle"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Custom Title *
-              </label>
-              <select
-                name="customTitle"
+              <Autocomplete
                 id="customTitle"
+                name="customTitle"
+                label="Custom Title"
+                options={dropdownData.pageData.map((page) => page.title)}
+                value={
+                  dropdownData.pageData.find((p) => p.id === selectedPageId)
+                    ?.title || ''
+                }
+                onChange={(value) => {
+                  const selectedPage = dropdownData.pageData.find(
+                    (p) => p.title === value
+                  );
+                  if (selectedPage) {
+                    setSelectedPageId(selectedPage.id);
+                    setFormData((prev) => ({
+                      ...prev,
+                      customUrl: selectedPage.url,
+                    }));
+                  }
+                }}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                onChange={handleTitleChange}
-                value={selectedPageId}
-              >
-                <option value="">Select Custom Title</option>
-                {dropdownData.pageData.map((page) => (
-                  <option key={page.id} value={page.id}>
-                    {page.title}
-                  </option>
-                ))}
-              </select>
+                placeholder="Search custom title..."
+              />
             </div>
 
             <div>
@@ -459,89 +463,56 @@ export default function ScreenshotDetailPage() {
         return (
           <>
             <div>
-              <label
-                htmlFor="eventcategory"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Category *
-              </label>
-              <select
-                name="eventcategory"
+              <Autocomplete
                 id="eventcategory"
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                name="eventcategory"
+                label="Event Category"
+                options={dropdownData.eventCategories}
                 value={formData.eventcategory || ''}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    eventcategory: e.target.value,
+                    eventcategory: value,
                   }))
                 }
-              >
-                <option value="">Select Event Category</option>
-                {dropdownData.eventCategories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                htmlFor="eventactionname"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Action Name *
-              </label>
-              <select
-                name="eventactionname"
-                id="eventactionname"
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                value={formData.eventactionname || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventactionname: e.target.value,
-                  }))
-                }
-              >
-                <option value="">Select Event Action</option>
-                {dropdownData.eventActionNames.map((action) => (
-                  <option key={action} value={action}>
-                    {action}
-                  </option>
-                ))}
-              </select>
+                placeholder="Search event category..."
+              />
             </div>
 
             <div>
-              <label
-                htmlFor="eventname"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Name
-              </label>
-              <select
-                name="eventname"
-                id="eventname"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                value={formData.eventname || ''}
-                onChange={(e) =>
+              <Autocomplete
+                id="eventactionname"
+                name="eventactionname"
+                label="Event Action Name"
+                options={dropdownData.eventActionNames}
+                value={formData.eventactionname || ''}
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    eventname: e.target.value,
+                    eventactionname: value,
                   }))
                 }
-              >
-                <option value="">Select Event Name (Optional)</option>
-                {dropdownData.eventNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                required
+                placeholder="Search event action..."
+              />
+            </div>
+
+            <div>
+              <Autocomplete
+                id="eventname"
+                name="eventname"
+                label="Event Name (Optional)"
+                options={dropdownData.eventNames}
+                value={formData.eventname || ''}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    eventname: value,
+                  }))
+                }
+                placeholder="Search event name..."
+              />
             </div>
 
             <div>
@@ -549,14 +520,14 @@ export default function ScreenshotDetailPage() {
                 htmlFor="eventvalue"
                 className="block text-sm font-medium text-gray-700"
               >
-                Event Value
+                Event Value (Optional)
               </label>
               <input
                 type="text"
                 name="eventvalue"
                 id="eventvalue"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Enter Event Value (Optional)"
+                placeholder="Enter Event Value"
                 value={formData.eventvalue || ''}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -575,32 +546,21 @@ export default function ScreenshotDetailPage() {
         return (
           <>
             <div>
-              <label
-                htmlFor="eventcategory"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Category *
-              </label>
-              <select
-                name="eventcategory"
+              <Autocomplete
                 id="eventcategory"
-                required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                name="eventcategory"
+                label="Event Category"
+                options={dropdownData.eventCategories}
                 value={formData.eventcategory || ''}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    eventcategory: e.target.value,
+                    eventcategory: value,
                   }))
                 }
-              >
-                <option value="">Select Event Category</option>
-                {dropdownData.eventCategories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+                required
+                placeholder="Search event category..."
+              />
             </div>
 
             <div>
@@ -622,31 +582,20 @@ export default function ScreenshotDetailPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="eventname"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Name
-              </label>
-              <select
-                name="eventname"
+              <Autocomplete
                 id="eventname"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                name="eventname"
+                label="Event Name (Optional)"
+                options={dropdownData.eventNames}
                 value={formData.eventname || ''}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    eventname: e.target.value,
+                    eventname: value,
                   }))
                 }
-              >
-                <option value="">Select Event Name (Optional)</option>
-                {dropdownData.eventNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Search event name..."
+              />
             </div>
 
             <div>
@@ -654,14 +603,14 @@ export default function ScreenshotDetailPage() {
                 htmlFor="eventvalue"
                 className="block text-sm font-medium text-gray-700"
               >
-                Event Value
+                Event Value (Optional)
               </label>
               <input
                 type="text"
                 name="eventvalue"
                 id="eventvalue"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Enter Event Value (Optional)"
+                placeholder="Enter Event Value"
                 value={formData.eventvalue || ''}
                 onChange={(e) =>
                   setFormData((prev) => ({
