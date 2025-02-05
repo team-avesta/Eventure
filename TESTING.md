@@ -46,7 +46,6 @@ src/
     │   │   ├── useAdminState.test.ts
     │   │   ├── useModules.test.ts
     │   │   └── useScreenshotUpload.test.ts
-    │   ├── utils/           # Utility function tests [⚪ Not Started]
     │   └── services/        # Service layer tests [✅ Completed]
     │       ├── auth.test.ts
     │       ├── api.test.ts
