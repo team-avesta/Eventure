@@ -58,14 +58,13 @@ export default function EditScreenshotNameModal({
                   Edit Screenshot Name
                 </Dialog.Title>
 
-                <form onSubmit={handleSubmit} className="mt-4">
+                <form onSubmit={handleSubmit} className="mt-4" role="form">
                   <Input
                     id="name"
                     label="Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter screenshot name"
-                    autoFocus
                   />
 
                   <div className="mt-6 flex justify-end gap-3">

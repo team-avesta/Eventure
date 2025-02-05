@@ -29,10 +29,11 @@ This testing strategy covers three main types of tests:
 src/
 └── __tests__/                # Test root directory
     ├── unit/                 # Unit tests [🟡 In Progress]
-    │   ├── components/       # Component tests [⚪ Not Started]
+    │   ├── components/       # Component tests [🟡 In Progress]
     │   │   ├── auth/        # Auth component tests
     │   │   ├── admin/       # Admin component tests
     │   │   └── screenshots/ # Screenshot component tests
+    │   │       └──EditScreenshotNameModal.test.tsx
     │   ├── pages/           # Page component tests [⚪ Not Started]
     │   │   ├── page.test.tsx              # Home page tests
     │   │   ├── docs/
@@ -158,10 +159,14 @@ export default defineConfig({
   - API service
   - Admin S3 service
   - Screenshot events service
+- ✅ Component tests
+  - Screenshot components
+    - AnalyticsModal
+    - EditScreenshotNameModal
+    - ModuleCard
 
 #### Pending:
 
-- ⚪ Component tests
 - ⚪ Utility function tests
 
 Example Component Test:
@@ -284,19 +289,23 @@ describe('Data API', () => {
 3. Service Layer Tests
 4. Custom Hooks Tests
 5. Basic Test Infrastructure
+6. Initial Component Tests
+   - EditScreenshotNameModal component tests
 
 ### In Progress (🟡):
 
 1. Unit Tests
-   - Component Tests Pending
-   - Utility Function Tests Pending
+   - Component Tests (Started)
+     - Modal components
+     - Auth components
+     - Layout components
+     - Navigation components
+   - Utility Function Tests (Pending)
 
 ### Not Started (⚪):
 
 1. Integration Tests
 2. E2E Tests
-3. Component Tests
-4. Utility Function Tests
 
 ## Next Steps
 
@@ -338,7 +347,49 @@ export const mockEvent = {
 };
 ```
 
-3. Custom Matchers:
+3. Session Storage Mocking:
+
+```typescript
+describe('Component with Session Storage', () => {
+  const mockSessionStorage = window.sessionStorage;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('handles auth state', () => {
+    // Mock no auth
+    (mockSessionStorage.getItem as jest.Mock).mockReturnValue(null);
+    render(<Component />);
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+
+    cleanup();
+
+    // Mock admin auth
+    (mockSessionStorage.getItem as jest.Mock).mockReturnValue(
+      JSON.stringify({ role: 'admin' })
+    );
+    render(<Component />);
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+  });
+
+  it('handles sign out', () => {
+    render(<Component />);
+    fireEvent.click(screen.getByText('Sign out'));
+    expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('auth');
+  });
+});
+```
+
+Key points about session storage mocking:
+
+- Use `window.sessionStorage` directly to get the mock
+- No need to manually create mock methods - Jest automatically mocks them
+- Clear mocks in `beforeEach` to ensure clean state
+- Use `mockReturnValue` to simulate different auth states
+- Mock the stored data in JSON format to match real usage
+
+4. Custom Matchers:
 
 ```typescript
 expect.extend({
@@ -403,3 +454,30 @@ test:
 ```
 
 For more detailed information about specific testing scenarios or patterns, refer to the individual test files in the `__tests__` directory.
+
+### Common Testing Patterns
+
+#### Modal Testing:
+
+```typescript
+// Testing modal visibility
+expect(screen.getByRole('dialog')).toBeInTheDocument();
+expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+// Testing modal interactions
+fireEvent.click(screen.getByText('Cancel'));
+fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+
+// Testing form submissions
+fireEvent.submit(screen.getByRole('form'));
+
+// Handling async state updates with act
+await act(async () => {
+  render(<Component />);
+});
+
+// Handling user interactions
+await act(async () => {
+  fireEvent.click(button);
+});
+```

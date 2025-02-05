@@ -2,7 +2,7 @@ import { Screenshot, ScreenshotStatus } from '@/services/adminS3Service';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import EditScreenshotNameModal from './modals/EditScreenshotNameModal';
+import EditScreenshotNameModal from './EditScreenshotNameModal';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 

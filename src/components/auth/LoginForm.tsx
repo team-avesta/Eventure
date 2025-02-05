@@ -17,7 +17,7 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      const authState = authService.login({ username, password });
+      const authState = await authService.login({ username, password });
 
       if (!authState) {
         setError('Invalid username or password');
@@ -54,7 +54,12 @@ export function LoginForm() {
 
       {error && <div className="text-sm text-red-600">{error}</div>}
 
-      <Button type="submit" fullWidth isLoading={isLoading}>
+      <Button
+        type="submit"
+        fullWidth
+        isLoading={isLoading}
+        disabled={isLoading}
+      >
         Sign in
       </Button>
     </form>
