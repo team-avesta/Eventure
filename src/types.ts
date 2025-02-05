@@ -13,6 +13,8 @@ export type Event = {
   action: string;
   value: string;
   dimensions: string[];
+  updatedAt?: string;
+  description?: string;
 };
 
 export interface Screenshot {

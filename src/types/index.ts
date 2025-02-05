@@ -18,6 +18,7 @@ export interface Event {
   };
   screenshotId: string;
   updatedAt: string;
+  description?: string;
 }
 
 export interface Dimension {

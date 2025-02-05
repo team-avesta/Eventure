@@ -7,23 +7,24 @@ import toast from 'react-hot-toast';
 import { Event } from '@/types';
 import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
 import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
-import { adminS3Service } from '@/services/adminS3Service';
+import { adminS3Service, EventType } from '@/services/adminS3Service';
 import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import Breadcrumb from '@/components/common/Breadcrumb';
 import DimensionDisplay from '@/components/common/DimensionDisplay';
 import { Autocomplete } from '@/components/common/Autocomplete';
+import { Tooltip } from 'react-tooltip';
 
 const EVENT_TYPES = [
-  { id: 'pageview', name: 'Page View', color: '#2563EB' },
+  { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
   {
-    id: 'trackevent_pageview',
+    id: EventType.TrackEventWithPageView,
     name: 'TrackEvent with PageView',
     color: '#16A34A',
   },
-  { id: 'trackevent', name: 'TrackEvent', color: '#9333EA' },
-  { id: 'outlink', name: 'Outlink', color: '#DC2626' },
-  { id: 'backendevent', name: 'Backend Event', color: '#F59E0B' },
+  { id: EventType.TrackEvent, name: 'TrackEvent', color: '#9333EA' },
+  { id: EventType.Outlink, name: 'Outlink', color: '#DC2626' },
+  { id: EventType.BackendEvent, name: 'Backend Event', color: '#F59E0B' },
 ];
 
 type RectangleState = {
@@ -91,6 +92,7 @@ export default function ScreenshotDetailPage() {
     eventname?: string;
     eventvalue?: string;
     dimensions?: string[];
+    description?: string;
   }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [modules, setModules] = useState<any[]>([]);
@@ -269,6 +271,7 @@ export default function ScreenshotDetailPage() {
     action: string;
     value: string;
     dimensions: string[];
+    description?: string;
   }) => {
     if (!newEvent) return;
 
@@ -278,7 +281,7 @@ export default function ScreenshotDetailPage() {
       screenshotId,
       eventType: selectedEventType?.id || '',
       name:
-        selectedEventType?.id === 'pageview'
+        selectedEventType?.id === EventType.PageView
           ? dropdownData.pageData.find(
               (p) => p.title.toLowerCase() === formData.name.toLowerCase()
             )?.title || ''
@@ -287,6 +290,7 @@ export default function ScreenshotDetailPage() {
       action: formData.action,
       value: formData.value,
       dimensions: formData.dimensions,
+      description: formData.description || undefined,
     };
 
     try {
@@ -294,7 +298,6 @@ export default function ScreenshotDetailPage() {
         await adminS3Service.updateEvent(eventData);
       } else {
         await adminS3Service.createEvent(eventData);
-        // Add to rectangles only after successful creation
         setRectangles((prev) => [
           ...prev,
           {
@@ -310,9 +313,7 @@ export default function ScreenshotDetailPage() {
         ]);
       }
 
-      // Refetch events to get the latest data
       await refetchEvents();
-
       setShowEventForm(false);
       setNewEvent(null);
       setSelectedEventType(null);
@@ -1026,6 +1027,10 @@ export default function ScreenshotDetailPage() {
                       <div
                         key={rect.id}
                         id={`event-card-${rect.id}`}
+                        data-tooltip-id={
+                          event?.description ? `tooltip-${rect.id}` : undefined
+                        }
+                        data-tooltip-content={event?.description}
                         className={`p-4 rounded-md transition-all relative cursor-pointer ${
                           expandedId === rect.id ? 'bg-gray-50' : ''
                         } ${
@@ -1223,6 +1228,14 @@ export default function ScreenshotDetailPage() {
                               )}
                           </div>
                         )}
+
+                        {event?.description && (
+                          <Tooltip
+                            id={`tooltip-${rect.id}`}
+                            place="top"
+                            className="z-50 max-w-xs"
+                          />
+                        )}
                       </div>
                     );
                   })}
@@ -1382,6 +1395,7 @@ export default function ScreenshotDetailPage() {
                           ) as string[],
                           action: '', // Not used for pageview
                           value: '', // Not used for pageview
+                          description: formData.get('description') as string,
                         });
                       } else if (
                         selectedEventType?.id === 'trackevent_pageview' ||
@@ -1396,23 +1410,48 @@ export default function ScreenshotDetailPage() {
                           dimensions: Array.from(
                             formData.getAll('dimensions')
                           ) as string[],
+                          description: formData.get('description') as string,
                         };
                         handleEventFormSubmit(eventData);
                       } else if (selectedEventType?.id === 'outlink') {
                         const eventData = {
                           name: (formData.get('eventname') as string) || '',
-                          category: formData.get('eventcategory') as string, // Hardcoded for outlink
-                          action: 'Outlink', // Hardcoded for outlink
+                          category: formData.get('eventcategory') as string,
+                          action: 'Outlink',
                           value: (formData.get('eventvalue') as string) || '',
                           dimensions: Array.from(
                             formData.getAll('dimensions')
                           ) as string[],
+                          description: formData.get('description') as string,
                         };
                         handleEventFormSubmit(eventData);
                       }
                     }}
                     className="mt-6 space-y-4"
                   >
+                    <div>
+                      <label
+                        htmlFor="description"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        Description (for developers)
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        rows={2}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                        placeholder="Add description to help other developers understand this event's purpose"
+                        value={formData.description || ''}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+
                     {renderFormFields()}
 
                     <div className="mt-6 flex justify-end space-x-3">

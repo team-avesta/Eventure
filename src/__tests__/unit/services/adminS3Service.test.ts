@@ -40,6 +40,8 @@ describe('adminS3Service', () => {
             action: 'Test Action',
             value: 'Test Value',
             dimensions: ['dim1'],
+            updatedAt: '2024-01-01',
+            description: 'Test Description',
           },
         ],
       },
@@ -681,6 +683,104 @@ describe('adminS3Service', () => {
         expect(api.update).toHaveBeenCalledWith('event-names', {
           eventNames: ['Updated Name', 'Name 2'],
         });
+      });
+    });
+  });
+
+  describe('Event Operations', () => {
+    const mockEvent = {
+      id: '1',
+      coordinates: {
+        startX: 0,
+        startY: 0,
+        width: 100,
+        height: 100,
+      },
+      screenshotId: '1',
+      eventType: EventType.PageView,
+      name: 'Test Event',
+      category: 'Test Category',
+      action: 'Test Action',
+      value: 'Test Value',
+      dimensions: ['dim1'],
+      updatedAt: '2024-01-01',
+      description: 'Test Description',
+    };
+
+    describe('createEvent', () => {
+      it('should create an event with description successfully', async () => {
+        (api.get as jest.Mock).mockResolvedValueOnce({ events: [] });
+
+        await adminS3Service.createEvent(mockEvent);
+
+        expect(api.update).toHaveBeenCalledWith('events', {
+          events: [mockEvent],
+        });
+      });
+
+      it('should create an event without description successfully', async () => {
+        const { description, ...eventWithoutDescription } = mockEvent;
+
+        (api.get as jest.Mock).mockResolvedValueOnce({ events: [] });
+
+        await adminS3Service.createEvent(eventWithoutDescription);
+
+        expect(api.update).toHaveBeenCalledWith('events', {
+          events: [eventWithoutDescription],
+        });
+      });
+    });
+
+    describe('updateEvent', () => {
+      it('should update event description successfully', async () => {
+        (api.get as jest.Mock).mockResolvedValueOnce({ events: [mockEvent] });
+
+        const updatedEvent = {
+          ...mockEvent,
+          description: 'Updated Description',
+        };
+
+        await adminS3Service.updateEvent(updatedEvent);
+
+        expect(api.update).toHaveBeenCalledWith('events', {
+          events: [updatedEvent],
+        });
+      });
+
+      it('should remove description when updating event', async () => {
+        (api.get as jest.Mock).mockResolvedValueOnce({ events: [mockEvent] });
+
+        const { description, ...updatedEvent } = mockEvent;
+
+        await adminS3Service.updateEvent(updatedEvent);
+
+        expect(api.update).toHaveBeenCalledWith('events', {
+          events: [updatedEvent],
+        });
+      });
+    });
+
+    describe('fetchEvents', () => {
+      it('should fetch events with descriptions successfully', async () => {
+        (api.get as jest.Mock).mockResolvedValueOnce({
+          events: [mockEvent],
+        });
+
+        const events = await adminS3Service.fetchEvents('1');
+        expect(events).toEqual([mockEvent]);
+        expect(events[0]).toHaveProperty('description', 'Test Description');
+      });
+
+      it('should fetch events without descriptions successfully', async () => {
+        const { description, ...eventWithoutDescription } = mockEvent;
+
+        (api.get as jest.Mock).mockResolvedValueOnce({
+          events: [eventWithoutDescription],
+        });
+
+        const events = await adminS3Service.fetchEvents('1');
+        expect(events).toEqual([eventWithoutDescription]);
+        expect(events[0].description).toBeUndefined();
       });
     });
   });
