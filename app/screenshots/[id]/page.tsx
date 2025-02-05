@@ -1022,7 +1022,6 @@ export default function ScreenshotDetailPage() {
                       (t) => t.id === rect.eventType
                     );
                     const event = events.find((e: Event) => e.id === rect.id);
-                    const tooltipId = `dimension-tooltip-${rect.id}-${rect.eventType}`;
                     return (
                       <div
                         key={rect.id}
@@ -1173,7 +1172,7 @@ export default function ScreenshotDetailPage() {
                         {/* Expanded Details */}
                         {expandedId === rect.id && (
                           <div className="mt-3 pt-3 border-t border-gray-200">
-                            {event?.name && (
+                            {event?.name && eventType?.id !== 'pageview' && (
                               <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
                                 <span className="font-medium min-w-[90px] whitespace-nowrap">
                                   Event Name:
