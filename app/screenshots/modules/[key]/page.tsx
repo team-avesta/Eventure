@@ -163,9 +163,9 @@ export default function ModuleScreenshotsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Breadcrumb
             items={[
               {
@@ -208,7 +208,9 @@ export default function ModuleScreenshotsPage() {
             )}
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentModule.screenshots.length === 0 ? (
           <div className="bg-white shadow rounded-lg p-6 text-center text-gray-500">
             No screenshots uploaded yet for this module.
