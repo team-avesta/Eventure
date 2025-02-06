@@ -33,6 +33,7 @@ export default function DimensionDisplay({
         {dimension.description && (
           <>
             <svg
+              data-testid="info-icon"
               data-tooltip-id={tooltipId}
               className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer flex-shrink-0"
               fill="none"

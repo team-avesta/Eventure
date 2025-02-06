@@ -44,6 +44,7 @@ export function Select({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            data-testid="select-dropdown-icon"
           >
             <path
               strokeLinecap="round"
