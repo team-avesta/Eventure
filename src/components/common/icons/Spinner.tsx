@@ -6,6 +6,7 @@ interface SpinnerProps {
 export function Spinner({ size = 16, className = '' }: SpinnerProps) {
   return (
     <svg
+      role="progressbar"
       className={`animate-spin ${className}`}
       width={size}
       height={size}
