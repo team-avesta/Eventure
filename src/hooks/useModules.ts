@@ -25,7 +25,6 @@ export function useModules(isOpen: boolean) {
       const data = await adminS3Service.fetchModules();
       setModules(data);
     } catch (error) {
-      console.error('Error fetching modules:', error);
       toast.error('Failed to fetch modules');
     } finally {
       setIsLoading(false);
@@ -44,7 +43,6 @@ export function useModules(isOpen: boolean) {
       toast.success('Module deleted successfully');
       return true;
     } catch (error) {
-      console.error('Error deleting module:', error);
       toast.error('Failed to delete module');
       return false;
     } finally {

@@ -58,7 +58,6 @@ export default function ManageEventNameModal({
       const data = await adminS3Service.fetchEventNames();
       setEvents(data);
     } catch (error) {
-      console.error('Error fetching event names:', error);
       toast.error('Failed to fetch event names');
     } finally {
       setIsLoading(false);
@@ -81,7 +80,6 @@ export default function ManageEventNameModal({
       toast.success('Event name deleted successfully');
       onClose();
     } catch (error) {
-      console.error('Error deleting event name:', error);
       toast.error('Failed to delete event name');
     } finally {
       setIsDeleting(false);

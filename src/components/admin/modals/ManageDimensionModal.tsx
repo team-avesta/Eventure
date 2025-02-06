@@ -58,7 +58,6 @@ export default function ManageDimensionModal({
       const data = await adminS3Service.fetchDimensions();
       setDimensions(data);
     } catch (error) {
-      console.error('Error fetching dimensions:', error);
       toast.error('Failed to fetch dimensions');
     } finally {
       setIsLoading(false);
@@ -81,7 +80,6 @@ export default function ManageDimensionModal({
       toast.success('Dimension deleted successfully');
       onClose();
     } catch (error) {
-      console.error('Error deleting dimension:', error);
       toast.error('Failed to delete dimension');
     } finally {
       setIsDeleting(false);

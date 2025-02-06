@@ -263,8 +263,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
               variant="outline"
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full"
+              aria-label="Back"
             >
-              <ArrowLeftIcon className="w-5 h-5" />
+              <ArrowLeftIcon className="w-5 h-5" aria-hidden="true" />
             </Button>
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
@@ -373,15 +374,17 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
                       variant="outline"
                       onClick={() => handleEdit(item)}
                       className="text-indigo-600 hover:text-indigo-900 mr-2"
+                      aria-label="Edit"
                     >
-                      <PencilIcon className="w-4 h-4" />
+                      <PencilIcon className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => handleDelete(item)}
                       className="text-red-600 hover:text-red-900"
+                      aria-label="Delete"
                     >
-                      <TrashIcon className="w-4 h-4" />
+                      <TrashIcon className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </td>
                 </tr>

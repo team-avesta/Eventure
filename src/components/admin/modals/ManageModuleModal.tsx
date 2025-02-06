@@ -58,7 +58,6 @@ export default function ManageModuleModal({
       const data = await adminS3Service.fetchModules();
       setModules(data);
     } catch (error) {
-      console.error('Error fetching modules:', error);
       toast.error('Failed to fetch modules');
     } finally {
       setIsLoading(false);
@@ -81,7 +80,6 @@ export default function ManageModuleModal({
       toast.success('Module deleted successfully');
       onClose();
     } catch (error) {
-      console.error('Error deleting module:', error);
       toast.error('Failed to delete module');
     } finally {
       setIsDeleting(false);

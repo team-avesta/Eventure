@@ -58,7 +58,6 @@ export default function ManageEventActionModal({
       const data = await adminS3Service.fetchEventActions();
       setActions(data);
     } catch (error) {
-      console.error('Error fetching event actions:', error);
       toast.error('Failed to fetch event actions');
     } finally {
       setIsLoading(false);
@@ -81,7 +80,6 @@ export default function ManageEventActionModal({
       toast.success('Event action deleted successfully');
       onClose();
     } catch (error) {
-      console.error('Error deleting event action:', error);
       toast.error('Failed to delete event action');
     } finally {
       setIsDeleting(false);

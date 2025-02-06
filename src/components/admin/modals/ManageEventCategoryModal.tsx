@@ -83,7 +83,6 @@ export default function ManageEventCategoryModal({
       toast.success('Event category deleted successfully');
       onClose();
     } catch (error) {
-      console.error('Error deleting event category:', error);
       toast.error('Failed to delete event category');
     } finally {
       setIsDeleting(false);

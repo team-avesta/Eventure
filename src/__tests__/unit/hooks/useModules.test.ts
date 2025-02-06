@@ -87,10 +87,6 @@ describe('useModules', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(console.error).toHaveBeenCalledWith(
-      'Error fetching modules:',
-      mockError
-    );
     expect(toast.error).toHaveBeenCalledWith('Failed to fetch modules');
     expect(result.current.isLoading).toBe(false);
   });
@@ -163,10 +159,6 @@ describe('useModules', () => {
       });
 
       expect(success).toBe(false);
-      expect(console.error).toHaveBeenCalledWith(
-        'Error deleting module:',
-        mockError
-      );
       expect(toast.error).toHaveBeenCalledWith('Failed to delete module');
       expect(result.current.isDeleting).toBe(false);
     });

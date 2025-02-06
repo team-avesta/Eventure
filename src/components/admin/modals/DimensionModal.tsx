@@ -52,7 +52,6 @@ export default function DimensionModal({
           .sort((a, b) => parseInt(a.id) - parseInt(b.id))
       );
     } catch (error) {
-      console.error('Error fetching dimensions:', error);
       toast.error('Failed to fetch existing dimensions');
     }
   }, [initialData]);
@@ -62,7 +61,6 @@ export default function DimensionModal({
       const types = await adminS3Service.fetchDimensionTypes();
       setDimensionTypes(types);
     } catch (error) {
-      console.error('Error fetching dimension types:', error);
       toast.error('Failed to fetch dimension types');
     }
   }, []);

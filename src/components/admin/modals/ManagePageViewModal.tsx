@@ -58,7 +58,6 @@ export default function ManagePageViewModal({
       const data = await adminS3Service.fetchPageViews();
       setPageViews(data);
     } catch (error) {
-      console.error('Error fetching page views:', error);
       toast.error('Failed to fetch page views');
     } finally {
       setIsLoading(false);
@@ -81,7 +80,6 @@ export default function ManagePageViewModal({
       toast.success('Page view deleted successfully');
       onClose();
     } catch (error) {
-      console.error('Error deleting page view:', error);
       toast.error('Failed to delete page view');
     } finally {
       setIsDeleting(false);

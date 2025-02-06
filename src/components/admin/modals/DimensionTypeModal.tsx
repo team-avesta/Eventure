@@ -26,9 +26,14 @@ export default function DimensionTypeModal({
   useEffect(() => {
     if (isOpen) {
       // Fetch existing types when modal opens
-      adminS3Service.fetchDimensionTypes().then((types) => {
-        setExistingTypes(types);
-      });
+      adminS3Service
+        .fetchDimensionTypes()
+        .then((types) => {
+          setExistingTypes(types);
+        })
+        .catch((error) => {
+          toast.error(error.message);
+        });
     }
   }, [isOpen]);
 
@@ -62,22 +67,22 @@ export default function DimensionTypeModal({
     };
 
     // Check for duplicates (excluding the current type being edited)
-    const duplicateId = existingTypes.find(
-      (t) => t.id === typeId && t.id !== initialData?.id
-    );
     const duplicateName = existingTypes.find(
       (t) =>
         t.name.toLowerCase() === name.trim().toLowerCase() &&
         t.id !== initialData?.id
     );
-
-    if (duplicateId) {
-      setError(`Type ID "${typeId}" already exists`);
-      return;
-    }
+    const duplicateId = existingTypes.find(
+      (t) => t.id === typeId && t.id !== initialData?.id
+    );
 
     if (duplicateName) {
       setError(`Type name "${name}" already exists`);
+      return;
+    }
+
+    if (duplicateId) {
+      setError(`Type ID "${typeId}" already exists`);
       return;
     }
 

@@ -31,7 +31,6 @@ export class S3DataService {
       const data = await response.Body?.transformToString();
       return JSON.parse(data || '{}');
     } catch (error) {
-      console.error(`Error fetching ${filename}:`, error);
       throw error;
     }
   }
@@ -47,7 +46,6 @@ export class S3DataService {
 
       await s3Client.send(command);
     } catch (error) {
-      console.error(`Error updating ${filename}:`, error);
       throw error;
     }
   }
@@ -67,7 +65,6 @@ export class S3DataService {
 
       await s3Client.send(command);
     } catch (error) {
-      console.error(`Error uploading file ${key}:`, error);
       throw error;
     }
   }
@@ -81,7 +78,6 @@ export class S3DataService {
 
       await s3Client.send(command);
     } catch (error) {
-      console.error(`Error deleting file ${key}:`, error);
       throw error;
     }
   }
