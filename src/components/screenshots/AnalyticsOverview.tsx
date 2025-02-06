@@ -141,7 +141,12 @@ export function AnalyticsOverview({ modules }: AnalyticsOverviewProps) {
   return (
     <div className="p-6">
       <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl shadow-sm p-8 mb-8 text-center">
-        <div className="text-4xl font-bold text-blue-900">{totalEvents}</div>
+        <div
+          className="text-4xl font-bold text-blue-900"
+          data-testid="total-events"
+        >
+          {totalEvents}
+        </div>
         <div className="text-sm text-blue-600 mt-2 font-medium">
           Total Events across {modules.length} Modules
         </div>
@@ -166,7 +171,12 @@ export function AnalyticsOverview({ modules }: AnalyticsOverviewProps) {
                 </div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div
+                  className="text-2xl font-bold text-gray-900"
+                  data-testid={`${event.name
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')}-count`}
+                >
                   {event.count}
                 </div>
                 <div className="text-sm text-gray-500 font-medium">

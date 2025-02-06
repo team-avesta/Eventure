@@ -104,7 +104,7 @@ export default function ScreenshotCard({
       style={style}
       {...attributes}
       className={`group relative ${
-        isDragModeEnabled
+        isDragModeEnabled && userRole === 'admin'
           ? 'ring-2 ring-blue-500 ring-opacity-50 rounded-lg'
           : ''
       }`}
