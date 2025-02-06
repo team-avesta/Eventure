@@ -7,69 +7,41 @@
 - [Overview](#overview)
 - [Directory Structure](#directory-structure)
 - [Testing Stack](#testing-stack)
-- [Setup Instructions](#setup-instructions)
 - [Test Types](#test-types)
 - [Running Tests](#running-tests)
 - [Best Practices](#best-practices)
-- [Common Patterns](#common-patterns)
-- [Progress Status](#progress-status)
-- [Continuous Integration and Pre-commit Hooks](#continuous-integration-and-pre-commit-hooks)
 
 ## Overview
 
-This testing strategy covers three main types of tests:
+Our testing strategy focuses on three main types of tests:
 
-- Unit Tests (Components, Hooks, Utils, Services) [✅ Completed]
-- Integration Tests (API, Services, Workflows) [⚪ Not Started]
-- E2E Tests (User Flows, Critical Paths) [⚪ Not Started]
+- Integration Tests (Pages, Workflows) [🟡 In Progress]
+- Unit Tests (Components, Hooks, Utils) [✅ Completed]
+- E2E Tests (Critical Paths) [⚪ Not Started]
 
 ## Directory Structure
 
 ```bash
 src/
-└── __tests__/                # Test root directory
+└── __tests__/
+    ├── integration/           # Integration tests [🟡 In Progress]
+    │   ├── pages/            # Page integration tests
+    │   │   ├── home/
+    │   │   │   └── page.test.tsx
+    │   │   └── auth/
+    │   │       └── page.test.tsx
+    │   └── workflows/        # User workflow tests
+    │
     ├── unit/                 # Unit tests [✅ Completed]
-    │   ├── components/       # Component tests [✅ Completed]
-    │   │   ├── auth/        # Auth component tests
-    │   │   ├── admin/       # Admin component tests
-    │   │   └── screenshots/ # Screenshot component tests
-    │   │       └──EditScreenshotNameModal.test.tsx
-    │   ├── pages/           # Page component tests [⚪ Not Started]
-    │   │   ├── page.test.tsx              # Home page tests
-    │   │   ├── docs/
-    │   │   │   └── page.test.tsx          # Documentation page tests
-    │   │   └── screenshots/
-    │   │       └── modules/
-    │   │           └── [key]/
-    │   │               └── page.test.tsx   # Module screenshots page tests
-    │   ├── hooks/           # Custom hooks tests [✅ Completed]
-    │   │   ├── useAuth.test.ts
-    │   │   ├── useAdminState.test.ts
-    │   │   ├── useModules.test.ts
-    │   │   └── useScreenshotUpload.test.ts
-    │   └── services/        # Service layer tests [✅ Completed]
-    │       ├── auth.test.ts
-    │       ├── api.test.ts
-    │       ├── adminS3Service.test.ts
-    │       └── screenshotEvents.test.ts
+    │   ├── components/       # Component tests
+    │   ├── hooks/           # Hook tests
+    │   └── utils/           # Utility tests
     │
-    ├── integration/         # Integration tests [⚪ Not Started]
-    │   ├── api/            # API route tests
-    │   │   ├── s3/
-    │   │   │   ├── screenshots.test.ts
-    │   │   │   ├── dropdowns.test.ts
-    │   │   │   └── [type].test.ts
-    │   ├── s3/            # S3 service integration
-    │   └── workflows/     # User workflow tests
-    │
-    └── e2e/               # End-to-end tests [⚪ Not Started]
-        ├── auth/          # Authentication flows
-        ├── events/        # Event management flows
-        ├── screenshots/   # Screenshot features
-        └── admin/        # Admin panel flows
+    └── e2e/                 # End-to-end tests [⚪ Not Started]
+        └── flows/           # Critical user flows
 ```
 
-## Testing Stack [✅ Completed]
+## Testing Stack
 
 ```json
 {
@@ -86,50 +58,118 @@ src/
 }
 ```
 
-## Setup Instructions [✅ Completed]
+## Test Types
 
-1. Install Dependencies:
+### 1. Integration Tests (Pages) [🟡 In Progress]
 
-```bash
-npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event msw cypress ts-jest @types/jest
-```
+Pages are tested as integration points, focusing on user flows rather than implementation details.
 
-2. Add Test Scripts to package.json:
-
-```json
-{
-  "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:e2e": "cypress run",
-    "test:e2e:dev": "cypress open"
-  }
-}
-```
-
-3. Configure Jest (jest.config.js):
-
-```javascript
-module.exports = {
-  testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-  },
-  testPathIgnorePatterns: ['<rootDir>/cypress/'],
-  collectCoverageFrom: [
-    'src/**/*.{js,jsx,ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/types/**/*',
-  ],
-};
-```
-
-4. Configure Cypress (cypress.config.ts):
+Example page test:
 
 ```typescript
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import HomePage from './page';
+
+describe('HomePage', () => {
+  // Mock providers/context if needed
+  const wrapper = ({ children }) => <Providers>{children}</Providers>;
+
+  it('completes main user journey', async () => {
+    const user = userEvent.setup();
+    render(<HomePage />, { wrapper });
+
+    // Test actual user flow
+    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.type(screen.getByRole('textbox'), 'test input');
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    // Verify end state
+    expect(screen.getByText('Success')).toBeInTheDocument();
+  });
+
+  it('handles API errors gracefully', async () => {
+    server.use(
+      rest.post('/api/submit', (req, res, ctx) => res(ctx.status(500)))
+    );
+
+    render(<HomePage />, { wrapper });
+    // Test error handling
+  });
+});
+```
+
+Key aspects to test in pages:
+
+- Initial page load and SEO elements
+- API data fetching and display
+- User interactions and form submissions
+- Error handling and loading states
+- Client-side navigation
+- Mobile/responsive behavior
+- Authentication flows
+
+### 2. Unit Tests [✅ Completed]
+
+For testing individual components, hooks, and utility functions.
+
+```typescript
+describe('useAuth', () => {
+  it('handles login flow', async () => {
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login(credentials);
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+  });
+});
+```
+
+### 3. E2E Tests [⚪ Not Started]
+
+For testing complete user flows in a real browser environment.
+
+```typescript
+describe('Authentication Flow', () => {
+  it('allows user to sign up and login', () => {
+    cy.visit('/signup');
+    cy.fillSignupForm();
+    cy.login();
+    cy.url().should('include', '/dashboard');
+  });
+});
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run specific test file
+npm test -- path/to/test.tsx
+
+# Generate coverage report
+npm run test:coverage
+
+# Run E2E tests
+npm run test:e2e
+
+# Open Cypress test runner
+npm run test:e2e:dev
+```
+
+## E2E Testing Setup [⚪ Not Started]
+
+### 1. Configuration
+
+```typescript
+// cypress.config.ts
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
@@ -143,345 +183,188 @@ export default defineConfig({
 });
 ```
 
-## Test Types
+### 2. Directory Structure
 
-### 1. Unit Tests [✅ Completed]
+```bash
+cypress/
+├── e2e/                     # Test files
+│   ├── auth/
+│   │   ├── login.cy.ts     # Login flow tests
+│   │   └── signup.cy.ts    # Signup flow tests
+│   ├── screenshots/
+│   │   └── upload.cy.ts    # Screenshot upload tests
+│   └── admin/
+│       └── manage.cy.ts    # Admin management tests
+├── fixtures/                # Test data
+│   └── users.json
+└── support/                # Support files
+    ├── commands.ts         # Custom commands
+    └── e2e.ts             # Global configuration
+```
 
-#### Completed:
-
-- ✅ Custom hooks functionality
-  - Authentication hook (useAuth)
-  - Admin state management (useAdminState)
-  - Module management (useModules)
-  - Screenshot upload (useScreenshotUpload)
-- ✅ Service layer methods
-  - Authentication service
-  - API service
-  - Admin S3 service
-  - Screenshot events service
-- ✅ Component tests
-  - Screenshot components
-    - AnalyticsModal
-    - EditScreenshotNameModal
-    - ModuleCard
-
-#### Pending:
-
-- ⚪ Utility function tests
-
-Example Component Test:
+### 3. Custom Commands
 
 ```typescript
-import { render, screen } from '@testing-library/react';
-import { Button } from '@/components/Button';
+// cypress/support/commands.ts
+Cypress.Commands.add('login', (email: string, password: string) => {
+  cy.visit('/login');
+  cy.get('[data-testid="email"]').type(email);
+  cy.get('[data-testid="password"]').type(password);
+  cy.get('[data-testid="submit"]').click();
+});
 
-describe('Button', () => {
-  it('renders correctly', () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByText('Click me')).toBeInTheDocument();
-  });
+Cypress.Commands.add('uploadScreenshot', (filePath: string) => {
+  cy.get('[data-testid="upload-input"]').attachFile(filePath);
+  cy.get('[data-testid="upload-button"]').click();
 });
 ```
 
-### 2. Integration Tests [⚪ Not Started]
-
-- Test API endpoints
-- Test service integrations
-- Test component interactions
-
-Example API Test:
+### 4. Test Examples
 
 ```typescript
-import { handler } from '@/app/api/endpoint';
-
-describe('API Endpoint', () => {
-  it('handles GET request', async () => {
-    const req = new Request('http://localhost:3000/api/endpoint');
-    const res = await handler(req);
-    expect(res.status).toBe(200);
-  });
-});
-```
-
-### 3. E2E Tests [⚪ Not Started]
-
-- Test complete user flows
-- Test critical business paths
-
-Example Cypress Test:
-
-```typescript
-describe('Authentication', () => {
-  it('allows user to login', () => {
+// cypress/e2e/auth/login.cy.ts
+describe('Login Flow', () => {
+  beforeEach(() => {
     cy.visit('/login');
-    cy.get('[data-testid="email"]').type('user@example.com');
-    cy.get('[data-testid="password"]').type('password');
-    cy.get('[data-testid="submit"]').click();
+  });
+
+  it('successfully logs in with valid credentials', () => {
+    cy.login('test@example.com', 'password123');
+    cy.url().should('include', '/dashboard');
+    cy.get('[data-testid="welcome-message"]')
+      .should('be.visible')
+      .and('contain', 'Welcome');
+  });
+
+  it('shows error with invalid credentials', () => {
+    cy.login('invalid@example.com', 'wrongpass');
+    cy.get('[data-testid="error-message"]')
+      .should('be.visible')
+      .and('contain', 'Invalid credentials');
+  });
+
+  it('maintains session after page reload', () => {
+    cy.login('test@example.com', 'password123');
+    cy.reload();
     cy.url().should('include', '/dashboard');
   });
 });
 ```
 
-## Running Tests [✅ Completed]
+### 5. Best Practices for E2E Tests
 
-```bash
-# Run all tests
-npm test
+1. **Test Critical Paths**
 
-# Run tests in watch mode
-npm run test:watch
+   - User authentication flows
+   - Core business workflows
+   - Payment processes
+   - Form submissions
 
-# Generate coverage report
-npm run test:coverage
+2. **Data Management**
 
-# Run E2E tests
-npm run test:e2e
+   - Use fixtures for test data
+   - Clean up test data after tests
+   - Don't rely on test order
 
-# Open Cypress test runner
-npm run test:e2e:dev
-```
+3. **Performance**
 
-## Best Practices [✅ Implemented in Current Tests]
+   - Minimize unnecessary page loads
+   - Use API calls when possible
+   - Cache authentication tokens
 
-1. Component Testing:
-   - ✅ Test rendering
-   - ✅ Test user interactions
-   - ✅ Test state changes
-   - ✅ Mock external dependencies
+4. **Reliability**
 
-```typescript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { Counter } from '@/components/Counter';
+   - Add proper waiting strategies
+   - Handle loading states
+   - Retry flaky operations
 
-describe('Counter', () => {
-  it('increments count', () => {
-    render(<Counter />);
-    const button = screen.getByRole('button');
-    fireEvent.click(button);
-    expect(screen.getByText('Count: 1')).toBeInTheDocument();
-  });
-});
-```
+5. **CI/CD Integration**
+   - Run E2E tests in CI pipeline
+   - Use parallelization for speed
+   - Save artifacts for debugging
 
-2. API Testing:
-   - ✅ Test success scenarios
-   - ✅ Test error handling
-   - ✅ Test edge cases
+### 6. Planned Test Coverage
 
-```typescript
-import { handler } from '@/app/api/data';
+1. **Authentication Flows**
 
-describe('Data API', () => {
-  it('handles missing parameters', async () => {
-    const req = new Request('http://localhost:3000/api/data');
-    const res = await handler(req);
-    expect(res.status).toBe(400);
-  });
-});
-```
+   - Login/Logout
+   - Registration
+   - Password reset
+   - Session management
 
-## Progress Status
+2. **Core Features**
 
-### Completed (✅):
+   - Screenshot upload and management
+   - Module configuration
+   - Event tracking
+   - Analytics viewing
 
-1. Testing Stack Setup
-2. Jest Configuration
-3. Service Layer Tests
-4. Custom Hooks Tests
-5. Basic Test Infrastructure
-6. Initial Component Tests
-   - EditScreenshotNameModal component tests
+3. **Admin Functions**
 
-### In Progress (🟡):
+   - User management
+   - System configuration
+   - Data management
+   - Access control
 
-1. Unit Tests
-   - Component Tests (Started)
-     - Modal components
-     - Auth components
-     - Layout components
-     - Navigation components
-   - Utility Function Tests (Pending)
+4. **Error Scenarios**
+   - Network failures
+   - Invalid inputs
+   - Server errors
+   - Rate limiting
 
-### Not Started (⚪):
+## Best Practices
 
-1. Integration Tests
-2. E2E Tests
+1. **Integration Over Unit**
 
-## Next Steps
+   - Focus on testing user flows and behaviors
+   - Avoid testing implementation details
+   - Test real interactions over mocked functions
 
-1. Implement component tests
-2. Add utility function tests
-3. Set up integration tests
-4. Configure and implement E2E tests with Cypress
+2. **Test Real User Behavior**
 
-## Common Patterns
+   - Use `userEvent` over `fireEvent`
+   - Test actual user flows
+   - Include error and edge cases
 
-1. Test Utils Setup:
+3. **API Mocking**
 
-```typescript
-import { render } from '@testing-library/react';
+   - Use MSW for API mocking
+   - Test both success and error cases
+   - Mock at the network level, not function level
 
-const customRender = (ui: React.ReactElement, options = {}) =>
-  render(ui, {
-    wrapper: ({ children }) => children,
-    ...options,
-  });
+4. **Accessibility**
 
-export * from '@testing-library/react';
-export { customRender as render };
-```
+   - Use proper ARIA roles in tests
+   - Include basic accessibility checks
+   - Test keyboard navigation
 
-2. Mock Data:
+5. **Performance**
 
-```typescript
-export const mockUser = {
-  id: 1,
-  name: 'Test User',
-  email: 'test@example.com',
-};
+   - Mock heavy computations in tests
+   - Use `jest.isolateModules()` when needed
+   - Clean up after each test
 
-export const mockEvent = {
-  id: 'evt_123',
-  type: 'click',
-  timestamp: new Date().toISOString(),
-};
-```
+6. **Code Organization**
 
-3. Session Storage Mocking:
+   - Keep tests close to source code
+   - Use descriptive test names
+   - Group related tests logically
 
-```typescript
-describe('Component with Session Storage', () => {
-  const mockSessionStorage = window.sessionStorage;
+7. **Async Testing**
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+   - Always use `async/await`
+   - Handle loading states
+   - Test data fetching scenarios
 
-  it('handles auth state', () => {
-    // Mock no auth
-    (mockSessionStorage.getItem as jest.Mock).mockReturnValue(null);
-    render(<Component />);
-    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+8. **Context and State**
+   - Test with required providers
+   - Verify state changes
+   - Test context interactions
 
-    cleanup();
+Remember:
 
-    // Mock admin auth
-    (mockSessionStorage.getItem as jest.Mock).mockReturnValue(
-      JSON.stringify({ role: 'admin' })
-    );
-    render(<Component />);
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-  });
-
-  it('handles sign out', () => {
-    render(<Component />);
-    fireEvent.click(screen.getByText('Sign out'));
-    expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('auth');
-  });
-});
-```
-
-Key points about session storage mocking:
-
-- Use `window.sessionStorage` directly to get the mock
-- No need to manually create mock methods - Jest automatically mocks them
-- Clear mocks in `beforeEach` to ensure clean state
-- Use `mockReturnValue` to simulate different auth states
-- Mock the stored data in JSON format to match real usage
-
-4. Custom Matchers:
-
-```typescript
-expect.extend({
-  toBeWithinRange(received, floor, ceiling) {
-    const pass = received >= floor && received <= ceiling;
-    return {
-      pass,
-      message: () =>
-        `expected ${received} to be within range ${floor} - ${ceiling}`,
-    };
-  },
-});
-```
-
-## Coverage Goals
-
-- Unit Tests: 80% coverage
-- Integration Tests: Key workflows and API endpoints
-- E2E Tests: Critical user paths
-
-## Continuous Integration and Pre-commit Hooks [✅ Completed]
-
-### Pre-commit Hooks
-
-We use Husky and lint-staged to run tests before each commit. This ensures that no failing tests are committed to the repository.
-
-Setup includes:
-
-1. Husky for Git hooks
-2. lint-staged for running commands on staged files
-3. Automatic test runs on modified files
-
-Configuration in package.json:
-
-```json
-{
-  "scripts": {
-    "prepare": "husky install"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "jest --bail --findRelatedTests --passWithNoTests"
-    ]
-  }
-}
-```
-
-The pre-commit hook will:
-
-1. Run ESLint on staged files and fix auto-fixable issues
-2. Run Jest tests only on files related to the changes
-3. Pass if there are no tests related to the changes (--passWithNoTests)
-4. Block the commit if any tests fail (--bail)
-
-### CI Pipeline
-
-Add to your CI pipeline:
-
-```yaml
-test:
-  script:
-    - npm install
-    - npm test
-    - npm run test:e2e
-```
-
-For more detailed information about specific testing scenarios or patterns, refer to the individual test files in the `__tests__` directory.
-
-### Common Testing Patterns
-
-#### Modal Testing:
-
-```typescript
-// Testing modal visibility
-expect(screen.getByRole('dialog')).toBeInTheDocument();
-expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-
-// Testing modal interactions
-fireEvent.click(screen.getByText('Cancel'));
-fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
-
-// Testing form submissions
-fireEvent.submit(screen.getByRole('form'));
-
-// Handling async state updates with act
-await act(async () => {
-  render(<Component />);
-});
-
-// Handling user interactions
-await act(async () => {
-  fireEvent.click(button);
-});
-```
+- Don't test implementation details
+- Focus on user behavior
+- Keep tests maintainable
+- Test edge cases
+- Write readable assertions
