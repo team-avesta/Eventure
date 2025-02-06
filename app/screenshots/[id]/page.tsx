@@ -344,23 +344,6 @@ export default function ScreenshotDetailPage() {
     fetchDropdownData();
   }, []);
 
-  // Handle title change for pageview
-  const handleTitleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    setSelectedPageId(selectedId);
-
-    // Find corresponding URL
-    const selectedPage = dropdownData.pageData.find(
-      (page) => page.id === selectedId
-    );
-    if (selectedPage) {
-      const urlInput = document.getElementById('customUrl') as HTMLInputElement;
-      if (urlInput) {
-        urlInput.value = selectedPage.url;
-      }
-    }
-  };
-
   const renderFormFields = () => {
     if (!selectedEventType) return null;
 
@@ -736,6 +719,7 @@ export default function ScreenshotDetailPage() {
             setSelectedPageId(pageData.id);
             setFormData({
               dimensions: event.dimensions,
+              description: event.description,
             });
           }
           break;
@@ -750,6 +734,7 @@ export default function ScreenshotDetailPage() {
             eventname: event.name || '',
             eventvalue: event.value || '',
             dimensions: event.dimensions,
+            description: event.description,
           });
           break;
       }
