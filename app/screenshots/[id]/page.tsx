@@ -225,7 +225,6 @@ export default function ScreenshotDetailPage() {
       setModules(updatedModules);
       toast.success('Image replaced successfully');
     } catch (error) {
-      console.error('Failed to replace image:', error);
       toast.error(
         error instanceof Error ? error.message : 'Failed to replace image'
       );
@@ -322,7 +321,6 @@ export default function ScreenshotDetailPage() {
         isEditing ? 'Event updated successfully' : 'Event saved successfully'
       );
     } catch (error) {
-      console.error('Error saving event:', error);
       toast.error(
         isEditing ? 'Failed to update event' : 'Failed to save event'
       );
@@ -336,7 +334,6 @@ export default function ScreenshotDetailPage() {
         const data = await adminS3Service.fetchDropdownData();
         setDropdownData(data);
       } catch (error) {
-        console.error('Error fetching dropdown data:', error);
         toast.error('Failed to load form data');
       }
     };
@@ -677,7 +674,6 @@ export default function ScreenshotDetailPage() {
                 height: newRect.height,
               };
             } catch (error) {
-              console.error('Error updating event:', error);
               toast.error('Failed to update event position');
               return rect; // Return original rectangle if update fails
             }
@@ -772,7 +768,6 @@ export default function ScreenshotDetailPage() {
         setRectangles((prev) => prev.filter((r) => r.id !== event.id));
         toast.success('Event deleted successfully');
       } catch (error) {
-        console.error('Error deleting event:', error);
         toast.error('Failed to delete event');
       } finally {
         setShowDeleteConfirmation(false);

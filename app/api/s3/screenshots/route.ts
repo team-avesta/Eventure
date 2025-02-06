@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error processing screenshot:', error);
     return NextResponse.json(
       { error: 'Failed to process screenshot' },
       { status: 500 }

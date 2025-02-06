@@ -47,7 +47,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting screenshot:', error);
     return NextResponse.json(
       { error: 'Failed to delete screenshot' },
       { status: 500 }

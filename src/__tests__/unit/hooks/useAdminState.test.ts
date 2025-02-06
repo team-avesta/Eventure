@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 jest.mock('@/services/adminS3Service');
 jest.mock('react-hot-toast');
 
-// Mock console.error
 const originalConsoleError = console.error;
 beforeAll(() => {
   console.error = jest.fn();

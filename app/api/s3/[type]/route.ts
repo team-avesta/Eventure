@@ -10,7 +10,6 @@ export async function GET(
     const data = await dataService.getData(params.type);
     return NextResponse.json(data);
   } catch (error) {
-    console.error(`Error fetching ${params.type}:`, error);
     return NextResponse.json(
       { error: `Failed to fetch ${params.type}` },
       { status: 500 }
@@ -71,7 +70,6 @@ export async function PUT(
     await dataService.updateData(params.type, body);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(`Error updating ${params.type}:`, error);
     return NextResponse.json(
       { error: `Failed to update ${params.type}` },
       { status: 500 }

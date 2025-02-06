@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
       eventNames: eventNames?.eventNames || [],
     });
   } catch (error) {
-    console.error('Error fetching dropdown data:', error);
     return NextResponse.json(
       { error: 'Failed to fetch dropdown data' },
       { status: 500 }
