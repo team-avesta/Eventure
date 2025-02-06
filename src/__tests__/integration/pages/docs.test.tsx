@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import DocumentationPage from '../../../../../app/docs/page';
+import DocumentationPage from '../../../../app/docs/page';
 
 // Mock next/link
 jest.mock('next/link', () => {

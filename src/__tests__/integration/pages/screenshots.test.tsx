@@ -1,6 +1,6 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ScreenshotsPage from '../../../../../app/screenshots/page';
+import ScreenshotsPage from '../../../../app/screenshots/page';
 import { adminS3Service } from '@/services/adminS3Service';
 import { useAuth } from '@/hooks/useAuth';
 import { EventType } from '@/services/adminS3Service';

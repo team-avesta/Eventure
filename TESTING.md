@@ -26,10 +26,11 @@ src/
 └── __tests__/
     ├── integration/           # Integration tests [🟡 In Progress]
     │   ├── pages/            # Page integration tests
-    │   │   ├── home/
-    │   │   │   └── page.test.tsx
-    │   │   └── auth/
-    │   │       └── page.test.tsx
+    │   │   ├── home.test.tsx          # Home page tests
+    │   │   ├── docs.test.tsx          # Documentation page tests
+    │   │   ├── admin.test.tsx         # Admin dashboard tests
+    │   │   ├── admin-section.test.tsx # Admin section page tests
+    │   │   └── screenshots.test.tsx   # Screenshots page tests
     │   └── workflows/        # User workflow tests
     │
     ├── unit/                 # Unit tests [✅ Completed]
@@ -40,6 +41,38 @@ src/
     └── e2e/                 # End-to-end tests [⚪ Not Started]
         └── flows/           # Critical user flows
 ```
+
+### Integration Test File Naming Convention
+
+For page integration tests, we follow these naming conventions:
+
+1. **Basic Pages**: Use the page name directly
+
+   - `home.test.tsx` for root page (`/`)
+   - `docs.test.tsx` for documentation page (`/docs`)
+
+2. **Feature Pages**: Use the feature name
+
+   - `screenshots.test.tsx` for screenshots list (`/screenshots`)
+   - `admin.test.tsx` for admin dashboard (`/admin`)
+
+3. **Dynamic Pages**: Use descriptive names with parent feature
+
+   - `admin-section.test.tsx` for dynamic admin sections (`/admin/[type]`)
+   - `screenshot-detail.test.tsx` for single screenshot view (`/screenshots/[id]`)
+   - `screenshot-module.test.tsx` for module screenshots (`/screenshots/modules/[key]`)
+
+This structure keeps tests organized and easily discoverable while maintaining a flat hierarchy in the pages directory.
+
+Key principles:
+
+- Use kebab-case for file names
+- Keep names descriptive but concise
+- Include parent feature for context
+- Avoid nesting in file names
+- Match route structure in name when possible
+
+All test files should be placed directly in `src/__tests__/integration/pages/`.
 
 ## Testing Stack
 

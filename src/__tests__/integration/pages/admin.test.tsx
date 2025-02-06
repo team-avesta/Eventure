@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import AdminPage from '../../../../../app/admin/page';
+import AdminPage from '../../../../app/admin/page';
 import { useRouter } from 'next/navigation';
 import { useAdminState } from '@/hooks/useAdminState';
 import { adminSections } from '@/data/adminSections';

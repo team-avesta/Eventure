@@ -16,14 +16,14 @@ Integration tests focus on testing complete user flows and page behaviors rather
 ## Test Structure
 
 ```typescript
-// src/__tests__/integration/pages/[feature]/page.test.tsx
+// src/__tests__/integration/pages/feature.test.tsx
 
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { mockServer } from '@/mocks/server'
 import YourPage from '@/app/[feature]/page'
 
-describe('YourPage Integration', () => {
+describe('Feature Page Integration', () => {
   const user = userEvent.setup()
 
   // Mock providers if needed
@@ -71,45 +71,50 @@ describe('YourPage Integration', () => {
 1. **Setup Test Environment**
 
    ```bash
-   # Create test file
-   mkdir -p src/__tests__/integration/pages/[feature]
-   touch src/__tests__/integration/pages/[feature]/page.test.tsx
+   # Create test file in pages directory
+   touch src/__tests__/integration/pages/feature.test.tsx
    ```
 
-2. **Configure Test Dependencies**
+2. **File Naming Convention**
+
+   - Basic Pages: `home.test.tsx`, `docs.test.tsx`
+   - Feature Pages: `screenshots.test.tsx`, `admin.test.tsx`
+   - Dynamic Pages: `admin-section.test.tsx`, `screenshots-module.test.tsx`
+
+3. **Configure Test Dependencies**
 
    - Import required testing utilities
    - Setup MSW for API mocking
    - Configure test providers/wrappers
 
-3. **Write Test Scenarios**
+4. **Write Test Scenarios**
 
    - Main user flows
    - Error cases
    - Edge cases
    - Loading states
 
-4. **Run and Verify**
+5. **Run and Verify**
 
    ```bash
    # Run specific test
-   npm test -- [feature]/page.test.tsx
+   npm test -- pages/feature.test.tsx
 
    # Run with coverage
-   npm test -- --coverage [feature]/page.test.tsx
+   npm test -- --coverage pages/feature.test.tsx
    ```
 
 ## Examples
 
-### 1. Authentication Page Test
+### 1. Basic Page Test (home.test.tsx)
 
 ```typescript
-// src/__tests__/integration/pages/auth/page.test.tsx
+// src/__tests__/integration/pages/home.test.tsx
 
-describe('Auth Page Integration', () => {
+describe('Home Page Integration', () => {
   it('completes login flow', async () => {
     const user = userEvent.setup();
-    render(<AuthPage />);
+    render(<HomePage />);
 
     // Fill form
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
@@ -120,50 +125,39 @@ describe('Auth Page Integration', () => {
     expect(await screen.findByText('Welcome')).toBeInTheDocument();
     expect(window.location.pathname).toBe('/dashboard');
   });
+});
+```
 
-  it('shows validation errors', async () => {
-    const user = userEvent.setup();
-    render(<AuthPage />);
+### 2. Feature Page Test (admin.test.tsx)
 
-    // Submit without data
-    await user.click(screen.getByRole('button', { name: 'Login' }));
+```typescript
+// src/__tests__/integration/pages/admin.test.tsx
 
-    // Verify errors
-    expect(screen.getByText('Email is required')).toBeInTheDocument();
-    expect(screen.getByText('Password is required')).toBeInTheDocument();
+describe('Admin Page Integration', () => {
+  it('loads and displays sections correctly', async () => {
+    render(<AdminPage />);
+
+    // Verify loading state
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+
+    // Verify sections display
+    expect(await screen.findByText('Admin Dashboard')).toBeInTheDocument();
+    adminSections.forEach((section) => {
+      expect(screen.getByText(section.title)).toBeInTheDocument();
+    });
   });
 });
 ```
 
-### 2. Data Management Page Test
+### 3. Dynamic Page Test (admin-section.test.tsx)
 
 ```typescript
-// src/__tests__/integration/pages/admin/manage-data/page.test.tsx
+// src/__tests__/integration/pages/admin-section.test.tsx
 
-describe('Data Management Page Integration', () => {
-  it('loads and displays data correctly', async () => {
-    // Mock API response
-    mockServer.use(
-      rest.get('/api/data', (req, res, ctx) =>
-        res(ctx.json({ items: mockData }))
-      )
-    );
-
-    render(<ManageDataPage />);
-
-    // Verify loading state
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-
-    // Verify data display
-    expect(await screen.findByText('Data Items')).toBeInTheDocument();
-    mockData.forEach((item) => {
-      expect(screen.getByText(item.name)).toBeInTheDocument();
-    });
-  });
-
+describe('Admin Section Page Integration', () => {
   it('handles data operations', async () => {
     const user = userEvent.setup();
-    render(<ManageDataPage />);
+    render(<AdminSectionPage params={{ type: 'modules' }} />);
 
     // Add new item
     await user.click(screen.getByText('Add Item'));
@@ -176,56 +170,13 @@ describe('Data Management Page Integration', () => {
 });
 ```
 
-### 3. Form Submission Test
-
-```typescript
-// src/__tests__/integration/pages/contact/page.test.tsx
-
-describe('Contact Form Integration', () => {
-  it('submits form successfully', async () => {
-    const user = userEvent.setup();
-    render(<ContactPage />);
-
-    // Fill form
-    await user.type(screen.getByLabelText('Name'), 'John Doe');
-    await user.type(screen.getByLabelText('Email'), 'john@example.com');
-    await user.type(screen.getByLabelText('Message'), 'Test message');
-
-    // Submit
-    await user.click(screen.getByRole('button', { name: 'Send' }));
-
-    // Verify success
-    expect(await screen.findByText('Message sent!')).toBeInTheDocument();
-  });
-
-  it('handles server error', async () => {
-    // Mock server error
-    mockServer.use(
-      rest.post('/api/contact', (req, res, ctx) => res(ctx.status(500)))
-    );
-
-    const user = userEvent.setup();
-    render(<ContactPage />);
-
-    // Fill and submit form
-    await user.type(screen.getByLabelText('Name'), 'John Doe');
-    await user.click(screen.getByRole('button', { name: 'Send' }));
-
-    // Verify error handling
-    expect(
-      await screen.findByText('Failed to send message')
-    ).toBeInTheDocument();
-  });
-});
-```
-
 ## Best Practices
 
 1. **Test Organization**
 
+   - Keep all page tests in `src/__tests__/integration/pages/`
+   - Use clear, descriptive file names
    - Group related tests logically
-   - Use descriptive test names
-   - Keep test files focused
 
 2. **Mocking Strategy**
 
