@@ -67,6 +67,7 @@ interface ScreenshotCardProps {
   onDelete: (screenshotId: string) => void;
   onNameChange: (screenshotId: string, newName: string) => void;
   isDragModeEnabled: boolean;
+  isDeleting: boolean;
 }
 
 export default function ScreenshotCard({
@@ -76,6 +77,7 @@ export default function ScreenshotCard({
   onDelete,
   onNameChange,
   isDragModeEnabled,
+  isDeleting,
 }: ScreenshotCardProps) {
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
 
@@ -199,10 +201,10 @@ export default function ScreenshotCard({
             </svg>
           </button>
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              onDelete(screenshot.id);
-            }}
+            onClick={() => onDelete(screenshot.id)}
+            aria-label={`Delete ${screenshot.name}`}
+            data-testid={`delete-button-${screenshot.id}`}
+            disabled={isDeleting}
             className="p-2 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-700 pointer-events-auto"
             title="Delete screenshot"
           >

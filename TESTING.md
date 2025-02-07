@@ -91,6 +91,112 @@ All test files should be placed directly in `src/__tests__/integration/pages/`.
 }
 ```
 
+## Mock Service Worker (MSW)
+
+### 1. Setup
+
+MSW is configured in `src/__mocks__/server.ts`:
+
+```typescript
+import { setupWorker } from 'msw/browser';
+import { http, HttpResponse } from 'msw';
+
+const worker = setupWorker();
+
+export const server = {
+  listen: () => worker.start({ onUnhandledRequest: 'bypass' }),
+  resetHandlers: () => worker.resetHandlers(),
+  close: () => worker.stop(),
+  use: (...handlers: any[]) => worker.use(...handlers),
+};
+```
+
+### 2. Usage in Tests
+
+```typescript
+import { http } from 'msw';
+import { server } from '@/__mocks__/server';
+
+describe('Component with API calls', () => {
+  it('handles successful API response', async () => {
+    // Mock successful response
+    server.use(
+      http.get('/api/data', () => {
+        return HttpResponse.json({ data: 'test' });
+      })
+    );
+
+    render(<Component />);
+    // Test component behavior
+  });
+
+  it('handles API error', async () => {
+    // Mock error response
+    server.use(
+      http.get('/api/data', () => {
+        return new HttpResponse(null, { status: 500 });
+      })
+    );
+
+    render(<Component />);
+    // Test error handling
+  });
+});
+```
+
+### 3. Best Practices
+
+1. **Reset Handlers After Each Test**
+
+   ```typescript
+   afterEach(() => server.resetHandlers());
+   ```
+
+2. **Mock at Request Level**
+
+   - Mock the actual HTTP requests instead of service functions
+   - Use actual API endpoints in your code
+   - Test both success and error scenarios
+
+3. **Dynamic Responses**
+
+   ```typescript
+   server.use(
+     http.post('/api/data', async ({ request }) => {
+       const body = await request.json();
+       return HttpResponse.json({
+         received: body,
+         status: 'success',
+       });
+     })
+   );
+   ```
+
+4. **Realistic Error Scenarios**
+
+   ```typescript
+   server.use(
+     http.get('/api/data', () => {
+       return new HttpResponse(null, {
+         status: 503,
+         statusText: 'Service Unavailable',
+       });
+     })
+   );
+   ```
+
+5. **Conditional Responses**
+   ```typescript
+   server.use(
+     http.get('/api/user/:id', ({ params }) => {
+       const { id } = params;
+       return id === '1'
+         ? HttpResponse.json({ name: 'John' })
+         : new HttpResponse(null, { status: 404 });
+     })
+   );
+   ```
+
 ## Test Types
 
 ### 1. Integration Tests (Pages) [🟡 In Progress]

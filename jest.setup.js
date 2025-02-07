@@ -1,6 +1,8 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 import { mockAnimationsApi } from 'jsdom-testing-mocks';
+import { TextEncoder, TextDecoder } from 'node:util';
+import 'whatwg-fetch';
 
 // Setup animation mocks
 mockAnimationsApi();
@@ -29,6 +31,12 @@ const mockSessionStorage = {
 };
 Object.defineProperty(window, 'sessionStorage', {
   value: mockSessionStorage,
+});
+
+// Setup TextEncoder/TextDecoder
+Object.assign(global, {
+  TextDecoder: TextDecoder,
+  TextEncoder: TextEncoder,
 });
 
 // Reset all mocks after each test

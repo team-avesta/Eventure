@@ -12,7 +12,7 @@ Eventure is a powerful event mapping tool that helps you visualize, track, and m
 - 📊 Dimension Management
 - 📱 Module-based Architecture
 - 🔒 Secure Data Storage (AWS S3)
-- �� Automated Backups
+- Automated Backups
 
 ## Tech Stack
 
@@ -20,6 +20,7 @@ Eventure is a powerful event mapping tool that helps you visualize, track, and m
 - TypeScript
 - AWS S3
 - Tailwind CSS
+- MSW (Mock Service Worker)
 
 ## Project Structure
 
@@ -31,7 +32,9 @@ eventure/
 │   ├── services/        # AWS S3 and API services
 │   ├── types/          # TypeScript definitions
 │   ├── utils/          # Utility functions
-│   └── hooks/          # Custom React hooks
+│   ├── hooks/          # Custom React hooks
+│   ├── __mocks__/      # MSW and other test mocks
+│   └── __tests__/      # Test files
 ├── public/             # Static assets
 └── doc/               # Documentation
 ```
@@ -77,7 +80,15 @@ SECRET_ACCESS_KEY=your-secret-key
 S3_BUCKET_NAME=your-bucket-name
 ```
 
-5. Run development server
+5. Set up MSW for development (optional)
+
+```bash
+npm run msw:init
+```
+
+This will create the MSW service worker in your public directory.
+
+6. Run development server
 
 ```bash
 npm run dev

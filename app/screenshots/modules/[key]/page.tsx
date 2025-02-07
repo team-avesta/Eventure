@@ -37,6 +37,7 @@ export default function ModuleScreenshotsPage() {
     null
   );
   const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -48,8 +49,13 @@ export default function ModuleScreenshotsPage() {
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
     if (auth) {
-      const { role } = JSON.parse(auth);
-      setUserRole(role);
+      try {
+        const { role } = JSON.parse(auth);
+        setUserRole(role);
+      } catch (error) {
+        // If JSON parsing fails, default to non-admin view
+        setUserRole('user');
+      }
     }
   }, []);
 
@@ -72,6 +78,7 @@ export default function ModuleScreenshotsPage() {
   const handleDeleteScreenshot = async () => {
     if (!screenshotToDelete || !currentModule) return;
 
+    setIsDeleting(true);
     try {
       await adminS3Service.deleteScreenshot(screenshotToDelete);
       await fetchModule();
@@ -79,6 +86,7 @@ export default function ModuleScreenshotsPage() {
     } catch (error) {
       toast.error('Failed to delete screenshot');
     } finally {
+      setIsDeleting(false);
       setScreenshotToDelete(null);
     }
   };
@@ -149,7 +157,9 @@ export default function ModuleScreenshotsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading...</div>
+        <div className="text-center" data-testid="loading">
+          Loading...
+        </div>
       </div>
     );
   }
@@ -235,6 +245,9 @@ export default function ModuleScreenshotsPage() {
                     onDelete={setScreenshotToDelete}
                     onNameChange={handleNameChange}
                     isDragModeEnabled={isDragModeEnabled}
+                    isDeleting={
+                      isDeleting && screenshotToDelete === screenshot.id
+                    }
                   />
                 ))}
               </div>
