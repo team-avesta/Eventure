@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Event } from '@/types';
@@ -10,10 +9,10 @@ import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
 import { adminS3Service, EventType } from '@/services/adminS3Service';
 import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import DescriptionModal from '@/components/shared/DescriptionModal';
+import ActionDropdown from '@/components/shared/ActionDropdown';
 import Breadcrumb from '@/components/common/Breadcrumb';
-import DimensionDisplay from '@/components/common/DimensionDisplay';
 import { Autocomplete } from '@/components/common/Autocomplete';
-import { Tooltip } from 'react-tooltip';
 
 const EVENT_TYPES = [
   { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
@@ -48,6 +47,11 @@ export default function ScreenshotDetailPage() {
   const screenshotId = params.id as string;
   const [isDraggable, setIsDraggable] = useState(false);
   const [showEventTypeModal, setShowEventTypeModal] = useState(false);
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [selectedDescription, setSelectedDescription] = useState<{
+    id: string;
+    description: string;
+  } | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [selectedEventType, setSelectedEventType] = useState<{
     id: string;
@@ -1007,10 +1011,6 @@ export default function ScreenshotDetailPage() {
                       <div
                         key={rect.id}
                         id={`event-card-${rect.id}`}
-                        data-tooltip-id={
-                          event?.description ? `tooltip-${rect.id}` : undefined
-                        }
-                        data-tooltip-content={event?.description}
                         className={`p-4 rounded-md transition-all relative cursor-pointer ${
                           expandedId === rect.id ? 'bg-gray-50' : ''
                         } ${
@@ -1090,13 +1090,43 @@ export default function ScreenshotDetailPage() {
                           </>
                         )}
 
-                        {/* Action Buttons - Only show when card is expanded AND user is admin */}
-                        {expandedId === rect.id && userRole === 'admin' && (
-                          <div className="absolute top-3 right-3 flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditEvent({
+                        {/* Action Menu - Different UI for admin and non-admin */}
+                        <div className="absolute top-3 right-3">
+                          {userRole === 'admin' ? (
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedId(
+                                    expandedId === rect.id ? null : rect.id
+                                  );
+                                }}
+                                className="p-1.5 text-gray-500 hover:text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                                  />
+                                </svg>
+                              </button>
+                              <ActionDropdown
+                                isOpen={expandedId === rect.id}
+                                onClose={() => setExpandedId(null)}
+                                onEdit={handleEditEvent}
+                                onDelete={handleDeleteEvent}
+                                onViewDescription={(id, description) => {
+                                  setSelectedDescription({ id, description });
+                                  setShowDescriptionModal(true);
+                                }}
+                                event={{
                                   id: rect.id,
                                   startX: rect.startX,
                                   startY: rect.startY,
@@ -1104,7 +1134,20 @@ export default function ScreenshotDetailPage() {
                                   height: rect.height,
                                   eventType: rect.eventType,
                                   eventAction: rect.action || '',
+                                  description: event?.description,
+                                }}
+                                isAdmin={userRole === 'admin'}
+                              />
+                            </div>
+                          ) : event?.description ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedDescription({
+                                  id: rect.id,
+                                  description: event.description || '',
                                 });
+                                setShowDescriptionModal(true);
                               }}
                               className="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
                             >
@@ -1118,104 +1161,12 @@ export default function ScreenshotDetailPage() {
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth="2"
-                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                               </svg>
                             </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteEvent({
-                                  id: rect.id,
-                                  startX: rect.startX,
-                                  startY: rect.startY,
-                                  width: rect.width,
-                                  height: rect.height,
-                                  eventType: rect.eventType,
-                                  eventAction: rect.action || '',
-                                });
-                              }}
-                              className="p-1.5 text-gray-500 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Expanded Details */}
-                        {expandedId === rect.id && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            {event?.name && eventType?.id !== 'pageview' && (
-                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                                <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                  Event Name:
-                                </span>
-                                <span
-                                  className="truncate pr-4"
-                                  title={event.name}
-                                >
-                                  {event.name}
-                                </span>
-                              </div>
-                            )}
-                            {event?.value && (
-                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                                <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                  Event Value:
-                                </span>
-                                <span
-                                  className="truncate pr-4"
-                                  title={event.value}
-                                >
-                                  {event.value}
-                                </span>
-                              </div>
-                            )}
-                            {event?.dimensions &&
-                              event.dimensions.length > 0 && (
-                                <div className="text-sm text-gray-600">
-                                  <span className="font-medium">
-                                    Dimensions:
-                                  </span>
-                                  <div className="mt-2 space-y-1.5">
-                                    {event.dimensions.map((dim: string) => {
-                                      const dimension =
-                                        dropdownData.dimensions.find(
-                                          (d) => d.id === dim
-                                        );
-                                      return dimension ? (
-                                        <DimensionDisplay
-                                          key={dim}
-                                          dimension={dimension}
-                                          eventId={event.id}
-                                        />
-                                      ) : null;
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                          </div>
-                        )}
-
-                        {event?.description && (
-                          <Tooltip
-                            id={`tooltip-${rect.id}`}
-                            place="top"
-                            className="z-50 max-w-xs"
-                          />
-                        )}
+                          ) : null}
+                        </div>
                       </div>
                     );
                   })}
@@ -1468,6 +1419,15 @@ export default function ScreenshotDetailPage() {
         message="Are you sure you want to delete this event? This action cannot be undone."
         confirmText="Delete Event"
         cancelText="Cancel"
+      />
+
+      <DescriptionModal
+        isOpen={showDescriptionModal}
+        onClose={() => {
+          setShowDescriptionModal(false);
+          setSelectedDescription(null);
+        }}
+        description={selectedDescription?.description || ''}
       />
     </div>
   );
