@@ -13,6 +13,7 @@ import DescriptionModal from '@/components/shared/DescriptionModal';
 import ActionDropdown from '@/components/shared/ActionDropdown';
 import Breadcrumb from '@/components/common/Breadcrumb';
 import { Autocomplete } from '@/components/common/Autocomplete';
+import DimensionDisplay from '@/components/common/DimensionDisplay';
 
 const EVENT_TYPES = [
   { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
@@ -105,6 +106,7 @@ export default function ScreenshotDetailPage() {
   const [selectedEventFilter, setSelectedEventFilter] = useState<string>('all');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<Rectangle | null>(null);
+  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
@@ -819,6 +821,26 @@ export default function ScreenshotDetailPage() {
       selectedEventFilter === 'all' || rect.eventType === selectedEventFilter
   );
 
+  // Add click handler for document to close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeDropdownId) {
+        const dropdownElement = document.querySelector(
+          `[data-dropdown-id="${activeDropdownId}"]`
+        );
+        if (
+          dropdownElement &&
+          !dropdownElement.contains(event.target as Node)
+        ) {
+          setActiveDropdownId(null);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [activeDropdownId]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -1012,11 +1034,9 @@ export default function ScreenshotDetailPage() {
                         key={rect.id}
                         id={`event-card-${rect.id}`}
                         className={`p-4 rounded-md transition-all relative cursor-pointer ${
-                          expandedId === rect.id ? 'bg-gray-50' : ''
-                        } ${
                           highlightedCardId === rect.id
                             ? 'border ring-1 ring-opacity-50'
-                            : 'border border-gray-200 hover:border-blue-500'
+                            : 'border border-gray-200 hover:bg-gray-50'
                         }`}
                         style={
                           highlightedCardId === rect.id
@@ -1030,9 +1050,15 @@ export default function ScreenshotDetailPage() {
                               } as React.CSSProperties)
                             : undefined
                         }
-                        onClick={() =>
-                          setExpandedId(expandedId === rect.id ? null : rect.id)
-                        }
+                        onClick={() => {
+                          setExpandedId(
+                            expandedId === rect.id ? null : rect.id
+                          );
+                          // Close any open dropdown when clicking on a card
+                          if (activeDropdownId) {
+                            setActiveDropdownId(null);
+                          }
+                        }}
                       >
                         {/* Show category and action for non-pageview events */}
                         {event?.category && eventType?.id !== 'pageview' && (
@@ -1096,9 +1122,11 @@ export default function ScreenshotDetailPage() {
                             <div className="relative">
                               <button
                                 onClick={(e) => {
-                                  e.stopPropagation();
-                                  setExpandedId(
-                                    expandedId === rect.id ? null : rect.id
+                                  e.stopPropagation(); // Prevent card click
+                                  setActiveDropdownId(
+                                    activeDropdownId === rect.id
+                                      ? null
+                                      : rect.id
                                   );
                                 }}
                                 className="p-1.5 text-gray-500 hover:text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
@@ -1118,8 +1146,8 @@ export default function ScreenshotDetailPage() {
                                 </svg>
                               </button>
                               <ActionDropdown
-                                isOpen={expandedId === rect.id}
-                                onClose={() => setExpandedId(null)}
+                                isOpen={activeDropdownId === rect.id}
+                                onClose={() => setActiveDropdownId(null)}
                                 onEdit={handleEditEvent}
                                 onDelete={handleDeleteEvent}
                                 onViewDescription={(id, description) => {
@@ -1167,6 +1195,61 @@ export default function ScreenshotDetailPage() {
                             </button>
                           ) : null}
                         </div>
+
+                        {/* Expanded Details */}
+                        {expandedId === rect.id && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            {event?.name && eventType?.id !== 'pageview' && (
+                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                                <span className="font-medium min-w-[90px] whitespace-nowrap">
+                                  Event Name:
+                                </span>
+                                <span
+                                  className="truncate pr-4"
+                                  title={event.name}
+                                >
+                                  {event.name}
+                                </span>
+                              </div>
+                            )}
+                            {event?.value && (
+                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
+                                <span className="font-medium min-w-[90px] whitespace-nowrap">
+                                  Event Value:
+                                </span>
+                                <span
+                                  className="truncate pr-4"
+                                  title={event.value}
+                                >
+                                  {event.value}
+                                </span>
+                              </div>
+                            )}
+                            {event?.dimensions &&
+                              event.dimensions.length > 0 && (
+                                <div className="text-sm text-gray-600">
+                                  <span className="font-medium">
+                                    Dimensions:
+                                  </span>
+                                  <div className="mt-2 space-y-1.5">
+                                    {event.dimensions.map((dim: string) => {
+                                      const dimension =
+                                        dropdownData.dimensions.find(
+                                          (d) => d.id === dim
+                                        );
+                                      return dimension ? (
+                                        <DimensionDisplay
+                                          key={dim}
+                                          dimension={dimension}
+                                          eventId={event.id}
+                                        />
+                                      ) : null;
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
