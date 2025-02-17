@@ -108,6 +108,7 @@ export default function ScreenshotDetailPage() {
   const [eventToDelete, setEventToDelete] = useState<Rectangle | null>(null);
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
     if (auth) {
@@ -280,6 +281,8 @@ export default function ScreenshotDetailPage() {
   }) => {
     if (!newEvent) return;
 
+    setIsSubmitting(true);
+
     let eventData: any = {
       id: newEvent.id || Date.now().toString(),
       coordinates: newEvent.coordinates!,
@@ -330,6 +333,8 @@ export default function ScreenshotDetailPage() {
       toast.error(
         isEditing ? 'Failed to update event' : 'Failed to save event'
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1478,9 +1483,12 @@ export default function ScreenshotDetailPage() {
                       </button>
                       <button
                         type="submit"
-                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className={`rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isSubmitting}
                       >
-                        Save Event
+                        {isSubmitting ? 'Saving...' : 'Save Event'}
                       </button>
                     </div>
                   </form>

@@ -17,9 +17,6 @@ interface ImageAnnotatorWrapperProps {
   } | null;
   onDrawComplete?: () => void;
   initialRectangles?: Rectangle[];
-  onEditEvent?: (rectId: string) => void;
-  onDeleteEvent?: (rectId: string) => void;
-  onGetEventDetails?: (rectId: string) => Promise<any>;
   onRectangleClick?: (rectId: string) => void;
 }
 
@@ -33,9 +30,6 @@ export default function ImageAnnotatorWrapper({
   selectedEventType,
   onDrawComplete,
   initialRectangles = [],
-  onEditEvent,
-  onDeleteEvent,
-  onGetEventDetails,
   onRectangleClick,
 }: ImageAnnotatorWrapperProps) {
   return (
@@ -49,9 +43,6 @@ export default function ImageAnnotatorWrapper({
       selectedEventType={selectedEventType}
       onDrawComplete={onDrawComplete}
       initialRectangles={initialRectangles}
-      onEditEvent={onEditEvent}
-      onDeleteEvent={onDeleteEvent}
-      onGetEventDetails={onGetEventDetails}
       onRectangleClick={onRectangleClick}
     />
   );

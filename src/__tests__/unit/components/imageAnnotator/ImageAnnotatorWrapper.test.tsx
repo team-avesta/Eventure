@@ -32,37 +32,11 @@ describe('ImageAnnotatorWrapper', () => {
     },
     onDrawComplete: jest.fn(),
     initialRectangles: [mockRectangle],
-    onEditEvent: jest.fn(),
-    onDeleteEvent: jest.fn(),
-    onGetEventDetails: jest.fn(),
     onRectangleClick: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  it('renders ImageAnnotator with correct props', () => {
-    render(<ImageAnnotatorWrapper {...mockProps} />);
-
-    expect(ImageAnnotator).toHaveBeenCalledWith(
-      {
-        initialImage: mockProps.imageUrl,
-        width: mockProps.width,
-        height: mockProps.height,
-        onRectanglesChange: mockProps.onRectanglesChange,
-        isDragMode: mockProps.isDragMode,
-        isDrawingEnabled: mockProps.isDrawingEnabled,
-        selectedEventType: mockProps.selectedEventType,
-        onDrawComplete: mockProps.onDrawComplete,
-        initialRectangles: mockProps.initialRectangles,
-        onEditEvent: mockProps.onEditEvent,
-        onDeleteEvent: mockProps.onDeleteEvent,
-        onGetEventDetails: mockProps.onGetEventDetails,
-        onRectangleClick: mockProps.onRectangleClick,
-      },
-      {}
-    );
   });
 
   it('handles undefined optional props', () => {
@@ -176,9 +150,6 @@ describe('ImageAnnotatorWrapper', () => {
     const eventHandlers = {
       ...mockProps,
       onDrawComplete: jest.fn(),
-      onEditEvent: jest.fn(),
-      onDeleteEvent: jest.fn(),
-      onGetEventDetails: jest.fn(),
       onRectangleClick: jest.fn(),
     };
 
@@ -187,9 +158,6 @@ describe('ImageAnnotatorWrapper', () => {
     expect(ImageAnnotator).toHaveBeenCalledWith(
       expect.objectContaining({
         onDrawComplete: eventHandlers.onDrawComplete,
-        onEditEvent: eventHandlers.onEditEvent,
-        onDeleteEvent: eventHandlers.onDeleteEvent,
-        onGetEventDetails: eventHandlers.onGetEventDetails,
         onRectangleClick: eventHandlers.onRectangleClick,
       }),
       {}

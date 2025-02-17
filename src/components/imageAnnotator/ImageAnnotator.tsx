@@ -41,7 +41,6 @@ interface ImageAnnotatorProps {
   width?: number;
   height?: number;
   onRectanglesChange?: (rectangles: Rectangle[]) => void;
-  className?: string;
   isDragMode: boolean;
   isDrawingEnabled: boolean;
   selectedEventType: {
@@ -51,9 +50,6 @@ interface ImageAnnotatorProps {
   } | null;
   onDrawComplete?: () => void;
   initialRectangles?: Rectangle[];
-  onEditEvent?: (rectId: string) => void;
-  onDeleteEvent?: (rectId: string) => void;
-  onGetEventDetails?: (rectId: string) => Promise<any>;
   onRectangleClick?: (rectId: string) => void;
 }
 
@@ -62,15 +58,11 @@ export default function ImageAnnotator({
   width = 800,
   height = 600,
   onRectanglesChange,
-  className = '',
   isDragMode,
   isDrawingEnabled,
   selectedEventType,
   onDrawComplete,
   initialRectangles = [],
-  onEditEvent,
-  onDeleteEvent,
-  onGetEventDetails,
   onRectangleClick,
 }: ImageAnnotatorProps) {
   const [image, setImage] = useState<string>(initialImage);
@@ -403,16 +395,6 @@ export default function ImageAnnotator({
       if (clickedRect.id) {
         // Trigger the click handler for the rectangle
         onRectangleClick?.(clickedRect.id);
-
-        // Show event details if available
-        if (onGetEventDetails) {
-          const eventDetails = await onGetEventDetails(clickedRect.id);
-          setSelectedInfo({
-            x: e.clientX,
-            y: e.clientY,
-            eventDetails,
-          });
-        }
       }
     } else {
       setSelectedInfo(null);
@@ -562,7 +544,7 @@ export default function ImageAnnotator({
   }, [isDragMode]);
 
   return (
-    <div className={`flex flex-col gap-4 ${className}`}>
+    <div className="flex flex-col gap-4">
       <div
         className="relative"
         style={{ width: `${width}px`, height: `${imageHeight}px` }}
@@ -588,146 +570,6 @@ export default function ImageAnnotator({
             className="absolute top-0 left-0 z-10"
             style={{ cursor: getCursorStyle(resizeHandle) }}
           />
-          {selectedInfo && (
-            <div
-              className="absolute z-20 bg-white rounded-lg shadow-lg p-4 min-w-[300px] text-sm"
-              style={{
-                left: selectedInfo.x + 10,
-                top: selectedInfo.y + 10,
-              }}
-            >
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <div className="font-semibold text-gray-900">
-                    Event Details
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        selectedInfo.eventDetails?.id &&
-                        onEditEvent?.(selectedInfo.eventDetails.id)
-                      }
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() =>
-                        selectedInfo.eventDetails?.id &&
-                        onDeleteEvent?.(selectedInfo.eventDetails.id)
-                      }
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {selectedInfo.eventDetails?.eventType === 'pageview' ? (
-                    <div className="flex flex-col gap-1.5">
-                      <div>
-                        <span className="text-gray-500">Custom Title:</span>{' '}
-                        <span className="text-gray-900">
-                          {selectedInfo.eventDetails.name || '-'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Custom URL:</span>{' '}
-                        <span className="text-gray-900">
-                          {selectedInfo.eventDetails.category || '-'}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1.5">
-                      <div>
-                        <span className="text-gray-500">Category:</span>{' '}
-                        <span className="text-gray-900">
-                          {selectedInfo.eventDetails?.category || '-'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Action Name:</span>{' '}
-                        <span className="text-gray-900">
-                          {selectedInfo.eventDetails?.action || '-'}
-                        </span>
-                      </div>
-                      {selectedInfo.eventDetails?.name && (
-                        <div>
-                          <span className="text-gray-500">Name:</span>{' '}
-                          <span className="text-gray-900">
-                            {selectedInfo.eventDetails.name}
-                          </span>
-                        </div>
-                      )}
-                      {selectedInfo.eventDetails?.value && (
-                        <div>
-                          <span className="text-gray-500">Value:</span>{' '}
-                          <span className="text-gray-900">
-                            {selectedInfo.eventDetails.value}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="pt-1">
-                    <div className="text-gray-500 mb-1.5">Dimensions:</div>
-                    {selectedInfo.eventDetails?.dimensions?.length > 0 ? (
-                      <div className="space-y-1">
-                        {selectedInfo.eventDetails.dimensions.map(
-                          (dimId: string, index: number) => (
-                            <div
-                              key={dimId}
-                              className="flex items-center gap-2"
-                            >
-                              <span className="text-gray-500 min-w-[24px]">
-                                {dimId}.
-                              </span>
-                              <span className="text-gray-900">
-                                {
-                                  selectedInfo.eventDetails.dimensionNames?.[
-                                    index
-                                  ]
-                                }
-                              </span>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-gray-500 italic">
-                        No dimensions available
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

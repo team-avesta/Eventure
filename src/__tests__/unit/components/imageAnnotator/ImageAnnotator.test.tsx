@@ -103,9 +103,6 @@ describe('ImageAnnotator', () => {
     isDrawingEnabled: true,
     selectedEventType: mockEventType,
     onDrawComplete: jest.fn(),
-    onEditEvent: jest.fn(),
-    onDeleteEvent: jest.fn(),
-    onGetEventDetails: jest.fn(),
     onRectangleClick: jest.fn(),
     initialRectangles: [],
   };
@@ -325,14 +322,10 @@ describe('ImageAnnotator', () => {
 
   describe('Event Handling', () => {
     it('calls onRectangleClick when clicking a rectangle', async () => {
-      const mockGetEventDetails = jest
-        .fn()
-        .mockResolvedValue({ id: 'rect1', name: 'Test Event' });
       render(
         <ImageAnnotator
           {...defaultProps}
           initialRectangles={[mockRect]}
-          onGetEventDetails={mockGetEventDetails}
           isDragMode={false}
         />
       );
@@ -356,46 +349,6 @@ describe('ImageAnnotator', () => {
       });
 
       expect(defaultProps.onRectangleClick).toHaveBeenCalledWith('rect1');
-      expect(mockGetEventDetails).toHaveBeenCalledWith('rect1');
-    });
-
-    it('shows event details popup when clicking a rectangle', async () => {
-      const mockEventDetails = {
-        id: 'rect1',
-        name: 'Test Event',
-        category: 'Test Category',
-        action: 'Test Action',
-      };
-      const mockGetEventDetails = jest.fn().mockResolvedValue(mockEventDetails);
-
-      render(
-        <ImageAnnotator
-          {...defaultProps}
-          initialRectangles={[mockRect]}
-          onGetEventDetails={mockGetEventDetails}
-          isDragMode={false}
-        />
-      );
-      const canvas = document.querySelector('canvas')!;
-
-      // Mock getBoundingClientRect for coordinate calculations
-      jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 600,
-        right: 800,
-        bottom: 600,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      });
-
-      await act(async () => {
-        fireEvent.click(canvas, { clientX: 150, clientY: 150 });
-      });
-
-      expect(screen.getByText('Event Details')).toBeInTheDocument();
     });
   });
 
@@ -423,86 +376,6 @@ describe('ImageAnnotator', () => {
       );
 
       expect(screen.getByRole('img')).toHaveAttribute('src', '/new-image.jpg');
-    });
-  });
-
-  describe('Modal Actions', () => {
-    it('calls onEditEvent when clicking edit button', async () => {
-      const mockEventDetails = { id: 'rect1', name: 'Test Event' };
-      const mockGetEventDetails = jest.fn().mockResolvedValue(mockEventDetails);
-
-      render(
-        <ImageAnnotator
-          {...defaultProps}
-          initialRectangles={[mockRect]}
-          onGetEventDetails={mockGetEventDetails}
-          isDragMode={false}
-        />
-      );
-      const canvas = document.querySelector('canvas')!;
-
-      // Mock getBoundingClientRect for coordinate calculations
-      jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 600,
-        right: 800,
-        bottom: 600,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      });
-
-      await act(async () => {
-        fireEvent.click(canvas, { clientX: 150, clientY: 150 });
-      });
-
-      const buttons = screen.getAllByRole('button');
-      await act(async () => {
-        fireEvent.click(buttons[0]);
-      });
-
-      expect(defaultProps.onEditEvent).toHaveBeenCalledWith('rect1');
-    });
-
-    it('calls onDeleteEvent when clicking delete button', async () => {
-      const mockEventDetails = { id: 'rect1', name: 'Test Event' };
-      const mockGetEventDetails = jest.fn().mockResolvedValue(mockEventDetails);
-
-      render(
-        <ImageAnnotator
-          {...defaultProps}
-          initialRectangles={[mockRect]}
-          onGetEventDetails={mockGetEventDetails}
-          isDragMode={false}
-        />
-      );
-      const canvas = document.querySelector('canvas')!;
-
-      // Mock getBoundingClientRect for coordinate calculations
-      jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 600,
-        right: 800,
-        bottom: 600,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      });
-
-      await act(async () => {
-        fireEvent.click(canvas, { clientX: 150, clientY: 150 });
-      });
-
-      const buttons = screen.getAllByRole('button');
-      await act(async () => {
-        fireEvent.click(buttons[1]);
-      });
-
-      expect(defaultProps.onDeleteEvent).toHaveBeenCalledWith('rect1');
     });
   });
 });
