@@ -108,10 +108,10 @@ describe('ImageAnnotator', () => {
   };
 
   const mockRect = {
-    startX: 100,
-    startY: 100,
-    width: 200,
-    height: 150,
+    startX: 12.5,
+    startY: 16.67,
+    width: 25,
+    height: 25,
     eventType: 'pageview',
     id: 'rect1',
   };
@@ -181,7 +181,6 @@ describe('ImageAnnotator', () => {
       );
       const canvas = document.querySelector('canvas')!;
 
-      // Mock getBoundingClientRect for coordinate calculations
       jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
         left: 0,
         top: 0,
@@ -196,31 +195,25 @@ describe('ImageAnnotator', () => {
 
       // Simulate drawing a rectangle
       await act(async () => {
-        // Start drawing
         fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 });
       });
 
       await act(async () => {
-        // Draw
         fireEvent.mouseMove(canvas, { clientX: 300, clientY: 200 });
       });
 
       await act(async () => {
-        // Stop drawing
         fireEvent.mouseUp(canvas);
       });
 
-      // Wait for state updates
+      // Wait for state updates and verify percentage-based coordinates
       await waitFor(() => {
-        expect(onRectanglesChange).toHaveBeenCalledWith([
-          expect.objectContaining({
-            startX: 100,
-            startY: 100,
-            width: 200,
-            height: 100,
-            eventType: 'pageview',
-          }),
-        ]);
+        const result = onRectanglesChange.mock.calls[0][0][0];
+        expect(result.startX).toBeCloseTo(12.5, 1);
+        expect(result.startY).toBeCloseTo(16.67, 1);
+        expect(result.width).toBeCloseTo(25, 1);
+        expect(result.height).toBeCloseTo(16.67, 1);
+        expect(result.eventType).toBe('pageview');
       });
       expect(defaultProps.onDrawComplete).toHaveBeenCalled();
     });
@@ -238,7 +231,6 @@ describe('ImageAnnotator', () => {
       );
       const canvas = document.querySelector('canvas')!;
 
-      // Mock getBoundingClientRect for coordinate calculations
       jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
         left: 0,
         top: 0,
@@ -251,6 +243,7 @@ describe('ImageAnnotator', () => {
         toJSON: () => ({}),
       });
 
+      // Click in the middle of the rectangle (in pixel coordinates)
       fireEvent.mouseDown(canvas, { clientX: 150, clientY: 150 });
       expect(canvas.style.cursor).toBe('move');
     });
@@ -269,7 +262,6 @@ describe('ImageAnnotator', () => {
       );
       const canvas = document.querySelector('canvas')!;
 
-      // Mock getBoundingClientRect for coordinate calculations
       jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
         left: 0,
         top: 0,
@@ -282,40 +274,43 @@ describe('ImageAnnotator', () => {
         toJSON: () => ({}),
       });
 
+      // Calculate pixel coordinates for the bottom-right corner
+      const cornerX =
+        (mockRect.startX * 800) / 100 + (mockRect.width * 800) / 100;
+      const cornerY =
+        (mockRect.startY * 600) / 100 + (mockRect.height * 600) / 100;
+
       // Simulate resizing from the bottom-right corner
       await act(async () => {
-        // Start resizing from bottom-right corner
         fireEvent.mouseDown(canvas, {
-          clientX: mockRect.startX + mockRect.width,
-          clientY: mockRect.startY + mockRect.height,
+          clientX: cornerX,
+          clientY: cornerY,
         });
       });
 
       await act(async () => {
-        // Resize
         fireEvent.mouseMove(canvas, {
-          clientX: mockRect.startX + mockRect.width + 50,
-          clientY: mockRect.startY + mockRect.height + 50,
+          clientX: cornerX + 50,
+          clientY: cornerY + 50,
         });
       });
 
       await act(async () => {
-        // Stop resizing
         fireEvent.mouseUp(canvas);
       });
 
-      // Wait for state updates
+      // Verify percentage-based coordinates after resize
       await waitFor(() => {
-        expect(onRectanglesChange).toHaveBeenCalledWith([
-          expect.objectContaining({
-            startX: mockRect.startX,
-            startY: mockRect.startY,
-            width: mockRect.width + 50,
-            height: mockRect.height + 50,
-            eventType: 'pageview',
-            id: 'rect1',
-          }),
-        ]);
+        const result = onRectanglesChange.mock.calls[0][0][0];
+        expect(result.startX).toBeCloseTo(mockRect.startX, 1);
+        expect(result.startY).toBeCloseTo(mockRect.startY, 1);
+        expect(result.width).toBeCloseTo(mockRect.width + (50 / 800) * 100, 1);
+        expect(result.height).toBeCloseTo(
+          mockRect.height + (50 / 600) * 100,
+          1
+        );
+        expect(result.eventType).toBe('pageview');
+        expect(result.id).toBe('rect1');
       });
     });
   });
@@ -331,7 +326,6 @@ describe('ImageAnnotator', () => {
       );
       const canvas = document.querySelector('canvas')!;
 
-      // Mock getBoundingClientRect for coordinate calculations
       jest.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
         left: 0,
         top: 0,
@@ -344,8 +338,14 @@ describe('ImageAnnotator', () => {
         toJSON: () => ({}),
       });
 
+      // Click in the middle of the rectangle (convert from percentage to pixels)
+      const clickX =
+        (mockRect.startX * 800) / 100 + (mockRect.width * 800) / 200;
+      const clickY =
+        (mockRect.startY * 600) / 100 + (mockRect.height * 600) / 200;
+
       await act(async () => {
-        fireEvent.click(canvas, { clientX: 150, clientY: 150 });
+        fireEvent.click(canvas, { clientX: clickX, clientY: clickY });
       });
 
       expect(defaultProps.onRectangleClick).toHaveBeenCalledWith('rect1');

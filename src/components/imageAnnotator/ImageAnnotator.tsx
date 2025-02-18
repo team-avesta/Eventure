@@ -2,6 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import {
+  PixelCoordinates,
+  PercentageCoordinates,
+  ImageSize,
+  pixelsToPercentages,
+  percentagesToPixels,
+} from '@/utils/coordinateUtils';
 
 const EVENT_TYPES = [
   { id: 'pageview', name: 'Page View', color: '#2563EB' },
@@ -16,13 +23,13 @@ const EVENT_TYPES = [
 ];
 
 export type Rectangle = {
-  id?: string; // Rectangle ID which maps to event ID
+  id?: string;
   startX: number;
   startY: number;
   width: number;
   height: number;
   eventType?: string;
-  eventAction?: string; // Only needed for label display
+  eventAction?: string;
 };
 
 type ResizeHandle =
@@ -76,11 +83,6 @@ export default function ImageAnnotator({
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
   const [imageHeight, setImageHeight] = useState<number>(height);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedInfo, setSelectedInfo] = useState<{
-    x: number;
-    y: number;
-    eventDetails: any;
-  } | null>(null);
 
   const HANDLE_SIZE = 8;
 
@@ -89,23 +91,29 @@ export default function ImageAnnotator({
     y: number,
     rect: Rectangle
   ): ResizeHandle => {
-    const { startX, startY, width: rectWidth, height: rectHeight } = rect;
-    const endX = startX + rectWidth;
-    const endY = startY + rectHeight;
+    const imageSize = {
+      width,
+      height: imageHeight,
+    };
+
+    // Convert percentage coordinates to pixels for handle detection
+    const pixelCoords = percentagesToPixels(rect, imageSize);
+    const endX = pixelCoords.startX + pixelCoords.width;
+    const endY = pixelCoords.startY + pixelCoords.height;
 
     // Check corners first
     if (
-      Math.abs(x - startX) <= HANDLE_SIZE &&
-      Math.abs(y - startY) <= HANDLE_SIZE
+      Math.abs(x - pixelCoords.startX) <= HANDLE_SIZE &&
+      Math.abs(y - pixelCoords.startY) <= HANDLE_SIZE
     )
       return 'topLeft';
     if (
       Math.abs(x - endX) <= HANDLE_SIZE &&
-      Math.abs(y - startY) <= HANDLE_SIZE
+      Math.abs(y - pixelCoords.startY) <= HANDLE_SIZE
     )
       return 'topRight';
     if (
-      Math.abs(x - startX) <= HANDLE_SIZE &&
+      Math.abs(x - pixelCoords.startX) <= HANDLE_SIZE &&
       Math.abs(y - endY) <= HANDLE_SIZE
     )
       return 'bottomLeft';
@@ -113,13 +121,21 @@ export default function ImageAnnotator({
       return 'bottomRight';
 
     // Then check edges
-    if (Math.abs(x - startX) <= HANDLE_SIZE && y > startY && y < endY)
+    if (
+      Math.abs(x - pixelCoords.startX) <= HANDLE_SIZE &&
+      y > pixelCoords.startY &&
+      y < endY
+    )
       return 'left';
-    if (Math.abs(x - endX) <= HANDLE_SIZE && y > startY && y < endY)
+    if (Math.abs(x - endX) <= HANDLE_SIZE && y > pixelCoords.startY && y < endY)
       return 'right';
-    if (Math.abs(y - startY) <= HANDLE_SIZE && x > startX && x < endX)
+    if (
+      Math.abs(y - pixelCoords.startY) <= HANDLE_SIZE &&
+      x > pixelCoords.startX &&
+      x < endX
+    )
       return 'top';
-    if (Math.abs(y - endY) <= HANDLE_SIZE && x > startX && x < endX)
+    if (Math.abs(y - endY) <= HANDLE_SIZE && x > pixelCoords.startX && x < endX)
       return 'bottom';
 
     return null;
@@ -149,11 +165,16 @@ export default function ImageAnnotator({
   };
 
   const isPointInRect = (x: number, y: number, rect: Rectangle) => {
+    const imageSize = {
+      width,
+      height: imageHeight,
+    };
+    const pixelCoords = percentagesToPixels(rect, imageSize);
     return (
-      x >= rect.startX &&
-      x <= rect.startX + rect.width &&
-      y >= rect.startY &&
-      y <= rect.startY + rect.height
+      x >= pixelCoords.startX &&
+      x <= pixelCoords.startX + pixelCoords.width &&
+      y >= pixelCoords.startY &&
+      y <= pixelCoords.startY + pixelCoords.height
     );
   };
 
@@ -205,6 +226,11 @@ export default function ImageAnnotator({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    const imageSize = {
+      width,
+      height: imageHeight,
+    };
+
     if (isResizing && selectedRectIndex !== -1) {
       canvas.style.cursor = getCursorStyle(resizeHandle);
       const dx = x - currentPos.x;
@@ -213,7 +239,9 @@ export default function ImageAnnotator({
       setRectangles((prev) =>
         prev.map((r, i) => {
           if (i === selectedRectIndex) {
-            let newRect = { ...r };
+            // Convert percentage coordinates to pixels for manipulation
+            const pixelCoords = percentagesToPixels(r, imageSize);
+            let newRect = { ...pixelCoords };
 
             switch (resizeHandle) {
               case 'topLeft':
@@ -262,15 +290,19 @@ export default function ImageAnnotator({
               newRect.height = Math.abs(newRect.height);
             }
 
-            return newRect;
+            // Convert back to percentages
+            return {
+              ...r,
+              ...pixelsToPercentages(newRect, imageSize),
+            };
           }
           return r;
         })
       );
     } else if (isDragging && selectedRectIndex !== -1) {
       canvas.style.cursor = 'move';
-      const dx = x - currentPos.x;
-      const dy = y - currentPos.y;
+      const dx = ((x - currentPos.x) / imageSize.width) * 100;
+      const dy = ((y - currentPos.y) / imageSize.height) * 100;
 
       setRectangles((prev) =>
         prev.map((r, i) => {
@@ -289,15 +321,23 @@ export default function ImageAnnotator({
       setCurrentPos({ x, y });
     } else {
       // Update cursor based on hover
-      const isOverRect = rectangles.some((r) => isPointInRect(x, y, r));
+      const isOverRect = rectangles.some((r) => {
+        const pixelCoords = percentagesToPixels(r, imageSize);
+        return isPointInRect(x, y, pixelCoords);
+      });
       if (isDragMode) {
         // Check for resize handles first
         const rectIndex = rectangles.findIndex((r) => {
-          const handle = getResizeHandle(x, y, r);
+          const pixelCoords = percentagesToPixels(r, imageSize);
+          const handle = getResizeHandle(x, y, pixelCoords);
           return handle !== null;
         });
         if (rectIndex !== -1) {
-          const handle = getResizeHandle(x, y, rectangles[rectIndex]);
+          const pixelCoords = percentagesToPixels(
+            rectangles[rectIndex],
+            imageSize
+          );
+          const handle = getResizeHandle(x, y, pixelCoords);
           canvas.style.cursor = getCursorStyle(handle);
         } else {
           canvas.style.cursor = isOverRect ? 'move' : 'default';
@@ -312,24 +352,27 @@ export default function ImageAnnotator({
 
   const stopDrawing = () => {
     if (isDrawing) {
-      const newRect: Rectangle = {
-        startX: startPos.x,
-        startY: startPos.y,
-        width: currentPos.x - startPos.x,
-        height: currentPos.y - startPos.y,
-        eventType: selectedEventType?.id,
+      const imageSize = {
+        width,
+        height: imageHeight,
       };
-      if (newRect.width < 0) {
-        newRect.startX += newRect.width;
-        newRect.width = Math.abs(newRect.width);
-      }
-      if (newRect.height < 0) {
-        newRect.startY += newRect.height;
-        newRect.height = Math.abs(newRect.height);
-      }
+
+      const pixelCoords = {
+        startX: Math.min(startPos.x, currentPos.x),
+        startY: Math.min(startPos.y, currentPos.y),
+        width: Math.abs(currentPos.x - startPos.x),
+        height: Math.abs(currentPos.y - startPos.y),
+      };
+
+      const percentageCoords = pixelsToPercentages(pixelCoords, imageSize);
 
       // Only add rectangle and trigger callback if the rectangle has some size
-      if (newRect.width > 5 && newRect.height > 5) {
+      if (percentageCoords.width > 0.5 && percentageCoords.height > 0.5) {
+        const newRect: Rectangle = {
+          ...percentageCoords,
+          eventType: selectedEventType?.id,
+        };
+
         setRectangles((prev) => {
           const newRectangles = [...prev, newRect];
           onRectanglesChange?.(newRectangles);
@@ -350,10 +393,7 @@ export default function ImageAnnotator({
   };
 
   const handleClick = async (e: React.MouseEvent) => {
-    // Don't show info when in drag mode
-    if (isDragMode) {
-      return;
-    }
+    if (isDragMode) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -362,8 +402,14 @@ export default function ImageAnnotator({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    const imageSize = {
+      width,
+      height: imageHeight,
+    };
+
     // Check if clicking on any rectangle or its label
     const clickedRectIndex = rectangles.findIndex((r) => {
+      const pixelCoords = percentagesToPixels(r, imageSize);
       // Check rectangle bounds
       const inRect = isPointInRect(x, y, r);
 
@@ -379,10 +425,10 @@ export default function ImageAnnotator({
           const labelHeight = 20;
 
           const inLabel =
-            x >= r.startX &&
-            x <= r.startX + labelWidth &&
-            y >= r.startY - labelHeight &&
-            y <= r.startY;
+            x >= pixelCoords.startX &&
+            x <= pixelCoords.startX + labelWidth &&
+            y >= pixelCoords.startY - labelHeight &&
+            y <= pixelCoords.startY;
 
           return inRect || inLabel;
         }
@@ -393,11 +439,8 @@ export default function ImageAnnotator({
     if (clickedRectIndex !== -1) {
       const clickedRect = rectangles[clickedRectIndex];
       if (clickedRect.id) {
-        // Trigger the click handler for the rectangle
         onRectangleClick?.(clickedRect.id);
       }
-    } else {
-      setSelectedInfo(null);
     }
   };
 
@@ -408,13 +451,21 @@ export default function ImageAnnotator({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const imageSize = {
+      width,
+      height: imageHeight,
+    };
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 2.5;
 
     // Draw all saved rectangles
-    rectangles.forEach((rect: any, index) => {
+    rectangles.forEach((rect: Rectangle, index) => {
       const isSelected = index === selectedRectIndex;
       const rectEventType = EVENT_TYPES.find((t) => t.id === rect.eventType);
+
+      // Convert percentage coordinates to pixels for drawing
+      const pixelCoords = percentagesToPixels(rect, imageSize);
 
       // Draw rectangle
       ctx.beginPath();
@@ -424,7 +475,12 @@ export default function ImageAnnotator({
       ctx.fillStyle = isSelected
         ? 'rgba(0, 255, 0, 0.1)'
         : `${rectEventType?.color}1A` || 'rgba(0, 0, 0, 0.1)';
-      ctx.rect(rect.startX, rect.startY, rect.width, rect.height);
+      ctx.rect(
+        pixelCoords.startX,
+        pixelCoords.startY,
+        pixelCoords.width,
+        pixelCoords.height
+      );
       ctx.fill();
       ctx.stroke();
 
@@ -442,8 +498,8 @@ export default function ImageAnnotator({
         ctx.fillStyle = rectEventType?.color || '#000000';
         ctx.globalAlpha = 0.9;
         ctx.fillRect(
-          rect.startX,
-          rect.startY - labelHeight,
+          pixelCoords.startX,
+          pixelCoords.startY - labelHeight,
           labelWidth,
           labelHeight
         );
@@ -454,8 +510,8 @@ export default function ImageAnnotator({
         ctx.textBaseline = 'middle';
         ctx.fillText(
           labelText,
-          rect.startX + padding,
-          rect.startY - labelHeight / 2
+          pixelCoords.startX + padding,
+          pixelCoords.startY - labelHeight / 2
         );
       }
 
@@ -467,15 +523,30 @@ export default function ImageAnnotator({
 
         // Corner handles
         const handles = [
-          { x: rect.startX, y: rect.startY },
-          { x: rect.startX + rect.width, y: rect.startY },
-          { x: rect.startX, y: rect.startY + rect.height },
-          { x: rect.startX + rect.width, y: rect.startY + rect.height },
+          { x: pixelCoords.startX, y: pixelCoords.startY },
+          { x: pixelCoords.startX + pixelCoords.width, y: pixelCoords.startY },
+          { x: pixelCoords.startX, y: pixelCoords.startY + pixelCoords.height },
+          {
+            x: pixelCoords.startX + pixelCoords.width,
+            y: pixelCoords.startY + pixelCoords.height,
+          },
           // Edge handles
-          { x: rect.startX + rect.width / 2, y: rect.startY },
-          { x: rect.startX + rect.width / 2, y: rect.startY + rect.height },
-          { x: rect.startX, y: rect.startY + rect.height / 2 },
-          { x: rect.startX + rect.width, y: rect.startY + rect.height / 2 },
+          {
+            x: pixelCoords.startX + pixelCoords.width / 2,
+            y: pixelCoords.startY,
+          },
+          {
+            x: pixelCoords.startX + pixelCoords.width / 2,
+            y: pixelCoords.startY + pixelCoords.height,
+          },
+          {
+            x: pixelCoords.startX,
+            y: pixelCoords.startY + pixelCoords.height / 2,
+          },
+          {
+            x: pixelCoords.startX + pixelCoords.width,
+            y: pixelCoords.startY + pixelCoords.height / 2,
+          },
         ];
 
         handles.forEach((handle) => {
@@ -517,6 +588,7 @@ export default function ImageAnnotator({
     width,
     height,
     selectedEventType,
+    imageHeight,
   ]);
 
   useEffect(() => {
@@ -535,13 +607,6 @@ export default function ImageAnnotator({
   useEffect(() => {
     setRectangles(initialRectangles);
   }, [initialRectangles]);
-
-  // Add effect to hide info when entering drag mode
-  useEffect(() => {
-    if (isDragMode) {
-      setSelectedInfo(null);
-    }
-  }, [isDragMode]);
 
   return (
     <div className="flex flex-col gap-4">
