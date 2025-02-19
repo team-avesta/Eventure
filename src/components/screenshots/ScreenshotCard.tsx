@@ -1,6 +1,5 @@
 import { Screenshot, ScreenshotStatus } from '@/services/adminS3Service';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useState } from 'react';
 import EditScreenshotNameModal from './EditScreenshotNameModal';
 import { useSortable } from '@dnd-kit/sortable';
@@ -120,7 +119,7 @@ export default function ScreenshotCard({
           className="absolute inset-0 z-10 bg-transparent cursor-grab active:cursor-grabbing"
         />
       )}
-      <Link
+      <a
         href={`/screenshots/${screenshot.id}`}
         className={`block ${isDragModeEnabled ? 'pointer-events-none' : ''}`}
       >
@@ -182,7 +181,7 @@ export default function ScreenshotCard({
             </p>
           </div>
         </div>
-      </Link>
+      </a>
       {userRole === 'admin' && (
         <div className="absolute top-2 right-2 flex gap-2 z-20">
           <button

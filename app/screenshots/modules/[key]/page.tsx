@@ -254,7 +254,7 @@ export default function ModuleScreenshotsPage() {
               <SearchInput
                 onSearch={handleSearch}
                 placeholder="Search screenshots..."
-                delay={200}
+                delay={0}
               />
             </div>
             <DndContext
