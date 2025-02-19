@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   adminS3Service,
   Module,
@@ -26,6 +26,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
+import { SearchInput } from '@/components/common/SearchInput';
 
 export default function ModuleScreenshotsPage() {
   const params = useParams();
@@ -38,6 +39,10 @@ export default function ModuleScreenshotsPage() {
   );
   const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [filteredScreenshots, setFilteredScreenshots] = useState<
+    Module['screenshots']
+  >([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -74,6 +79,12 @@ export default function ModuleScreenshotsPage() {
   useEffect(() => {
     fetchModule();
   }, [fetchModule]);
+
+  useEffect(() => {
+    if (currentModule?.screenshots) {
+      setFilteredScreenshots(currentModule.screenshots);
+    }
+  }, [currentModule?.screenshots]);
 
   const handleDeleteScreenshot = async () => {
     if (!screenshotToDelete || !currentModule) return;
@@ -154,6 +165,18 @@ export default function ModuleScreenshotsPage() {
     }
   };
 
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    if (!currentModule?.screenshots) return;
+
+    const searchTerms = value.toLowerCase().split(/[\s-]+/); // Split by spaces and hyphens
+    const filtered = currentModule.screenshots.filter((screenshot) => {
+      const normalizedName = screenshot.name.toLowerCase();
+      return searchTerms.every((term) => normalizedName.includes(term));
+    });
+    setFilteredScreenshots(filtered);
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -226,33 +249,43 @@ export default function ModuleScreenshotsPage() {
             No screenshots uploaded yet for this module.
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={currentModule.screenshots.map((s) => s.id)}
-              strategy={rectSortingStrategy}
+          <>
+            <div className="mb-6">
+              <SearchInput
+                onSearch={handleSearch}
+                placeholder="Search screenshots..."
+                delay={200}
+              />
+            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentModule.screenshots.map((screenshot) => (
-                  <ScreenshotCard
-                    key={screenshot.id}
-                    screenshot={screenshot}
-                    userRole={userRole}
-                    onStatusChange={handleStatusChange}
-                    onDelete={setScreenshotToDelete}
-                    onNameChange={handleNameChange}
-                    isDragModeEnabled={isDragModeEnabled}
-                    isDeleting={
-                      isDeleting && screenshotToDelete === screenshot.id
-                    }
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+              <SortableContext
+                items={currentModule.screenshots.map((s) => s.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredScreenshots.map((screenshot) => (
+                    <ScreenshotCard
+                      key={screenshot.id}
+                      screenshot={screenshot}
+                      userRole={userRole}
+                      onStatusChange={handleStatusChange}
+                      onDelete={setScreenshotToDelete}
+                      onNameChange={handleNameChange}
+                      isDragModeEnabled={isDragModeEnabled}
+                      isDeleting={
+                        isDeleting && screenshotToDelete === screenshot.id
+                      }
+                      searchTerm={searchTerm}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </>
         )}
       </div>
 

@@ -235,14 +235,28 @@ jest.mock('../../../../src/components/shared/ConfirmationModal', () => {
   };
 });
 
+// Add SearchInput mock
+jest.mock('@/components/common/SearchInput', () => ({
+  SearchInput: ({ onSearch, placeholder }: any) => (
+    <input
+      type="text"
+      placeholder={placeholder}
+      onChange={(e) => onSearch(e.target.value)}
+      data-testid="search-input"
+    />
+  ),
+}));
+
 // Mock data
 const mockModule = {
   key: 'test-module',
   name: 'Test Module',
   screenshots: [
-    { id: '1', name: 'Screenshot 1', status: 'TODO' },
-    { id: '2', name: 'Screenshot 2', status: 'IN_PROGRESS' },
-    { id: '3', name: 'Screenshot 3', status: 'DONE' },
+    { id: '1', name: 'Login Page Screenshot', status: 'TODO' },
+    { id: '2', name: 'User Dashboard View', status: 'IN_PROGRESS' },
+    { id: '3', name: 'Settings Panel', status: 'DONE' },
+    { id: '4', name: 'Login-Form Error', status: 'TODO' },
+    { id: '5', name: 'User Profile Page', status: 'IN_PROGRESS' },
   ],
 };
 
@@ -606,6 +620,8 @@ describe('ModuleScreenshotsPage - Admin Features', () => {
       '2',
       '1',
       '3',
+      '4',
+      '5',
     ]);
     expect(toast.success).toHaveBeenCalledWith(
       'Screenshot order updated successfully'
@@ -657,9 +673,11 @@ describe('ModuleScreenshotsPage - Admin Features', () => {
       return mockModule.screenshots.find((s) => s.id === id)?.name;
     });
     expect(currentOrder).toEqual([
-      'Screenshot 1',
-      'Screenshot 2',
-      'Screenshot 3',
+      'Login Page Screenshot',
+      'User Dashboard View',
+      'Settings Panel',
+      'Login-Form Error',
+      'User Profile Page',
     ]);
 
     // Should have called fetchModules again to revert
@@ -1740,9 +1758,11 @@ describe('ModuleScreenshotsPage - Error Handling', () => {
       return mockModule.screenshots.find((s) => s.id === id)?.name;
     });
     expect(currentOrder).toEqual([
-      'Screenshot 1',
-      'Screenshot 2',
-      'Screenshot 3',
+      'Login Page Screenshot',
+      'User Dashboard View',
+      'Settings Panel',
+      'Login-Form Error',
+      'User Profile Page',
     ]);
 
     // Should have called fetchModules again to revert
@@ -1862,16 +1882,149 @@ describe('ModuleScreenshotsPage - UI Elements', () => {
 
     await waitFor(() => {
       // Check TODO status
-      const todoStatus = screen.getByText('TODO');
-      expect(todoStatus).toHaveClass('bg-orange-500', 'text-white');
+      const todoStatuses = screen.getAllByText('TODO');
+      todoStatuses.forEach((status) => {
+        expect(status).toHaveClass('bg-orange-500', 'text-white');
+      });
 
       // Check IN_PROGRESS status
-      const inProgressStatus = screen.getByText('IN_PROGRESS');
-      expect(inProgressStatus).toHaveClass('bg-blue-100', 'text-blue-800');
+      const inProgressStatuses = screen.getAllByText('IN_PROGRESS');
+      inProgressStatuses.forEach((status) => {
+        expect(status).toHaveClass('bg-blue-100', 'text-blue-800');
+      });
 
       // Check DONE status
       const doneStatus = screen.getByText('DONE');
       expect(doneStatus).toHaveClass('bg-green-100', 'text-green-800');
+    });
+  });
+});
+
+describe('ModuleScreenshotsPage', () => {
+  describe('Search Functionality', () => {
+    beforeEach(async () => {
+      jest.useFakeTimers();
+      mockFetchModules.mockResolvedValue([mockModule]);
+      render(<ModuleScreenshotsPage />, { wrapper: Wrapper });
+      await waitForElementToBeRemoved(() => screen.queryByTestId('loading'));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('renders search input with correct placeholder', () => {
+      const searchInput = screen.getByTestId('search-input');
+      expect(searchInput).toHaveAttribute(
+        'placeholder',
+        'Search screenshots...'
+      );
+    });
+
+    it('filters screenshots based on search term', async () => {
+      const searchInput = screen.getByTestId('search-input');
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: 'login' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      // Should show only login-related screenshots
+      expect(screen.getByTestId('screenshot-card-1')).toBeInTheDocument(); // Login Page Screenshot
+      expect(screen.getByTestId('screenshot-card-4')).toBeInTheDocument(); // Login-Form Error
+      expect(screen.queryByTestId('screenshot-card-2')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('screenshot-card-3')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('screenshot-card-5')).not.toBeInTheDocument();
+    });
+
+    it('handles case-insensitive search', async () => {
+      const searchInput = screen.getByTestId('search-input');
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: 'USER' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      // Should show user-related screenshots regardless of case
+      expect(screen.getByTestId('screenshot-card-2')).toBeInTheDocument(); // User Dashboard View
+      expect(screen.getByTestId('screenshot-card-5')).toBeInTheDocument(); // User Profile Page
+      expect(screen.queryByTestId('screenshot-card-1')).not.toBeInTheDocument();
+    });
+
+    it('handles multi-word search terms', async () => {
+      const searchInput = screen.getByTestId('search-input');
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: 'login form' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      // Should only show screenshots containing both words
+      expect(screen.getByTestId('screenshot-card-4')).toBeInTheDocument(); // Login-Form Error
+      expect(screen.queryByTestId('screenshot-card-1')).not.toBeInTheDocument();
+    });
+
+    it('handles hyphenated search terms', async () => {
+      const searchInput = screen.getByTestId('search-input');
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: 'login-form' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      // Should match hyphenated terms
+      expect(screen.getByTestId('screenshot-card-4')).toBeInTheDocument(); // Login-Form Error
+    });
+
+    it('shows all screenshots when search is cleared', async () => {
+      const searchInput = screen.getByTestId('search-input');
+
+      // First filter
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: 'login' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      // Then clear
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: '' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      // Should show all screenshots again
+      mockModule.screenshots.forEach((screenshot) => {
+        expect(
+          screen.getByTestId(`screenshot-card-${screenshot.id}`)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('shows no results when no matches found', async () => {
+      const searchInput = screen.getByTestId('search-input');
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      mockModule.screenshots.forEach((screenshot) => {
+        expect(
+          screen.queryByTestId(`screenshot-card-${screenshot.id}`)
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    it('passes search term to ScreenshotCard for highlighting', async () => {
+      const searchInput = screen.getByTestId('search-input');
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: 'login' } });
+        jest.advanceTimersByTime(200);
+      });
+
+      const card = screen.getByTestId('screenshot-card-1');
+      expect(card).toHaveTextContent('Login Page Screenshot');
+      // The actual highlighting is tested in ScreenshotCard.test.tsx
     });
   });
 });

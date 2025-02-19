@@ -57,6 +57,7 @@ describe('ScreenshotCard', () => {
     onDelete: jest.fn(),
     onNameChange: jest.fn(),
     isDragModeEnabled: false,
+    isDeleting: false,
   };
 
   beforeEach(() => {
@@ -191,6 +192,46 @@ describe('ScreenshotCard', () => {
 
       const link = screen.getByRole('link');
       expect(link.className).toContain('pointer-events-none');
+    });
+  });
+
+  describe('Search highlighting', () => {
+    it('highlights matching text when searchTerm is provided', () => {
+      render(<ScreenshotCard {...mockProps} searchTerm="test" />);
+      const highlightedText = screen.getByText('Test');
+      expect(highlightedText).toHaveClass('bg-yellow-200');
+    });
+
+    it('handles case-insensitive search highlighting', () => {
+      render(<ScreenshotCard {...mockProps} searchTerm="TEST" />);
+      const highlightedText = screen.getByText('Test');
+      expect(highlightedText).toHaveClass('bg-yellow-200');
+    });
+
+    it('highlights partial matches in the name', () => {
+      render(<ScreenshotCard {...mockProps} searchTerm="Screen" />);
+      const highlightedText = screen.getByText('Screen');
+      expect(highlightedText).toHaveClass('bg-yellow-200');
+    });
+
+    it('does not highlight when searchTerm does not match', () => {
+      render(<ScreenshotCard {...mockProps} searchTerm="xyz" />);
+      const text = screen.getByText('Test Screenshot');
+      expect(text).not.toHaveClass('bg-yellow-200');
+    });
+
+    it('handles multiple word search terms', () => {
+      render(<ScreenshotCard {...mockProps} searchTerm="test screen" />);
+      const highlightedTexts = screen.getAllByText(/test|screen/i);
+      highlightedTexts.forEach((text) => {
+        expect(text).toHaveClass('bg-yellow-200');
+      });
+    });
+
+    it('renders without highlighting when searchTerm is empty', () => {
+      render(<ScreenshotCard {...mockProps} searchTerm="" />);
+      const text = screen.getByText('Test Screenshot');
+      expect(text).not.toHaveClass('bg-yellow-200');
     });
   });
 });

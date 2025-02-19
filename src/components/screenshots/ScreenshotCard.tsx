@@ -5,6 +5,7 @@ import { useState } from 'react';
 import EditScreenshotNameModal from './EditScreenshotNameModal';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { HighlightedText } from '@/components/common/HighlightedText';
 
 const statusColors = {
   [ScreenshotStatus.TODO]: 'bg-orange-500 text-white',
@@ -68,6 +69,7 @@ interface ScreenshotCardProps {
   onNameChange: (screenshotId: string, newName: string) => void;
   isDragModeEnabled: boolean;
   isDeleting: boolean;
+  searchTerm?: string;
 }
 
 export default function ScreenshotCard({
@@ -78,6 +80,7 @@ export default function ScreenshotCard({
   onNameChange,
   isDragModeEnabled,
   isDeleting,
+  searchTerm = '',
 }: ScreenshotCardProps) {
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
 
@@ -137,7 +140,11 @@ export default function ScreenshotCard({
                 className="text-lg font-medium text-gray-900 truncate flex-1 group-hover:text-gray-700"
                 title={screenshot.name}
               >
-                {screenshot.name}
+                <HighlightedText
+                  text={screenshot.name}
+                  highlight={searchTerm}
+                  className="text-lg font-medium text-gray-900"
+                />
               </h3>
               {userRole === 'admin' ? (
                 <button
