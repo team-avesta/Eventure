@@ -10,6 +10,7 @@ interface ScreenshotUploadParams {
   key: string;
   pageName: string;
   customName?: string;
+  labelId?: string;
   status: ScreenshotStatus;
 }
 
@@ -86,6 +87,7 @@ export class S3DataService {
     key,
     pageName,
     customName,
+    labelId,
     status,
   }: ScreenshotUploadParams) {
     // Get existing modules to validate module exists
@@ -108,6 +110,7 @@ export class S3DataService {
       name: sanitizedName,
       url: `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.REGION}.amazonaws.com/${key}`,
       pageName,
+      labelId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status,

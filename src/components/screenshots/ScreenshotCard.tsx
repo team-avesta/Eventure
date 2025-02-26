@@ -2,63 +2,14 @@ import { Screenshot, ScreenshotStatus } from '@/services/adminS3Service';
 import Image from 'next/image';
 import { useState } from 'react';
 import EditScreenshotNameModal from './EditScreenshotNameModal';
+import EditScreenshotLabelModal from './EditScreenshotLabelModal';
+import EditScreenshotStatusModal from './EditScreenshotStatusModal';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { HighlightedText } from '@/components/common/HighlightedText';
-
-const statusColors = {
-  [ScreenshotStatus.TODO]: 'bg-orange-500 text-white',
-  [ScreenshotStatus.IN_PROGRESS]: 'bg-blue-100 text-blue-800',
-  [ScreenshotStatus.DONE]: 'bg-green-100 text-green-800',
-};
-
-const statusIcons = {
-  [ScreenshotStatus.TODO]: (
-    <svg
-      className="w-4 h-4 mr-1"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-      />
-    </svg>
-  ),
-  [ScreenshotStatus.IN_PROGRESS]: (
-    <svg
-      className="w-4 h-4 mr-1"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  ),
-  [ScreenshotStatus.DONE]: (
-    <svg
-      className="w-4 h-4 mr-1"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
-  ),
-};
+import { PageLabel } from '@/types/pageLabel';
+import { StatusChip } from '@/components/common/StatusChip';
+import { LabelChip } from '@/components/common/LabelChip';
 
 interface ScreenshotCardProps {
   screenshot: Screenshot;
@@ -66,9 +17,12 @@ interface ScreenshotCardProps {
   onStatusChange: (screenshotId: string, status: ScreenshotStatus) => void;
   onDelete: (screenshotId: string) => void;
   onNameChange: (screenshotId: string, newName: string) => void;
+  onLabelChange?: (screenshotId: string, newLabelId: string | null) => void;
   isDragModeEnabled: boolean;
   isDeleting: boolean;
   searchTerm?: string;
+  availableLabels: PageLabel[];
+  labelName: string | null;
 }
 
 export default function ScreenshotCard({
@@ -77,11 +31,16 @@ export default function ScreenshotCard({
   onStatusChange,
   onDelete,
   onNameChange,
+  onLabelChange,
   isDragModeEnabled,
   isDeleting,
   searchTerm = '',
+  availableLabels,
+  labelName,
 }: ScreenshotCardProps) {
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
+  const [isEditLabelModalOpen, setIsEditLabelModalOpen] = useState(false);
+  const [isEditStatusModalOpen, setIsEditStatusModalOpen] = useState(false);
 
   const {
     attributes,
@@ -94,6 +53,16 @@ export default function ScreenshotCard({
     id: screenshot.id,
     disabled: userRole !== 'admin' || !isDragModeEnabled,
   });
+
+  const handleLabelChange = (newLabelId: string | null) => {
+    if (onLabelChange) {
+      onLabelChange(screenshot.id, newLabelId);
+    }
+  };
+
+  const handleStatusChange = (newStatus: ScreenshotStatus) => {
+    onStatusChange(screenshot.id, newStatus);
+  };
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -145,35 +114,41 @@ export default function ScreenshotCard({
                   className="text-lg font-medium text-gray-900"
                 />
               </h3>
-              {userRole === 'admin' ? (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const currentStatus =
-                      screenshot.status || ScreenshotStatus.TODO;
-                    const statusValues = Object.values(ScreenshotStatus);
-                    const currentIndex = statusValues.indexOf(currentStatus);
-                    const nextStatus =
-                      statusValues[(currentIndex + 1) % statusValues.length];
-                    onStatusChange(screenshot.id, nextStatus);
-                  }}
-                  className={`px-2 py-1 rounded-full text-xs font-medium flex items-center whitespace-nowrap transition-colors duration-200 ${
-                    statusColors[screenshot.status || ScreenshotStatus.TODO]
-                  } hover:opacity-80 pointer-events-auto`}
-                  title="Click to change status"
-                >
-                  {statusIcons[screenshot.status || ScreenshotStatus.TODO]}
-                  {screenshot.status || ScreenshotStatus.TODO}
-                </button>
-              ) : (
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium flex items-center whitespace-nowrap ${
-                    statusColors[screenshot.status || ScreenshotStatus.TODO]
-                  }`}
-                >
-                  {statusIcons[screenshot.status || ScreenshotStatus.TODO]}
-                  {screenshot.status || ScreenshotStatus.TODO}
-                </span>
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2">
+              {/* Status Chip */}
+              <StatusChip
+                status={screenshot.status || ScreenshotStatus.TODO}
+                onClick={
+                  userRole === 'admin'
+                    ? () => setIsEditStatusModalOpen(true)
+                    : undefined
+                }
+                isClickable={userRole === 'admin'}
+              />
+
+              {/* Label Chip */}
+              {labelName && (
+                <LabelChip
+                  label={labelName}
+                  onClick={
+                    userRole === 'admin'
+                      ? () => setIsEditLabelModalOpen(true)
+                      : undefined
+                  }
+                  isClickable={userRole === 'admin'}
+                />
+              )}
+
+              {/* Add Label Button */}
+              {!labelName && userRole === 'admin' && (
+                <LabelChip
+                  label={null}
+                  onClick={() => setIsEditLabelModalOpen(true)}
+                  isClickable={true}
+                  isAddButton={true}
+                />
               )}
             </div>
             <p className="mt-2 text-sm text-gray-500">
@@ -236,6 +211,21 @@ export default function ScreenshotCard({
         onClose={() => setIsEditNameModalOpen(false)}
         onSave={(newName) => onNameChange(screenshot.id, newName)}
         currentName={screenshot.name}
+      />
+
+      <EditScreenshotLabelModal
+        isOpen={isEditLabelModalOpen}
+        onClose={() => setIsEditLabelModalOpen(false)}
+        onSave={handleLabelChange}
+        currentLabelId={screenshot.labelId || null}
+        availableLabels={availableLabels}
+      />
+
+      <EditScreenshotStatusModal
+        isOpen={isEditStatusModalOpen}
+        onClose={() => setIsEditStatusModalOpen(false)}
+        onSave={handleStatusChange}
+        currentStatus={screenshot.status || ScreenshotStatus.TODO}
       />
     </div>
   );

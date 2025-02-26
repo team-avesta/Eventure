@@ -11,6 +11,7 @@ export function useScreenshotUpload({
   const [file, setFile] = useState<File | null>(null);
   const [pageName, setPageName] = useState<string>('');
   const [customName, setCustomName] = useState<string>('');
+  const [selectedLabel, setSelectedLabel] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -19,6 +20,7 @@ export function useScreenshotUpload({
     setFile(null);
     setPageName('');
     setCustomName('');
+    setSelectedLabel('');
     setError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -93,6 +95,7 @@ export function useScreenshotUpload({
           key,
           pageName,
           customName: customName.trim(),
+          labelId: selectedLabel || undefined,
         }),
       });
 
@@ -118,6 +121,8 @@ export function useScreenshotUpload({
     setPageName,
     customName,
     setCustomName,
+    selectedLabel,
+    setSelectedLabel,
     error,
     fileInputRef,
     isUploading,

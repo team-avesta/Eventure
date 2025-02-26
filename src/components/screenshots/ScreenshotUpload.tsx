@@ -6,6 +6,9 @@ import { Button } from '@/components/common/Button';
 import { useScreenshotUpload } from '@/hooks/useScreenshotUpload';
 import { Module } from '@/services/adminS3Service';
 import { Input } from '@/components/common/Input';
+import { useEffect, useState } from 'react';
+import { PageLabel } from '@/types/pageLabel';
+import { pageLabelService } from '@/services/pageLabelService';
 
 interface ScreenshotUploadProps {
   modules: Module[];
@@ -16,6 +19,9 @@ export default function ScreenshotUpload({
   modules,
   onSuccess,
 }: ScreenshotUploadProps) {
+  const [availableLabels, setAvailableLabels] = useState<PageLabel[]>([]);
+  const [selectedLabel, setSelectedLabel] = useState<string>('');
+
   const {
     file,
     setFile,
@@ -23,11 +29,32 @@ export default function ScreenshotUpload({
     setPageName,
     customName,
     setCustomName,
+    setSelectedLabel: setHookSelectedLabel,
     error,
     fileInputRef,
     isUploading,
     handleSubmit,
   } = useScreenshotUpload({ onSuccess });
+
+  // Fetch all labels regardless of module
+  useEffect(() => {
+    const fetchLabels = async () => {
+      try {
+        const labels = await pageLabelService.getAllLabels();
+        setAvailableLabels(labels);
+      } catch (error) {
+        console.error('Failed to fetch labels:', error);
+        setAvailableLabels([]);
+      }
+    };
+
+    fetchLabels();
+  }, []);
+
+  // Update the hook's selectedLabel when the component's selectedLabel changes
+  useEffect(() => {
+    setHookSelectedLabel(selectedLabel);
+  }, [selectedLabel, setHookSelectedLabel]);
 
   const moduleOptions = [
     { value: '', label: 'Select a module' },
@@ -35,6 +62,14 @@ export default function ScreenshotUpload({
       value: module.key,
       label: module.name,
     })) || []),
+  ];
+
+  const labelOptions = [
+    { value: '', label: 'Select a label (optional)' },
+    ...availableLabels.map((label) => ({
+      value: label.id,
+      label: label.name,
+    })),
   ];
 
   return (
@@ -47,6 +82,16 @@ export default function ScreenshotUpload({
           onChange={(e) => setPageName(e.target.value)}
           options={moduleOptions}
         />
+
+        {availableLabels.length > 0 && (
+          <Select
+            id="label"
+            label="Label (Optional)"
+            value={selectedLabel}
+            onChange={(e) => setSelectedLabel(e.target.value)}
+            options={labelOptions}
+          />
+        )}
 
         <Input
           id="customName"

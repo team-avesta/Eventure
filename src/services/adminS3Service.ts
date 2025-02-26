@@ -22,6 +22,7 @@ export interface Screenshot {
   createdAt: string;
   updatedAt: string;
   status: ScreenshotStatus;
+  labelId?: string;
   events?: Event[];
 }
 
@@ -458,6 +459,29 @@ export const adminS3Service = {
           ? {
               ...screenshot,
               name: newName,
+              updatedAt: new Date().toISOString(),
+            }
+          : screenshot
+      ),
+    }));
+
+    return api.update('modules', { modules: updatedModules });
+  },
+  updateScreenshotLabel: async (
+    screenshotId: string,
+    newLabelId: string | null
+  ) => {
+    const response = await api.get<{ modules: Module[] }>('modules');
+    const modules = extractData<Module>(response, 'modules');
+
+    // Find and update the screenshot label
+    const updatedModules = modules.map((module) => ({
+      ...module,
+      screenshots: module.screenshots.map((screenshot) =>
+        screenshot.id === screenshotId
+          ? {
+              ...screenshot,
+              labelId: newLabelId,
               updatedAt: new Date().toISOString(),
             }
           : screenshot

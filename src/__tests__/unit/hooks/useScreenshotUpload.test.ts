@@ -30,12 +30,40 @@ describe('useScreenshotUpload', () => {
       setPageName: expect.any(Function),
       customName: '',
       setCustomName: expect.any(Function),
+      selectedLabel: '',
+      setSelectedLabel: expect.any(Function),
       error: '',
       fileInputRef: expect.any(Object),
       isUploading: false,
       handleSubmit: expect.any(Function),
       resetForm: expect.any(Function),
     });
+  });
+
+  it('should update selectedLabel state when a label is selected', () => {
+    const { result } = renderHook(() => useScreenshotUpload());
+
+    expect(result.current.selectedLabel).toBe('');
+
+    act(() => {
+      result.current.setSelectedLabel('label-123');
+    });
+
+    expect(result.current.selectedLabel).toBe('label-123');
+
+    // Test changing to a different label
+    act(() => {
+      result.current.setSelectedLabel('label-456');
+    });
+
+    expect(result.current.selectedLabel).toBe('label-456');
+
+    // Test clearing the label
+    act(() => {
+      result.current.setSelectedLabel('');
+    });
+
+    expect(result.current.selectedLabel).toBe('');
   });
 
   it('should reset form state', () => {
@@ -46,6 +74,7 @@ describe('useScreenshotUpload', () => {
       result.current.setFile(mockFile);
       result.current.setPageName('test-page');
       result.current.setCustomName('test-name');
+      result.current.setSelectedLabel('test-label');
     });
 
     // Reset form
@@ -56,6 +85,7 @@ describe('useScreenshotUpload', () => {
     expect(result.current.file).toBeNull();
     expect(result.current.pageName).toBe('');
     expect(result.current.customName).toBe('');
+    expect(result.current.selectedLabel).toBe('');
     expect(result.current.error).toBe('');
   });
 
@@ -149,6 +179,7 @@ describe('useScreenshotUpload', () => {
         result.current.setFile(mockFile);
         result.current.setPageName('test-page');
         result.current.setCustomName('test-name');
+        result.current.setSelectedLabel('test-label');
       });
 
       await act(async () => {
@@ -182,6 +213,7 @@ describe('useScreenshotUpload', () => {
           key: 'test-key',
           pageName: 'test-page',
           customName: 'test-name',
+          labelId: 'test-label',
         }),
       });
 
@@ -191,6 +223,96 @@ describe('useScreenshotUpload', () => {
       expect(onSuccess).toHaveBeenCalled();
       expect(result.current.file).toBeNull();
       expect(result.current.isUploading).toBe(false);
+    });
+
+    it('should handle successful upload without a label', async () => {
+      const onSuccess = jest.fn();
+      const { result } = renderHook(() => useScreenshotUpload({ onSuccess }));
+
+      // Mock presigned URL response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ presignedUrl: 'test-url', key: 'test-key' }),
+      });
+
+      // Mock S3 upload response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      });
+
+      // Mock finalize response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      });
+
+      act(() => {
+        result.current.setFile(mockFile);
+        result.current.setPageName('test-page');
+        result.current.setCustomName('test-name');
+        // Not setting a label
+      });
+
+      await act(async () => {
+        await result.current.handleSubmit(mockEvent);
+      });
+
+      // Verify finalize request
+      expect(mockFetch).toHaveBeenNthCalledWith(3, '/api/s3/screenshots', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: 'test-key',
+          pageName: 'test-page',
+          customName: 'test-name',
+          labelId: undefined,
+        }),
+      });
+    });
+
+    it('should include the selected label in the API request', async () => {
+      const { result } = renderHook(() => useScreenshotUpload());
+      const labelId = 'label-test-id';
+
+      // Mock presigned URL response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ presignedUrl: 'test-url', key: 'test-key' }),
+      });
+
+      // Mock S3 upload response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      });
+
+      // Mock finalize response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      });
+
+      // Set up the form with a label
+      act(() => {
+        result.current.setFile(mockFile);
+        result.current.setPageName('test-page');
+        result.current.setCustomName('test-name');
+        result.current.setSelectedLabel(labelId);
+      });
+
+      // Submit the form
+      await act(async () => {
+        await result.current.handleSubmit(mockEvent);
+      });
+
+      // Verify the label is included in the API request
+      const finalizeCall = mockFetch.mock.calls[2];
+      const requestBody = JSON.parse(finalizeCall[1].body);
+
+      expect(requestBody).toHaveProperty('labelId', labelId);
+      expect(finalizeCall[0]).toBe('/api/s3/screenshots');
+      expect(finalizeCall[1].method).toBe('POST');
     });
 
     it('should handle upload error', async () => {

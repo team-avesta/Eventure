@@ -1,5 +1,6 @@
 export * from './AdminIcons';
 export * from './Spinner';
+export * from './UploadIcon';
 
 interface IconProps {
   className?: string;

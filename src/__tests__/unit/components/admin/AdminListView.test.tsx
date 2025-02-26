@@ -8,6 +8,19 @@ import toast from 'react-hot-toast';
 jest.mock('@/services/adminS3Service');
 jest.mock('react-hot-toast');
 
+// Manual mock for pageLabelService
+jest.mock('@/services/pageLabelService', () => ({
+  pageLabelService: {
+    getAllLabels: jest.fn(),
+    createLabel: jest.fn(),
+    updateLabel: jest.fn(),
+    deleteLabel: jest.fn(),
+  },
+}));
+
+// Import after mocking
+import { pageLabelService } from '@/services/pageLabelService';
+
 const mockModules = [
   { key: '1', name: 'Module 1' },
   { key: '2', name: 'Module 2' },
@@ -33,6 +46,11 @@ const mockDimensions = [
   },
 ];
 
+const mockPageLabels = [
+  { id: '1', name: 'Label 1' },
+  { id: '2', name: 'Label 2' },
+];
+
 describe('AdminListView', () => {
   const defaultProps = {
     type: 'module' as const,
@@ -49,6 +67,9 @@ describe('AdminListView', () => {
     );
     (adminS3Service.fetchDimensions as jest.Mock).mockResolvedValue(
       mockDimensions
+    );
+    (pageLabelService.getAllLabels as jest.Mock).mockResolvedValue(
+      mockPageLabels
     );
   });
 
@@ -130,6 +151,25 @@ describe('AdminListView', () => {
 
       expect(screen.getByText('Page 1')).toBeInTheDocument();
       expect(screen.getByText('/page1')).toBeInTheDocument();
+    });
+
+    it('fetches page labels when type is pageLabel', async () => {
+      await act(async () => {
+        render(
+          <AdminListView
+            {...defaultProps}
+            type="pageLabel"
+            title="Page Labels"
+          />
+        );
+      });
+
+      await waitFor(() => {
+        expect(pageLabelService.getAllLabels).toHaveBeenCalled();
+      });
+
+      expect(screen.getByText('Label 1')).toBeInTheDocument();
+      expect(screen.getByText('Label 2')).toBeInTheDocument();
     });
 
     it('handles fetch error', async () => {
@@ -312,6 +352,155 @@ describe('AdminListView', () => {
 
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('Failed to add modules');
+      });
+    });
+  });
+
+  describe('CRUD Operations for Page Labels', () => {
+    it('creates a new page label', async () => {
+      const user = userEvent.setup();
+      (pageLabelService.createLabel as jest.Mock).mockResolvedValue({
+        id: '3',
+        name: 'New Label',
+      });
+
+      await act(async () => {
+        render(
+          <AdminListView
+            {...defaultProps}
+            type="pageLabel"
+            title="Page Labels"
+          />
+        );
+      });
+
+      await act(async () => {
+        await user.click(
+          screen.getByRole('button', { name: 'Add Page Labels' })
+        );
+      });
+
+      // Submit the form
+      await act(async () => {
+        await user.type(screen.getByLabelText(/name/i), 'New Label');
+        await user.click(screen.getByRole('button', { name: 'Create' }));
+      });
+
+      await waitFor(() => {
+        expect(pageLabelService.createLabel).toHaveBeenCalled();
+        expect(toast.success).toHaveBeenCalledWith(
+          'Page Labels added successfully'
+        );
+      });
+    });
+
+    it('updates an existing page label', async () => {
+      const user = userEvent.setup();
+      (pageLabelService.updateLabel as jest.Mock).mockResolvedValue({
+        id: '1',
+        name: 'Label 1 Updated',
+      });
+
+      await act(async () => {
+        render(
+          <AdminListView
+            {...defaultProps}
+            type="pageLabel"
+            title="Page Labels"
+          />
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Label 1')).toBeInTheDocument();
+      });
+
+      await act(async () => {
+        const editButtons = screen.getAllByRole('button', { name: 'Edit' });
+        await user.click(editButtons[0]);
+      });
+
+      // Update the form
+      await act(async () => {
+        await user.type(screen.getByLabelText(/name/i), ' Updated');
+        await user.click(screen.getByRole('button', { name: 'Update' }));
+      });
+
+      await waitFor(() => {
+        expect(pageLabelService.updateLabel).toHaveBeenCalled();
+        expect(toast.success).toHaveBeenCalledWith(
+          'Page Labels updated successfully'
+        );
+      });
+    });
+
+    it('deletes a page label', async () => {
+      const user = userEvent.setup();
+      (pageLabelService.deleteLabel as jest.Mock).mockResolvedValue({});
+
+      await act(async () => {
+        render(
+          <AdminListView
+            {...defaultProps}
+            type="pageLabel"
+            title="Page Labels"
+          />
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Label 1')).toBeInTheDocument();
+      });
+
+      await act(async () => {
+        const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+        await user.click(deleteButtons[0]);
+      });
+
+      await act(async () => {
+        await user.click(
+          screen.getByRole('button', { name: 'Delete Page Labels' })
+        );
+      });
+
+      await waitFor(() => {
+        expect(pageLabelService.deleteLabel).toHaveBeenCalled();
+        expect(toast.success).toHaveBeenCalledWith(
+          'Page Labels deleted successfully'
+        );
+      });
+    });
+
+    it('handles page label operation errors', async () => {
+      const user = userEvent.setup();
+      (pageLabelService.createLabel as jest.Mock).mockRejectedValue(
+        new Error('Failed')
+      );
+
+      await act(async () => {
+        render(
+          <AdminListView
+            {...defaultProps}
+            type="pageLabel"
+            title="Page Labels"
+          />
+        );
+      });
+
+      await act(async () => {
+        await user.click(
+          screen.getByRole('button', { name: 'Add Page Labels' })
+        );
+      });
+
+      // Submit the form
+      await act(async () => {
+        await user.type(screen.getByLabelText(/name/i), 'New Label');
+        await user.click(screen.getByRole('button', { name: 'Create' }));
+      });
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to add page labels');
       });
     });
   });

@@ -1,6 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ScreenshotCard from '@/components/screenshots/ScreenshotCard';
 import { Screenshot, ScreenshotStatus } from '@/services/adminS3Service';
+import userEvent from '@testing-library/user-event';
+import { PageLabel } from '@/types/pageLabel';
+import { act } from 'react';
 
 // Mock next/image since it's not available in test environment
 jest.mock('next/image', () => ({
@@ -39,6 +42,31 @@ jest.mock('@dnd-kit/sortable', () => ({
   }),
 }));
 
+// Mock the modal components
+jest.mock('@/components/screenshots/EditScreenshotNameModal', () => {
+  const mockFn = jest.fn();
+  return {
+    __esModule: true,
+    default: mockFn,
+  };
+});
+
+jest.mock('@/components/screenshots/EditScreenshotLabelModal', () => {
+  const mockFn = jest.fn();
+  return {
+    __esModule: true,
+    default: mockFn,
+  };
+});
+
+jest.mock('@/components/screenshots/EditScreenshotStatusModal', () => {
+  const mockFn = jest.fn();
+  return {
+    __esModule: true,
+    default: mockFn,
+  };
+});
+
 describe('ScreenshotCard', () => {
   const mockScreenshot: Screenshot = {
     id: 'test-id',
@@ -48,7 +76,13 @@ describe('ScreenshotCard', () => {
     updatedAt: '2024-01-01T00:00:00.000Z',
     status: ScreenshotStatus.TODO,
     pageName: 'Test Page',
+    labelId: undefined,
   };
+
+  const mockAvailableLabels = [
+    { id: 'label-1', name: 'Label 1' },
+    { id: 'label-2', name: 'Label 2' },
+  ];
 
   const mockProps = {
     screenshot: mockScreenshot,
@@ -56,12 +90,107 @@ describe('ScreenshotCard', () => {
     onStatusChange: jest.fn(),
     onDelete: jest.fn(),
     onNameChange: jest.fn(),
+    onLabelChange: jest.fn(),
     isDragModeEnabled: false,
     isDeleting: false,
+    availableLabels: mockAvailableLabels,
+    labelName: null,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    const EditScreenshotNameModal =
+      require('@/components/screenshots/EditScreenshotNameModal').default;
+    const EditScreenshotLabelModal =
+      require('@/components/screenshots/EditScreenshotLabelModal').default;
+    const EditScreenshotStatusModal =
+      require('@/components/screenshots/EditScreenshotStatusModal').default;
+
+    EditScreenshotNameModal.mockImplementation(
+      ({
+        isOpen,
+        onClose,
+        onSave,
+        currentName,
+      }: {
+        isOpen: boolean;
+        onClose: () => void;
+        onSave: (name: string) => void;
+        currentName: string;
+      }) =>
+        isOpen ? (
+          <div role="dialog" aria-label="Edit Screenshot Name">
+            <input data-testid="name-input" defaultValue={currentName} />
+            <button onClick={() => onSave('New Name')}>Save</button>
+            <button onClick={onClose}>Cancel</button>
+          </div>
+        ) : null
+    );
+
+    EditScreenshotLabelModal.mockImplementation(
+      ({
+        isOpen,
+        onClose,
+        onSave,
+        currentLabelId,
+        availableLabels,
+      }: {
+        isOpen: boolean;
+        onClose: () => void;
+        onSave: (labelId: string | null) => void;
+        currentLabelId: string | null | undefined;
+        availableLabels: PageLabel[];
+      }) =>
+        isOpen ? (
+          <div role="dialog" aria-label="Edit Screenshot Label">
+            <select
+              data-testid="label-select"
+              defaultValue={currentLabelId || ''}
+            >
+              <option value="">No Label</option>
+              {availableLabels?.map((label) => (
+                <option key={label.id} value={label.id}>
+                  {label.name}
+                </option>
+              ))}
+            </select>
+            <button onClick={() => onSave('label-1')}>Save</button>
+            <button onClick={() => onSave(null)}>Remove Label</button>
+            <button onClick={onClose}>Cancel</button>
+          </div>
+        ) : null
+    );
+
+    EditScreenshotStatusModal.mockImplementation(
+      ({
+        isOpen,
+        onClose,
+        onSave,
+        currentStatus,
+      }: {
+        isOpen: boolean;
+        onClose: () => void;
+        onSave: (status: ScreenshotStatus) => void;
+        currentStatus: ScreenshotStatus;
+      }) =>
+        isOpen ? (
+          <div role="dialog" aria-label="Edit Screenshot Status">
+            <select data-testid="status-select" defaultValue={currentStatus}>
+              <option value={ScreenshotStatus.TODO}>
+                {ScreenshotStatus.TODO}
+              </option>
+              <option value={ScreenshotStatus.IN_PROGRESS}>
+                {ScreenshotStatus.IN_PROGRESS}
+              </option>
+              <option value={ScreenshotStatus.DONE}>
+                {ScreenshotStatus.DONE}
+              </option>
+            </select>
+            <button onClick={() => onSave(ScreenshotStatus.DONE)}>Save</button>
+            <button onClick={onClose}>Cancel</button>
+          </div>
+        ) : null
+    );
   });
 
   it('renders screenshot details correctly', () => {
@@ -93,34 +222,214 @@ describe('ScreenshotCard', () => {
       expect(screen.getByTitle('Delete screenshot')).toBeInTheDocument();
     });
 
-    it('allows status change when clicked by admin', () => {
-      render(<ScreenshotCard {...adminProps} />);
-
-      const statusButton = screen.getByTitle('Click to change status');
-      fireEvent.click(statusButton);
-
-      expect(mockProps.onStatusChange).toHaveBeenCalledWith(
-        mockScreenshot.id,
-        ScreenshotStatus.IN_PROGRESS
-      );
-    });
-
-    it('opens edit name modal when edit button is clicked', () => {
-      render(<ScreenshotCard {...adminProps} />);
-
-      const editButton = screen.getByTitle('Edit name');
-      fireEvent.click(editButton);
-
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-    });
-
-    it('calls onDelete when delete button is clicked', () => {
+    it('calls onDelete when delete button is clicked', async () => {
       render(<ScreenshotCard {...adminProps} />);
 
       const deleteButton = screen.getByTitle('Delete screenshot');
-      fireEvent.click(deleteButton);
+      await act(async () => {
+        fireEvent.click(deleteButton);
+      });
 
       expect(mockProps.onDelete).toHaveBeenCalledWith(mockScreenshot.id);
+    });
+
+    it('opens edit name modal when edit button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<ScreenshotCard {...adminProps} />);
+
+      await act(async () => {
+        await user.click(screen.getByTitle('Edit name'));
+      });
+
+      expect(
+        screen.getByRole('dialog', { name: 'Edit Screenshot Name' })
+      ).toBeInTheDocument();
+    });
+
+    it('calls onNameChange when name is saved', async () => {
+      const user = userEvent.setup();
+      render(<ScreenshotCard {...adminProps} />);
+
+      // Open the modal
+      await act(async () => {
+        await user.click(screen.getByTitle('Edit name'));
+      });
+
+      // Click save
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+      });
+
+      expect(mockProps.onNameChange).toHaveBeenCalledWith(
+        mockScreenshot.id,
+        'New Name'
+      );
+    });
+
+    it('opens status modal when status chip is clicked', async () => {
+      const user = userEvent.setup();
+      render(<ScreenshotCard {...adminProps} />);
+
+      await act(async () => {
+        await user.click(screen.getByText('TODO'));
+      });
+
+      expect(
+        screen.getByRole('dialog', { name: 'Edit Screenshot Status' })
+      ).toBeInTheDocument();
+    });
+
+    it('calls onStatusChange when status is saved', async () => {
+      const user = userEvent.setup();
+      render(<ScreenshotCard {...adminProps} />);
+
+      // Open the modal
+      await act(async () => {
+        await user.click(screen.getByText('TODO'));
+      });
+
+      // Click save
+      await act(async () => {
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+      });
+
+      expect(mockProps.onStatusChange).toHaveBeenCalledWith(
+        mockScreenshot.id,
+        ScreenshotStatus.DONE
+      );
+    });
+  });
+
+  describe('Label functionality', () => {
+    it('displays label chip when label is provided', () => {
+      render(<ScreenshotCard {...mockProps} labelName="Test Label" />);
+      expect(screen.getByText('Test Label')).toBeInTheDocument();
+    });
+
+    it('displays add label button for admin when no label is present', () => {
+      render(
+        <ScreenshotCard {...mockProps} labelName={null} userRole="admin" />
+      );
+
+      expect(screen.getByText('Add label')).toBeInTheDocument();
+    });
+
+    it('does not display add label button for non-admin users', () => {
+      render(
+        <ScreenshotCard {...mockProps} labelName={null} userRole="user" />
+      );
+
+      expect(screen.queryByText('Add label')).not.toBeInTheDocument();
+    });
+
+    it('opens label modal when label chip is clicked by admin', async () => {
+      const user = userEvent.setup();
+      const EditScreenshotLabelModal =
+        require('@/components/screenshots/EditScreenshotLabelModal').default;
+
+      render(
+        <ScreenshotCard
+          {...mockProps}
+          labelName="Test Label"
+          userRole="admin"
+        />
+      );
+
+      await act(async () => {
+        await user.click(screen.getByText('Test Label'));
+      });
+
+      expect(EditScreenshotLabelModal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isOpen: true,
+          currentLabelId: null,
+        }),
+        expect.anything()
+      );
+    });
+
+    it('opens label modal when add label button is clicked', async () => {
+      const user = userEvent.setup();
+      const EditScreenshotLabelModal =
+        require('@/components/screenshots/EditScreenshotLabelModal').default;
+
+      render(
+        <ScreenshotCard {...mockProps} labelName={null} userRole="admin" />
+      );
+
+      await act(async () => {
+        await user.click(screen.getByText('Add label'));
+      });
+
+      expect(EditScreenshotLabelModal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isOpen: true,
+          currentLabelId: null,
+        }),
+        expect.anything()
+      );
+    });
+
+    it('calls onLabelChange when label is saved', async () => {
+      const onLabelChange = jest.fn();
+      const user = userEvent.setup();
+      const EditScreenshotLabelModal =
+        require('@/components/screenshots/EditScreenshotLabelModal').default;
+
+      render(
+        <ScreenshotCard
+          {...mockProps}
+          labelName={null}
+          userRole="admin"
+          onLabelChange={onLabelChange}
+        />
+      );
+
+      // Open the modal
+      await act(async () => {
+        await user.click(screen.getByText('Add label'));
+      });
+
+      // Get the onSave callback from the last call to the modal
+      const onSaveCallback = EditScreenshotLabelModal.mock.calls[0][0].onSave;
+
+      // Call the onSave callback with a new label ID
+      await act(async () => {
+        onSaveCallback('new-label-id');
+      });
+
+      expect(onLabelChange).toHaveBeenCalledWith('test-id', 'new-label-id');
+    });
+
+    it('calls onLabelChange with null when label is removed', async () => {
+      const onLabelChange = jest.fn();
+      const user = userEvent.setup();
+      const EditScreenshotLabelModal =
+        require('@/components/screenshots/EditScreenshotLabelModal').default;
+
+      render(
+        <ScreenshotCard
+          {...mockProps}
+          labelName="Test Label"
+          userRole="admin"
+          onLabelChange={onLabelChange}
+        />
+      );
+
+      // Open the modal
+      await act(async () => {
+        await user.click(screen.getByText('Test Label'));
+      });
+
+      // Get the onSave callback from the last call to the modal
+      const onSaveCallback = EditScreenshotLabelModal.mock.calls[0][0].onSave;
+
+      // Call the onSave callback with null to remove the label
+      await act(async () => {
+        onSaveCallback(null);
+      });
+
+      expect(onLabelChange).toHaveBeenCalledWith('test-id', null);
     });
   });
 

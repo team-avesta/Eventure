@@ -4,7 +4,7 @@ import { Module, ScreenshotStatus } from '@/services/adminS3Service';
 
 export async function POST(request: NextRequest) {
   try {
-    const { key, pageName, customName } = await request.json();
+    const { key, pageName, customName, labelId } = await request.json();
 
     // Validate the upload and update database/metadata
     const s3Service = new S3DataService();
@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
       key,
       pageName,
       customName,
+      labelId,
       status: ScreenshotStatus.TODO,
     });
 

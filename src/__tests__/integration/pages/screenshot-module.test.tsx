@@ -16,6 +16,20 @@ import React from 'react';
 import { waitForElementToBeRemoved } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../../__mocks__/server';
+import { pageLabelService } from '@/services/pageLabelService';
+
+// Mock pageLabelService
+jest.mock('@/services/pageLabelService', () => ({
+  pageLabelService: {
+    getAllLabels: jest.fn().mockResolvedValue([
+      { id: 'label1', name: 'Label 1' },
+      { id: 'label2', name: 'Label 2' },
+    ]),
+    createLabel: jest.fn(),
+    updateLabel: jest.fn(),
+    deleteLabel: jest.fn(),
+  },
+}));
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -57,6 +71,7 @@ jest.mock('@/services/adminS3Service', () => ({
     deleteScreenshot: jest.fn(),
     updateScreenshotStatus: jest.fn(),
     updateScreenshotName: jest.fn(),
+    updateScreenshotLabel: jest.fn(),
   },
   ScreenshotStatus: {
     TODO: 'TODO',
@@ -68,6 +83,8 @@ jest.mock('@/services/adminS3Service', () => ({
 // Cast mock for TypeScript
 const mockFetchModules = adminS3Service.fetchModules as jest.Mock;
 const mockDeleteScreenshot = adminS3Service.deleteScreenshot as jest.Mock;
+const mockUpdateScreenshotLabel =
+  adminS3Service.updateScreenshotLabel as jest.Mock;
 
 // Types
 interface Screenshot {
@@ -118,13 +135,21 @@ jest.mock('../../../../src/components/screenshots/ScreenshotCard', () => {
     onDelete,
     onStatusChange,
     onNameChange,
+    onLabelChange,
     isDeleting,
+    availableLabels,
+    labelName,
   }: any) => {
     const [currentStatus, setCurrentStatus] = React.useState(
       screenshot.status || ScreenshotStatus.TODO
     );
     const [isEditNameModalOpen, setIsEditNameModalOpen] = React.useState(false);
+    const [isEditLabelModalOpen, setIsEditLabelModalOpen] =
+      React.useState(false);
     const [newName, setNewName] = React.useState(screenshot.name);
+    const [selectedLabelId, setSelectedLabelId] = React.useState(
+      screenshot.labelId
+    );
 
     const statusColors: Record<string, string> = {
       TODO: 'bg-orange-500 text-white',
@@ -138,6 +163,14 @@ jest.mock('../../../../src/components/screenshots/ScreenshotCard', () => {
         className="group relative"
       >
         {screenshot.name}
+        {labelName && (
+          <span
+            data-testid={`label-badge-${screenshot.id}`}
+            className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+          >
+            {labelName}
+          </span>
+        )}
         {userRole === 'admin' ? (
           <>
             <button
@@ -177,6 +210,17 @@ jest.mock('../../../../src/components/screenshots/ScreenshotCard', () => {
             >
               Edit
             </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setIsEditLabelModalOpen(true);
+              }}
+              className="p-2 bg-purple-600 text-white rounded-full group-hover:opacity-100 transition-opacity duration-200 hover:bg-purple-700"
+              title="Edit label"
+              data-testid={`edit-label-button-${screenshot.id}`}
+            >
+              Label
+            </button>
           </>
         ) : (
           <span data-testid={`status-text-${screenshot.id}`}>
@@ -204,6 +248,40 @@ jest.mock('../../../../src/components/screenshots/ScreenshotCard', () => {
                 }
               }}
               disabled={!newName.trim() || newName.trim() === screenshot.name}
+            >
+              Save Changes
+            </button>
+          </div>
+        )}
+        {isEditLabelModalOpen && (
+          <div role="dialog" aria-label="Edit Screenshot Label">
+            <h2>Edit Screenshot Label</h2>
+            <select
+              aria-label="Label"
+              value={selectedLabelId || ''}
+              onChange={(e) => setSelectedLabelId(e.target.value || null)}
+              data-testid={`label-select-${screenshot.id}`}
+            >
+              <option value="">No Label</option>
+              {availableLabels.map((label: any) => (
+                <option key={label.id} value={label.id}>
+                  {label.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setIsEditLabelModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={() => {
+                onLabelChange(screenshot.id, selectedLabelId);
+                setIsEditLabelModalOpen(false);
+              }}
+              data-testid={`save-label-button-${screenshot.id}`}
             >
               Save Changes
             </button>
@@ -247,16 +325,58 @@ jest.mock('@/components/common/SearchInput', () => ({
   ),
 }));
 
+// Add Dropdown mock
+jest.mock('@/components/common/Dropdown', () => ({
+  Dropdown: ({
+    options,
+    selectedId,
+    onSelect,
+    allOptionLabel,
+    placeholder,
+  }: any) => (
+    <div className="dropdown-container" data-testid="label-filter-dropdown">
+      <select
+        value={selectedId || ''}
+        onChange={(e) => onSelect(e.target.value || null)}
+        aria-label={placeholder}
+        data-testid="label-filter-select"
+      >
+        <option value="">{allOptionLabel}</option>
+        {options.map((option: any) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  ),
+}));
+
 // Mock data
 const mockModule = {
   key: 'test-module',
   name: 'Test Module',
   screenshots: [
-    { id: '1', name: 'Login Page Screenshot', status: 'TODO' },
-    { id: '2', name: 'User Dashboard View', status: 'IN_PROGRESS' },
-    { id: '3', name: 'Settings Panel', status: 'DONE' },
-    { id: '4', name: 'Login-Form Error', status: 'TODO' },
-    { id: '5', name: 'User Profile Page', status: 'IN_PROGRESS' },
+    {
+      id: '1',
+      name: 'Login Page Screenshot',
+      status: 'TODO',
+      labelId: 'label1',
+    },
+    {
+      id: '2',
+      name: 'User Dashboard View',
+      status: 'IN_PROGRESS',
+      labelId: 'label2',
+    },
+    { id: '3', name: 'Settings Panel', status: 'DONE', labelId: null },
+    { id: '4', name: 'Login-Form Error', status: 'TODO', labelId: 'label1' },
+    {
+      id: '5',
+      name: 'User Profile Page',
+      status: 'IN_PROGRESS',
+      labelId: null,
+    },
   ],
 };
 
@@ -315,9 +435,19 @@ const customRender = (ui: React.ReactElement) => {
   return render(ui, { wrapper: Wrapper });
 };
 
+// Reset all mocks before each test
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+// Clean up after each test
+afterEach(() => {
+  cleanup();
+});
+
 describe('ModuleScreenshotsPage - Initial Loading States', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    // Set up mocks for this test suite
     const mockAuth = { role: 'user' };
     window.sessionStorage.getItem = jest
       .fn()
@@ -2026,5 +2156,315 @@ describe('ModuleScreenshotsPage', () => {
       expect(card).toHaveTextContent('Login Page Screenshot');
       // The actual highlighting is tested in ScreenshotCard.test.tsx
     });
+  });
+});
+
+describe('ModuleScreenshotsPage - Label Functionality', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Set admin role
+    const mockAuth = { role: 'admin' };
+    window.sessionStorage.getItem = jest
+      .fn()
+      .mockReturnValue(JSON.stringify(mockAuth));
+    mockFetchModules.mockResolvedValue([mockModule]);
+
+    // Reset label service mock for each test
+    (pageLabelService.getAllLabels as jest.Mock).mockResolvedValue([
+      { id: 'label1', name: 'Label 1' },
+      { id: 'label2', name: 'Label 2' },
+    ]);
+  });
+
+  it('should fetch labels on mount', async () => {
+    const mockGetAllLabels = jest.fn().mockResolvedValue([
+      { id: 'label1', name: 'Label 1' },
+      { id: 'label2', name: 'Label 2' },
+    ]);
+
+    // Override the mock implementation for this test
+    (pageLabelService.getAllLabels as jest.Mock) = mockGetAllLabels;
+
+    await act(async () => {
+      customRender(<ModuleScreenshotsPage />);
+    });
+
+    // Use a more robust waitFor with timeout
+    await waitFor(
+      () => {
+        expect(mockGetAllLabels).toHaveBeenCalled();
+      },
+      { timeout: 3000 }
+    );
+
+    // Check if label filter dropdown is rendered
+    await waitFor(
+      () => {
+        const labelDropdown = screen.getByTestId('label-filter-dropdown');
+        expect(labelDropdown).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it('should display label badges on screenshots', async () => {
+    await act(async () => {
+      customRender(<ModuleScreenshotsPage />);
+    });
+
+    // Use more robust waitFor with timeout
+    await waitFor(
+      () => {
+        // Check if label badges are displayed for screenshots with labels
+        const labelBadge1 = screen.getByTestId('label-badge-1');
+        expect(labelBadge1).toBeInTheDocument();
+        expect(labelBadge1).toHaveTextContent('Label 1');
+
+        const labelBadge2 = screen.getByTestId('label-badge-2');
+        expect(labelBadge2).toBeInTheDocument();
+        expect(labelBadge2).toHaveTextContent('Label 2');
+
+        // Screenshots without labels should not have badges
+        expect(screen.queryByTestId('label-badge-3')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it('should filter screenshots by label', async () => {
+    await act(async () => {
+      customRender(<ModuleScreenshotsPage />);
+    });
+
+    // Wait for initial render with timeout
+    await waitFor(
+      () => {
+        mockModule.screenshots.forEach((screenshot) => {
+          expect(
+            screen.getByTestId(`screenshot-card-${screenshot.id}`)
+          ).toBeInTheDocument();
+        });
+      },
+      { timeout: 3000 }
+    );
+
+    // Select a label filter
+    const labelFilterSelect = await screen.findByTestId('label-filter-select');
+
+    await act(async () => {
+      await userEvent.selectOptions(labelFilterSelect, 'label1');
+    });
+
+    // Only screenshots with label1 should be visible - use more robust waitFor
+    await waitFor(
+      () => {
+        // These should be visible (have label1)
+        expect(screen.getByTestId('screenshot-card-1')).toBeInTheDocument();
+        expect(screen.getByTestId('screenshot-card-4')).toBeInTheDocument();
+
+        // These should be hidden (don't have label1)
+        expect(
+          screen.queryByTestId('screenshot-card-2')
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId('screenshot-card-3')
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId('screenshot-card-5')
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+
+    // Clear the filter
+    await act(async () => {
+      await userEvent.selectOptions(labelFilterSelect, '');
+    });
+
+    // All screenshots should be visible again - use more robust waitFor
+    await waitFor(
+      () => {
+        mockModule.screenshots.forEach((screenshot) => {
+          expect(
+            screen.getByTestId(`screenshot-card-${screenshot.id}`)
+          ).toBeInTheDocument();
+        });
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it('should update screenshot label', async () => {
+    mockUpdateScreenshotLabel.mockResolvedValue(undefined);
+    const updatedModule = {
+      ...mockModule,
+      screenshots: mockModule.screenshots.map((s) =>
+        s.id === '3' ? { ...s, labelId: 'label1' } : s
+      ),
+    };
+    mockFetchModules
+      .mockResolvedValueOnce([mockModule])
+      .mockResolvedValueOnce([updatedModule]);
+
+    await act(async () => {
+      customRender(<ModuleScreenshotsPage />);
+    });
+
+    // Open label edit modal - use findByTestId with timeout
+    const editLabelButton = await screen.findByTestId(
+      'edit-label-button-3',
+      {},
+      { timeout: 3000 }
+    );
+    await act(async () => {
+      await userEvent.click(editLabelButton);
+    });
+
+    // Select a label - use findByTestId with timeout
+    const labelSelect = await screen.findByTestId(
+      'label-select-3',
+      {},
+      { timeout: 3000 }
+    );
+    await act(async () => {
+      await userEvent.selectOptions(labelSelect, 'label1');
+    });
+
+    // Save changes - use findByTestId with timeout
+    const saveButton = await screen.findByTestId(
+      'save-label-button-3',
+      {},
+      { timeout: 3000 }
+    );
+    await act(async () => {
+      await userEvent.click(saveButton);
+    });
+
+    // Verify API call
+    await waitFor(
+      () => {
+        expect(mockUpdateScreenshotLabel).toHaveBeenCalledWith('3', 'label1');
+        expect(toast.success).toHaveBeenCalledWith(
+          'Screenshot label updated successfully'
+        );
+      },
+      { timeout: 3000 }
+    );
+
+    // Verify UI update
+    await waitFor(
+      () => {
+        const labelBadge = screen.getByTestId('label-badge-3');
+        expect(labelBadge).toBeInTheDocument();
+        expect(labelBadge).toHaveTextContent('Label 1');
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it('should handle label update errors gracefully', async () => {
+    mockUpdateScreenshotLabel.mockRejectedValue(
+      new Error('Failed to update label')
+    );
+
+    await act(async () => {
+      customRender(<ModuleScreenshotsPage />);
+    });
+
+    // Open label edit modal - use findByTestId with timeout
+    const editLabelButton = await screen.findByTestId(
+      'edit-label-button-3',
+      {},
+      { timeout: 3000 }
+    );
+    await act(async () => {
+      await userEvent.click(editLabelButton);
+    });
+
+    // Select a label - use findByTestId with timeout
+    const labelSelect = await screen.findByTestId(
+      'label-select-3',
+      {},
+      { timeout: 3000 }
+    );
+    await act(async () => {
+      await userEvent.selectOptions(labelSelect, 'label1');
+    });
+
+    // Save changes - use findByTestId with timeout
+    const saveButton = await screen.findByTestId(
+      'save-label-button-3',
+      {},
+      { timeout: 3000 }
+    );
+    await act(async () => {
+      await userEvent.click(saveButton);
+    });
+
+    // Verify error message
+    await waitFor(
+      () => {
+        expect(toast.error).toHaveBeenCalledWith(
+          'Failed to update screenshot label'
+        );
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it('should handle error when fetching labels', async () => {
+    // Mock the getAllLabels function to reject
+    const mockGetAllLabels = jest
+      .fn()
+      .mockRejectedValue(new Error('Failed to fetch labels'));
+    (pageLabelService.getAllLabels as jest.Mock) = mockGetAllLabels;
+
+    await act(async () => {
+      customRender(<ModuleScreenshotsPage />);
+    });
+
+    await waitFor(
+      () => {
+        expect(toast.error).toHaveBeenCalledWith('Failed to fetch labels');
+      },
+      { timeout: 3000 }
+    );
+
+    // The page should still render without labels
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: mockModule.name })
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+  });
+
+  it('should not show label filter when no labels are available', async () => {
+    // Mock empty labels array
+    const mockGetAllLabels = jest.fn().mockResolvedValue([]);
+    (pageLabelService.getAllLabels as jest.Mock) = mockGetAllLabels;
+
+    await act(async () => {
+      customRender(<ModuleScreenshotsPage />);
+    });
+
+    await waitFor(
+      () => {
+        expect(mockGetAllLabels).toHaveBeenCalled();
+      },
+      { timeout: 3000 }
+    );
+
+    // Label filter should not be rendered
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByTestId('label-filter-dropdown')
+        ).not.toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
   });
 });

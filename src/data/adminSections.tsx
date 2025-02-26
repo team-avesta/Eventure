@@ -17,7 +17,8 @@ export interface AdminSection {
     | 'category'
     | 'action'
     | 'name'
-    | 'dimensionType';
+    | 'dimensionType'
+    | 'pageLabel';
   icon: React.ReactNode;
 }
 
@@ -27,6 +28,12 @@ export const adminSections: AdminSection[] = [
     description: 'Manage modules and their screenshots',
     type: 'module',
     icon: <ModuleIcon className="w-6 h-6" />,
+  },
+  {
+    title: 'Page Labels',
+    description: 'Manage page labels for organizing screenshots',
+    type: 'pageLabel',
+    icon: <EventIcon className="w-6 h-6" />,
   },
   {
     title: 'PageView Events',

@@ -25,6 +25,10 @@ const customJestConfig = {
   testEnvironmentOptions: {
     customExportConditions: [''],
   },
+  // Transform ESM modules - update to handle more ESM packages
+  transformIgnorePatterns: [
+    '/node_modules/(?!(.pnpm/)?((uuid|nanoid|@mswjs|msw|@sinclair|@floating-ui|@popperjs|react-day-picker|date-fns|internmap|d3-|delaunator|robust-predicates).*))',
+  ],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

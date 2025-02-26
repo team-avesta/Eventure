@@ -17,8 +17,9 @@ import DimensionModal from './modals/DimensionModal';
 import EventCategoryModal from './modals/EventCategoryModal';
 import EventActionModal from './modals/EventActionModal';
 import EventNameModal from './modals/EventNameModal';
-import EventTypeModal from './modals/EventTypeModal';
 import DimensionTypeModal from './modals/DimensionTypeModal';
+import PageLabelModal from './modals/PageLabelModal';
+import { pageLabelService } from '@/services/pageLabelService';
 
 interface AdminListViewProps {
   type:
@@ -28,7 +29,8 @@ interface AdminListViewProps {
     | 'category'
     | 'action'
     | 'name'
-    | 'dimensionType';
+    | 'dimensionType'
+    | 'pageLabel';
   title: string;
   onClose: () => void;
 }
@@ -85,6 +87,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         case 'dimensionType':
           data = await adminS3Service.fetchDimensionTypes();
           break;
+        case 'pageLabel':
+          data = await pageLabelService.getAllLabels();
+          break;
       }
       setItems(data);
     } catch (error) {
@@ -125,6 +130,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
           case 'dimensionType':
             await adminS3Service.updateDimensionType(selectedItem.id, data);
             break;
+          case 'pageLabel':
+            await pageLabelService.updateLabel(selectedItem.id, data);
+            break;
         }
         toast.success(`${title} updated successfully`);
       } else {
@@ -150,6 +158,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
             break;
           case 'dimensionType':
             await adminS3Service.createDimensionType(data);
+            break;
+          case 'pageLabel':
+            await pageLabelService.createLabel(data);
             break;
         }
         toast.success(`${title} added successfully`);
@@ -200,6 +211,9 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         case 'dimensionType':
           await adminS3Service.deleteDimensionType(selectedItem.id);
           break;
+        case 'pageLabel':
+          await pageLabelService.deleteLabel(selectedItem.id);
+          break;
       }
       await fetchItems();
       toast.success(`${title} deleted successfully`);
@@ -249,6 +263,8 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
         return <EventNameModal {...modalProps} />;
       case 'dimensionType':
         return <DimensionTypeModal {...modalProps} />;
+      case 'pageLabel':
+        return <PageLabelModal {...modalProps} />;
       default:
         return null;
     }

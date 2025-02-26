@@ -879,6 +879,61 @@ describe('adminS3Service', () => {
       });
     });
 
+    describe('updateScreenshotLabel', () => {
+      it('should update screenshot label successfully', async () => {
+        (api.get as jest.Mock).mockResolvedValueOnce({ modules: [mockModule] });
+
+        await adminS3Service.updateScreenshotLabel('1', 'label1');
+
+        expect(api.update).toHaveBeenCalledWith('modules', {
+          modules: [
+            {
+              ...mockModule,
+              screenshots: [
+                {
+                  ...mockScreenshot,
+                  labelId: 'label1',
+                  updatedAt: expect.any(String),
+                },
+              ],
+            },
+          ],
+        });
+      });
+
+      it('should remove screenshot label when null is provided', async () => {
+        const screenshotWithLabel = {
+          ...mockScreenshot,
+          labelId: 'existingLabel',
+        };
+        const moduleWithLabeledScreenshot = {
+          ...mockModule,
+          screenshots: [screenshotWithLabel],
+        };
+
+        (api.get as jest.Mock).mockResolvedValueOnce({
+          modules: [moduleWithLabeledScreenshot],
+        });
+
+        await adminS3Service.updateScreenshotLabel('1', null);
+
+        expect(api.update).toHaveBeenCalledWith('modules', {
+          modules: [
+            {
+              ...moduleWithLabeledScreenshot,
+              screenshots: [
+                {
+                  ...screenshotWithLabel,
+                  labelId: null,
+                  updatedAt: expect.any(String),
+                },
+              ],
+            },
+          ],
+        });
+      });
+    });
+
     describe('replaceScreenshot', () => {
       it('should replace screenshot successfully', async () => {
         const mockFile = new File([''], 'test.png', { type: 'image/png' });

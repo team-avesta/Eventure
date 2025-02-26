@@ -27,11 +27,14 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SearchInput } from '@/components/common/SearchInput';
+import { pageLabelService } from '@/services/pageLabelService';
+import { PageLabel } from '@/types/pageLabel';
+import { Dropdown } from '@/components/common/Dropdown';
 
 export default function ModuleScreenshotsPage() {
   const params = useParams();
   const moduleKey = params.key as string;
-  const [userRole, setUserRole] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>('user');
   const [currentModule, setCurrentModule] = useState<Module | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [screenshotToDelete, setScreenshotToDelete] = useState<string | null>(
@@ -43,6 +46,9 @@ export default function ModuleScreenshotsPage() {
     Module['screenshots']
   >([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [availableLabels, setAvailableLabels] = useState<PageLabel[]>([]);
+  const [labelMap, setLabelMap] = useState<Record<string, string>>({});
+  const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -64,6 +70,26 @@ export default function ModuleScreenshotsPage() {
     }
   }, []);
 
+  const fetchLabels = useCallback(async () => {
+    try {
+      const labels = await pageLabelService.getAllLabels();
+      setAvailableLabels(labels);
+
+      // Create a map of label IDs to label names for quick lookup
+      const labelMapping: Record<string, string> = {};
+      labels.forEach((label) => {
+        labelMapping[label.id] = label.name;
+      });
+      setLabelMap(labelMapping);
+    } catch (error) {
+      toast.error('Failed to fetch labels');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLabels();
+  }, [fetchLabels]);
+
   const fetchModule = useCallback(async () => {
     try {
       const modules = await adminS3Service.fetchModules();
@@ -80,11 +106,30 @@ export default function ModuleScreenshotsPage() {
     fetchModule();
   }, [fetchModule]);
 
+  // Apply filters whenever search term, selected label, or module changes
   useEffect(() => {
-    if (currentModule?.screenshots) {
-      setFilteredScreenshots(currentModule.screenshots);
+    if (!currentModule?.screenshots) return;
+
+    let filtered = [...currentModule.screenshots];
+
+    // Apply search filter
+    if (searchTerm) {
+      const searchTerms = searchTerm.toLowerCase().split(/[\s-]+/);
+      filtered = filtered.filter((screenshot) => {
+        const normalizedName = screenshot.name.toLowerCase();
+        return searchTerms.every((term) => normalizedName.includes(term));
+      });
     }
-  }, [currentModule?.screenshots]);
+
+    // Apply label filter
+    if (selectedLabelId) {
+      filtered = filtered.filter(
+        (screenshot) => screenshot.labelId === selectedLabelId
+      );
+    }
+
+    setFilteredScreenshots(filtered);
+  }, [currentModule?.screenshots, searchTerm, selectedLabelId]);
 
   const handleDeleteScreenshot = async () => {
     if (!screenshotToDelete || !currentModule) return;
@@ -122,6 +167,19 @@ export default function ModuleScreenshotsPage() {
       toast.success('Screenshot name updated successfully');
     } catch (error) {
       toast.error('Failed to update screenshot name');
+    }
+  };
+
+  const handleLabelChange = async (
+    screenshotId: string,
+    newLabelId: string | null
+  ) => {
+    try {
+      await adminS3Service.updateScreenshotLabel(screenshotId, newLabelId);
+      await fetchModule();
+      toast.success('Screenshot label updated successfully');
+    } catch (error) {
+      toast.error('Failed to update screenshot label');
     }
   };
 
@@ -167,14 +225,6 @@ export default function ModuleScreenshotsPage() {
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    if (!currentModule?.screenshots) return;
-
-    const searchTerms = value.toLowerCase().split(/[\s-]+/); // Split by spaces and hyphens
-    const filtered = currentModule.screenshots.filter((screenshot) => {
-      const normalizedName = screenshot.name.toLowerCase();
-      return searchTerms.every((term) => normalizedName.includes(term));
-    });
-    setFilteredScreenshots(filtered);
   };
 
   if (isLoading) {
@@ -250,41 +300,70 @@ export default function ModuleScreenshotsPage() {
           </div>
         ) : (
           <>
-            <div className="mb-6">
-              <SearchInput
-                onSearch={handleSearch}
-                placeholder="Search screenshots..."
-                delay={0}
-              />
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <div className="w-full sm:w-auto sm:flex-1 mb-2 sm:mb-0">
+                <SearchInput
+                  onSearch={handleSearch}
+                  placeholder="Search screenshots..."
+                  delay={0}
+                />
+              </div>
+
+              {availableLabels.length > 0 && (
+                <Dropdown
+                  options={availableLabels.map((label) => ({
+                    id: label.id,
+                    label: label.name,
+                  }))}
+                  selectedId={selectedLabelId}
+                  onSelect={setSelectedLabelId}
+                  allOptionLabel="All labels"
+                  placeholder="Filter by label"
+                />
+              )}
             </div>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={currentModule.screenshots.map((s) => s.id)}
-                strategy={rectSortingStrategy}
+
+            {filteredScreenshots.length === 0 ? (
+              <div className="bg-white shadow rounded-lg p-6 text-center text-gray-500">
+                No screenshots match your filters.
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredScreenshots.map((screenshot) => (
-                    <ScreenshotCard
-                      key={screenshot.id}
-                      screenshot={screenshot}
-                      userRole={userRole}
-                      onStatusChange={handleStatusChange}
-                      onDelete={setScreenshotToDelete}
-                      onNameChange={handleNameChange}
-                      isDragModeEnabled={isDragModeEnabled}
-                      isDeleting={
-                        isDeleting && screenshotToDelete === screenshot.id
-                      }
-                      searchTerm={searchTerm}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
+                <SortableContext
+                  items={currentModule.screenshots.map((s) => s.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredScreenshots.map((screenshot) => (
+                      <ScreenshotCard
+                        key={screenshot.id}
+                        screenshot={screenshot}
+                        userRole={userRole}
+                        onStatusChange={handleStatusChange}
+                        onDelete={setScreenshotToDelete}
+                        onNameChange={handleNameChange}
+                        onLabelChange={handleLabelChange}
+                        isDragModeEnabled={isDragModeEnabled}
+                        isDeleting={
+                          isDeleting && screenshotToDelete === screenshot.id
+                        }
+                        searchTerm={searchTerm}
+                        availableLabels={availableLabels}
+                        labelName={
+                          screenshot.labelId
+                            ? labelMap[screenshot.labelId]
+                            : null
+                        }
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
           </>
         )}
       </div>
