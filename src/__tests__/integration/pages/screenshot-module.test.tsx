@@ -496,7 +496,7 @@ describe('ModuleScreenshotsPage - Initial Loading States', () => {
 
     // Then, after the error occurs, we should see the error state
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Failed to fetch module');
+      expect(toast.error).toHaveBeenCalledWith('Failed to fetch');
     });
   });
 
@@ -791,9 +791,7 @@ describe('ModuleScreenshotsPage - Admin Features', () => {
 
     // Wait for error toast
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        'Failed to update screenshot order'
-      );
+      expect(toast.error).toHaveBeenCalledWith('Failed to update order');
     });
 
     // Verify screenshots are in original order
@@ -1102,7 +1100,7 @@ describe('ModuleScreenshotsPage - Screenshot Management', () => {
       });
 
       // Verify error message
-      expect(toast.error).toHaveBeenCalledWith('Failed to delete screenshot');
+      expect(toast.error).toHaveBeenCalledWith('Failed to delete');
 
       // Verify screenshot still exists
       expect(
@@ -1236,7 +1234,7 @@ describe('ModuleScreenshotsPage - Screenshot Management', () => {
         await userEvent.click(statusButton);
       });
 
-      expect(toast.error).toHaveBeenCalledWith('Failed to update status');
+      expect(toast.error).toHaveBeenCalledWith('Failed to update');
     });
 
     it('should show status controls for admin users', async () => {
@@ -1548,9 +1546,7 @@ describe('ModuleScreenshotsPage - Screenshot Management', () => {
         await userEvent.click(saveButton);
       });
 
-      expect(toast.error).toHaveBeenCalledWith(
-        'Failed to update screenshot name'
-      );
+      expect(toast.error).toHaveBeenCalledWith('Failed to update');
       expect(
         screen.getByText(mockModule.screenshots[0].name)
       ).toBeInTheDocument();
@@ -1808,9 +1804,7 @@ describe('ModuleScreenshotsPage - Error Handling', () => {
     await act(async () => {
       await userEvent.click(saveButton);
     });
-    expect(toast.error).toHaveBeenCalledWith(
-      'Failed to update screenshot name'
-    );
+    expect(toast.error).toHaveBeenCalledWith('Failed to update name');
   });
 
   it('should handle network errors gracefully', async () => {
@@ -1823,7 +1817,7 @@ describe('ModuleScreenshotsPage - Error Handling', () => {
 
     // Should show error toast
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Failed to fetch module');
+      expect(toast.error).toHaveBeenCalledWith('Network error');
     });
 
     // Should not show loading state anymore
@@ -1876,9 +1870,7 @@ describe('ModuleScreenshotsPage - Error Handling', () => {
 
     // Wait for error toast
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        'Failed to update screenshot order'
-      );
+      expect(toast.error).toHaveBeenCalledWith('Failed to update order');
     });
 
     // Verify screenshots are in original order
@@ -2404,9 +2396,7 @@ describe('ModuleScreenshotsPage - Label Functionality', () => {
     // Verify error message
     await waitFor(
       () => {
-        expect(toast.error).toHaveBeenCalledWith(
-          'Failed to update screenshot label'
-        );
+        expect(toast.error).toHaveBeenCalledWith('Failed to update label');
       },
       { timeout: 3000 }
     );

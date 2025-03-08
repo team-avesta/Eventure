@@ -1,6 +1,7 @@
 export * from './AdminIcons';
 export * from './Spinner';
 export * from './UploadIcon';
+export { default as ReorderIcon } from './ReorderIcon';
 
 interface IconProps {
   className?: string;
