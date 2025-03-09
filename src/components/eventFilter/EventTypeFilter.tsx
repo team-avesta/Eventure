@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { FiChevronDown } from 'react-icons/fi';
+import { EventType } from '@/services/adminS3Service';
 
 const EVENT_TYPES = [
   { id: 'all', name: 'All Events', color: '#6B7280' },
@@ -51,7 +53,7 @@ export default function EventTypeFilter({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-2.5 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+        className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
       >
         <div className="flex items-center gap-2">
           <span className="text-gray-700">{selectedType?.name}</span>
@@ -61,21 +63,11 @@ export default function EventTypeFilter({
               : rectangles.filter((r) => r.eventType === selectedFilter).length}
           </span>
         </div>
-        <svg
+        <FiChevronDown
           className={`w-4 h-4 text-gray-500 transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        />
       </button>
 
       {isOpen && (

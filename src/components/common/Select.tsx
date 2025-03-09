@@ -1,3 +1,5 @@
+import { FiChevronDown } from 'react-icons/fi';
+
 interface SelectOption {
   value: string;
   label: string;
@@ -39,20 +41,10 @@ export function Select({
           ))}
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-          <svg
+          <FiChevronDown
             className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
             data-testid="select-dropdown-icon"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
+          />
         </div>
       </div>
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}

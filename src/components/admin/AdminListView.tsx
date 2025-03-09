@@ -7,7 +7,6 @@ import {
   ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '@/components/common/Button';
-import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
@@ -20,6 +19,8 @@ import EventNameModal from './modals/EventNameModal';
 import DimensionTypeModal from './modals/DimensionTypeModal';
 import PageLabelModal from './modals/PageLabelModal';
 import { pageLabelService } from '@/services/pageLabelService';
+import { FiPlus } from 'react-icons/fi';
+import { CgSpinner } from 'react-icons/cg';
 
 interface AdminListViewProps {
   type:
@@ -38,7 +39,11 @@ interface AdminListViewProps {
 function LoadingState() {
   return (
     <div className="text-center py-8">
-      <Spinner className="mx-auto" />
+      <CgSpinner
+        size={16}
+        className="animate-spin mx-auto"
+        role="progressbar"
+      />
       <div className="mt-2 text-sm text-gray-500">Loading items...</div>
     </div>
   );
@@ -291,19 +296,7 @@ export function AdminListView({ type, title, onClose }: AdminListViewProps) {
             </div>
           </div>
           <Button onClick={handleAdd} className="flex items-center gap-2">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
+            <FiPlus className="w-4 h-4" />
             Add {title}
           </Button>
         </div>

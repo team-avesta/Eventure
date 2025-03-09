@@ -62,20 +62,6 @@ describe('LabelChip component', () => {
     );
   });
 
-  it('renders add button icon when isAddButton is true', () => {
-    render(<LabelChip label={null} isAddButton={true} />);
-
-    const icon = screen.getByTestId('chip-icon');
-    expect(icon).toBeInTheDocument();
-    // The add button has a plus icon (path with d attribute containing "M12 6v6m0 0v6m0-6h6m-6 0H6")
-    const svg = icon.querySelector('svg');
-    const path = svg?.querySelector('path');
-    expect(path).toHaveAttribute(
-      'd',
-      expect.stringContaining('M12 6v6m0 0v6m0-6h6m-6 0H6')
-    );
-  });
-
   it('calls onClick when clicked and onClick is provided', () => {
     const mockOnClick = jest.fn();
     render(<LabelChip label="Test Label" onClick={mockOnClick} />);

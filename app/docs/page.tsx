@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { FiArrowUp } from 'react-icons/fi';
 
 export default function DocumentationPage() {
   return (
@@ -633,19 +634,7 @@ export default function DocumentationPage() {
             href="#"
             className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 10l7-7m0 0l7 7m-7-7v18"
-              />
-            </svg>
+            <FiArrowUp className="w-4 h-4 mr-2" />
             Back to Top
           </Link>
         </div>

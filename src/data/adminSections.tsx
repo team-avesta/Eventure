@@ -1,11 +1,4 @@
-import {
-  ModuleIcon,
-  PageViewIcon,
-  DimensionIcon,
-  CategoryIcon,
-  ActionIcon,
-  EventIcon,
-} from '@/components/common/icons';
+import { FiGrid, FiEye, FiCopy, FiBox, FiZap, FiTag } from 'react-icons/fi';
 
 export interface AdminSection {
   title: string;
@@ -27,48 +20,48 @@ export const adminSections: AdminSection[] = [
     title: 'Modules',
     description: 'Manage modules and their screenshots',
     type: 'module',
-    icon: <ModuleIcon className="w-6 h-6" />,
+    icon: <FiGrid className="w-6 h-6" />,
   },
   {
     title: 'Page Labels',
     description: 'Manage page labels for organizing screenshots',
     type: 'pageLabel',
-    icon: <EventIcon className="w-6 h-6" />,
+    icon: <FiTag className="w-6 h-6" />,
   },
   {
     title: 'PageView Events',
     description: 'Configure pageview event settings',
     type: 'pageview',
-    icon: <PageViewIcon className="w-6 h-6" />,
+    icon: <FiEye className="w-6 h-6" />,
   },
   {
     title: 'Dimensions',
     description: 'Manage tracking dimensions',
     type: 'dimension',
-    icon: <DimensionIcon className="w-6 h-6" />,
+    icon: <FiCopy className="w-6 h-6" />,
   },
   {
     title: 'Dimension Types',
     description: 'Manage dimension data types',
     type: 'dimensionType',
-    icon: <DimensionIcon className="w-6 h-6" />,
+    icon: <FiCopy className="w-6 h-6" />,
   },
   {
     title: 'Event Categories',
     description: 'Manage event categories',
     type: 'category',
-    icon: <CategoryIcon className="w-6 h-6" />,
+    icon: <FiBox className="w-6 h-6" />,
   },
   {
     title: 'Event Action Names',
     description: 'Manage event action names',
     type: 'action',
-    icon: <ActionIcon className="w-6 h-6" />,
+    icon: <FiZap className="w-6 h-6" />,
   },
   {
     title: 'Event Names',
     description: 'Manage event names',
     type: 'name',
-    icon: <EventIcon className="w-6 h-6" />,
+    icon: <FiTag className="w-6 h-6" />,
   },
 ];

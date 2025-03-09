@@ -1,6 +1,6 @@
 import React from 'react';
 import Breadcrumb from '@/components/common/Breadcrumb';
-import { ReorderIcon } from '@/components/common/icons';
+import { FiMove } from 'react-icons/fi';
 
 interface ModuleHeaderProps {
   moduleName: string;
@@ -35,9 +35,10 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
         }`}
         data-testid="toggle-drag-mode"
       >
-        <ReorderIcon
-          className="mr-2 -ml-1 h-5 w-5"
-          isActive={isDragModeEnabled}
+        <FiMove
+          className={`${
+            isDragModeEnabled ? 'rotate-180' : ''
+          } transition-transform mr-2 -ml-1 h-5 w-5`}
         />
         {isDragModeEnabled ? 'Exit Reorder Mode' : 'Reorder Screenshots'}
       </button>

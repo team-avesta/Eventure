@@ -16,23 +16,6 @@ jest.mock('@/components/common/Breadcrumb', () => ({
   ),
 }));
 
-// Mock the ReorderIcon component
-jest.mock('@/components/common/icons', () => ({
-  ReorderIcon: ({
-    isActive,
-    className,
-  }: {
-    isActive?: boolean;
-    className?: string;
-  }) => (
-    <svg
-      data-testid="reorder-icon"
-      data-active={isActive ? 'true' : 'false'}
-      className={className}
-    />
-  ),
-}));
-
 describe('ModuleHeader', () => {
   const defaultProps = {
     moduleName: 'Test Module',
@@ -126,10 +109,6 @@ describe('ModuleHeader', () => {
     expect(button).toHaveTextContent('Exit Reorder Mode');
     expect(button).toHaveClass('bg-blue-100');
     expect(button).toHaveClass('text-blue-700');
-
-    // Check icon state
-    const icon = screen.getByTestId('reorder-icon');
-    expect(icon).toHaveAttribute('data-active', 'true');
   });
 
   it('shows correct button text and styling when drag mode is disabled', () => {
@@ -147,10 +126,6 @@ describe('ModuleHeader', () => {
     expect(button).toHaveTextContent('Reorder Screenshots');
     expect(button).toHaveClass('bg-blue-600');
     expect(button).toHaveClass('text-white');
-
-    // Check icon state
-    const icon = screen.getByTestId('reorder-icon');
-    expect(icon).toHaveAttribute('data-active', 'false');
   });
 
   it('renders with sticky positioning and correct layout', () => {

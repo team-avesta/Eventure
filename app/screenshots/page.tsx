@@ -11,8 +11,8 @@ import ScreenshotUpload from '@/components/screenshots/ScreenshotUpload';
 import { ModuleCard } from '@/components/screenshots/ModuleCard';
 import { AnalyticsModal } from '@/components/screenshots/AnalyticsModal';
 import { useAuth } from '@/hooks/useAuth';
-import { Spinner } from '@/components/common/icons';
 import toast from 'react-hot-toast';
+import { CgSpinner } from 'react-icons/cg';
 
 interface EventCounts {
   pageViewCount: number;
@@ -74,7 +74,7 @@ export default function ScreenshotsPage() {
   if (isAuthLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Spinner size={32} />
+        <CgSpinner size={32} className="animate-spin" role="progressbar" />
       </div>
     );
   }

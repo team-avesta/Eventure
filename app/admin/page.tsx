@@ -1,10 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Spinner } from '@/components/common/icons';
 import { AdminCard } from '@/components/admin/AdminCard';
 import { adminSections } from '@/data/adminSections';
 import { useAdminState } from '@/hooks/useAdminState';
+import { CgSpinner } from 'react-icons/cg';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -13,7 +13,7 @@ export default function AdminPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Spinner size={32} />
+        <CgSpinner size={32} className="animate-spin" role="progressbar" />
       </div>
     );
   }

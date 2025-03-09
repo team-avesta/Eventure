@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Input } from './Input';
-import { UploadIcon } from './icons/UploadIcon';
+import { FiUpload } from 'react-icons/fi';
 
 interface FileUploadProps {
   onChange: (file: File | null) => void;
@@ -51,7 +51,7 @@ export function FileUpload({
         className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-primary transition-colors duration-200"
       >
         <div className="space-y-2 text-center">
-          <UploadIcon />
+          <FiUpload className="mx-auto h-10 w-10 text-gray-400" />
           <div className="flex text-sm text-gray-600">
             <label
               htmlFor="file-upload"

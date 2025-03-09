@@ -1,6 +1,7 @@
 import { ChangeEvent } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useState, useEffect } from 'react';
+import { FiX } from 'react-icons/fi';
 
 interface SearchInputProps {
   onSearch: (value: string) => void;
@@ -42,19 +43,7 @@ export const SearchInput = ({
           onClick={() => setSearchTerm('')}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <FiX className="h-5 w-5" />
         </button>
       )}
     </div>

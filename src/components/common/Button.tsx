@@ -1,4 +1,4 @@
-import { Spinner } from './icons/Spinner';
+import { CgSpinner } from 'react-icons/cg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline';
@@ -38,7 +38,7 @@ export function Button({
     >
       {isLoading ? (
         <span className="flex items-center justify-center">
-          <Spinner className="-ml-1 mr-2" size={16} />
+          <CgSpinner size={16} className="animate-spin -ml-1 mr-2" />
           Loading...
         </span>
       ) : (

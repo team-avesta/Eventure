@@ -3,10 +3,10 @@ import { TrashIcon } from '@heroicons/react/24/outline';
 import { Modal } from '@/components/common/Modal';
 import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
-import { Spinner } from '@/components/common/icons/Spinner';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
+import { CgSpinner } from 'react-icons/cg';
 
 interface ManageEventNameModalProps {
   isOpen: boolean;
@@ -16,7 +16,11 @@ interface ManageEventNameModalProps {
 function LoadingState() {
   return (
     <div className="text-center py-8">
-      <Spinner className="mx-auto" />
+      <CgSpinner
+        size={16}
+        className="animate-spin mx-auto"
+        role="progressbar"
+      />
       <div className="mt-2 text-sm text-gray-500">Loading event names...</div>
     </div>
   );
