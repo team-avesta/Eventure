@@ -14,6 +14,10 @@ import ActionDropdown from '@/components/shared/ActionDropdown';
 import Breadcrumb from '@/components/common/Breadcrumb';
 import { Autocomplete } from '@/components/common/Autocomplete';
 import DimensionDisplay from '@/components/common/DimensionDisplay';
+import InputField from '@/components/common/InputField';
+import CheckboxField from '@/components/common/CheckboxField';
+import DimensionsSection from '@/components/common/DimensionsSection';
+import EmptyState from '@/components/screenshots/module/EmptyState';
 
 const EVENT_TYPES = [
   { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
@@ -352,45 +356,24 @@ export default function ScreenshotDetailPage() {
     fetchDropdownData();
   }, []);
 
+  const handleDimensionChange = (dimensionId: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      dimensions: checked
+        ? [...(prev.dimensions || []), dimensionId]
+        : (prev.dimensions || []).filter((id) => id !== dimensionId),
+    }));
+  };
+
   const renderFormFields = () => {
     if (!selectedEventType) return null;
 
     const dimensionsSection = (
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Dimensions
-        </label>
-        <div className="max-h-[300px] overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
-          {dropdownData.dimensions.map((dimension) => (
-            <label
-              key={dimension.id}
-              className="flex items-center space-x-3 hover:bg-gray-50 p-1 rounded cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                name="dimensions"
-                value={dimension.id}
-                checked={formData.dimensions?.includes(dimension.id)}
-                onChange={(e) => {
-                  const dimensionId = dimension.id;
-                  setFormData((prev) => ({
-                    ...prev,
-                    dimensions: e.target.checked
-                      ? [...(prev.dimensions || []), dimensionId]
-                      : (prev.dimensions || []).filter(
-                          (id) => id !== dimensionId
-                        ),
-                  }));
-                }}
-                className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">
-                {String(dimension.id).padStart(2, '0')}. {dimension.name}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
+      <DimensionsSection
+        dimensions={dropdownData.dimensions}
+        selectedDimensions={formData.dimensions || []}
+        onDimensionChange={handleDimensionChange}
+      />
     );
 
     switch (selectedEventType.id) {
@@ -424,27 +407,18 @@ export default function ScreenshotDetailPage() {
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="customUrl"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Custom URL *
-              </label>
-              <input
-                type="text"
-                name="customUrl"
-                id="customUrl"
-                required
-                readOnly
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
-                placeholder="URL will be set automatically"
-                value={
-                  dropdownData.pageData.find((p) => p.id === selectedPageId)
-                    ?.url || ''
-                }
-              />
-            </div>
+            <InputField
+              id="customUrl"
+              name="customUrl"
+              label="Custom URL"
+              value={
+                dropdownData.pageData.find((p) => p.id === selectedPageId)
+                  ?.url || ''
+              }
+              readOnly
+              required
+              placeholder="URL will be set automatically"
+            />
 
             {dimensionsSection}
           </>
@@ -509,18 +483,10 @@ export default function ScreenshotDetailPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="eventvalue"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Value (Optional)
-              </label>
-              <input
-                type="text"
-                name="eventvalue"
+              <InputField
                 id="eventvalue"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Enter Event Value"
+                name="eventvalue"
+                label="Event Value (Optional)"
                 value={formData.eventvalue || ''}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -528,6 +494,7 @@ export default function ScreenshotDetailPage() {
                     eventvalue: e.target.value,
                   }))
                 }
+                placeholder="Enter Event Value"
               />
             </div>
 
@@ -557,20 +524,13 @@ export default function ScreenshotDetailPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="eventactionname"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Action Name *
-              </label>
-              <input
-                type="text"
-                name="eventactionname"
+              <InputField
                 id="eventactionname"
+                name="eventactionname"
+                label="Event Action Name"
                 value="Outlink"
                 readOnly
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
               />
             </div>
 
@@ -592,18 +552,10 @@ export default function ScreenshotDetailPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="eventvalue"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Event Value (Optional)
-              </label>
-              <input
-                type="text"
-                name="eventvalue"
+              <InputField
                 id="eventvalue"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Enter Event Value"
+                name="eventvalue"
+                label="Event Value (Optional)"
                 value={formData.eventvalue || ''}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -611,6 +563,7 @@ export default function ScreenshotDetailPage() {
                     eventvalue: e.target.value,
                   }))
                 }
+                placeholder="Enter Event Value"
               />
             </div>
 
@@ -855,11 +808,7 @@ export default function ScreenshotDetailPage() {
   }
 
   if (!screenshot || !parentModule) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">Screenshot not found</div>
-      </div>
-    );
+    return <EmptyState message="Screenshot not found" />;
   }
 
   return (
