@@ -19,8 +19,8 @@ interface EventTypeFilterProps {
   selectedFilter: string;
   onFilterChange: (filterType: string) => void;
   rectangles: Array<{
-    id: string;
-    eventType: string;
+    id?: string;
+    eventType?: string;
   }>;
 }
 

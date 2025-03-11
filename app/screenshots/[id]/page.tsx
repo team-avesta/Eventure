@@ -26,6 +26,10 @@ import {
   FiImage,
   FiInfo,
 } from 'react-icons/fi';
+import Switch from '@/components/common/Switch';
+import { Textarea } from '@/components/common/Textarea';
+import EventPanel from '@/components/screenshots/detail/EventPanel/EventPanel';
+import EventTypeSelector from '@/components/screenshots/detail/EventTypeSelector';
 
 const EVENT_TYPES = [
   { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
@@ -118,7 +122,9 @@ export default function ScreenshotDetailPage() {
   const [selectedEventFilter, setSelectedEventFilter] = useState<string>('all');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<Rectangle | null>(null);
-  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
+  const [activeDropdownId, setActiveDropdownId] = useState<string | undefined>(
+    undefined
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
@@ -798,7 +804,7 @@ export default function ScreenshotDetailPage() {
           dropdownElement &&
           !dropdownElement.contains(event.target as Node)
         ) {
-          setActiveDropdownId(null);
+          setActiveDropdownId(undefined);
         }
       }
     };
@@ -818,6 +824,18 @@ export default function ScreenshotDetailPage() {
   if (!screenshot || !parentModule) {
     return <EmptyState message="Screenshot not found" />;
   }
+
+  const handleCardClick = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
+    if (activeDropdownId) {
+      setActiveDropdownId(undefined);
+    }
+  };
+
+  const handleViewDescription = (id: string, description: string) => {
+    setSelectedDescription({ id, description });
+    setShowDescriptionModal(true);
+  };
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -868,22 +886,10 @@ export default function ScreenshotDetailPage() {
                   </button>
 
                   {/* Drag Switch */}
-                  <div className="h-11 px-5 rounded-md border border-gray-300 bg-white flex items-center shadow-sm">
-                    <label className="flex items-center cursor-pointer">
-                      <span className="text-sm font-medium text-gray-700 mr-3">
-                        Drag
-                      </span>
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={isDraggable}
-                          onChange={(e) => setIsDraggable(e.target.checked)}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#0073CF] rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0073CF]"></div>
-                      </div>
-                    </label>
-                  </div>
+                  <Switch
+                    isDraggable={isDraggable}
+                    setIsDraggable={setIsDraggable}
+                  />
                 </div>
               )}
             </div>
@@ -932,314 +938,34 @@ export default function ScreenshotDetailPage() {
           </div>
 
           {/* Right Panel */}
-          <div className="w-[400px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-            <div className="sticky top-0 bg-white z-10 border-b border-gray-200">
-              <div className="flex items-center justify-between p-3">
-                <h3 className="text-base font-semibold text-gray-900">
-                  Event Details
-                </h3>
-                <EventTypeFilter
-                  selectedFilter={selectedEventFilter}
-                  onFilterChange={setSelectedEventFilter}
-                  rectangles={rectangles}
-                />
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-auto">
-              <div className="space-y-3 p-4">
-                {filteredRectangles
-                  .sort((a, b) => {
-                    const order = {
-                      pageview: 1,
-                      trackevent_pageview: 2,
-                      trackevent: 3,
-                      backendevent: 4,
-                      outlink: 5,
-                    };
-                    return (
-                      order[a.eventType as keyof typeof order] -
-                      order[b.eventType as keyof typeof order]
-                    );
-                  })
-                  .map((rect) => {
-                    const eventType = EVENT_TYPES.find(
-                      (t) => t.id === rect.eventType
-                    );
-                    const event = events.find((e: Event) => e.id === rect.id);
-                    return (
-                      <div
-                        key={rect.id}
-                        id={`event-card-${rect.id}`}
-                        className={`p-4 rounded-md transition-all relative cursor-pointer ${
-                          highlightedCardId === rect.id
-                            ? 'border ring-1 ring-opacity-50'
-                            : 'border border-gray-200 hover:bg-gray-50'
-                        }`}
-                        style={
-                          highlightedCardId === rect.id
-                            ? ({
-                                borderColor: getEventTypeBorderColor(
-                                  rect.eventType
-                                ),
-                                '--tw-ring-color': getEventTypeBorderColor(
-                                  rect.eventType
-                                ),
-                              } as React.CSSProperties)
-                            : undefined
-                        }
-                        onClick={() => {
-                          setExpandedId(
-                            expandedId === rect.id ? null : rect.id
-                          );
-                          // Close any open dropdown when clicking on a card
-                          if (activeDropdownId) {
-                            setActiveDropdownId(null);
-                          }
-                        }}
-                      >
-                        {/* Show category and action for non-pageview events */}
-                        {event?.category && eventType?.id !== 'pageview' && (
-                          <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                            <span className="font-medium min-w-[90px] whitespace-nowrap">
-                              Event Category:
-                            </span>
-                            <span
-                              className="truncate pr-16"
-                              title={event.category}
-                            >
-                              {event.category}
-                            </span>
-                          </div>
-                        )}
-                        {event?.action && (
-                          <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                            <span className="font-medium min-w-[90px] whitespace-nowrap">
-                              Event Action:
-                            </span>
-                            <span
-                              className="truncate pr-16"
-                              title={event.action}
-                            >
-                              {event.action}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Show additional fields for pageview */}
-                        {eventType?.id === 'pageview' && (
-                          <>
-                            <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                              <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                Custom Title:
-                              </span>
-                              <span
-                                className="truncate pr-4"
-                                title={event?.name}
-                              >
-                                {event?.name}
-                              </span>
-                            </div>
-                            <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                              <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                Custom URL:
-                              </span>
-                              <span
-                                className="truncate pr-4"
-                                title={event?.category}
-                              >
-                                {event?.category}
-                              </span>
-                            </div>
-                          </>
-                        )}
-
-                        {/* Action Menu - Different UI for admin and non-admin */}
-                        <div className="absolute top-3 right-3">
-                          {userRole === 'admin' ? (
-                            <div className="relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent card click
-                                  setActiveDropdownId(
-                                    activeDropdownId === rect.id
-                                      ? null
-                                      : rect.id
-                                  );
-                                }}
-                                className="p-1.5 text-gray-500 hover:text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
-                              >
-                                <FiMoreVertical className="w-4 h-4" />
-                              </button>
-                              <ActionDropdown
-                                isOpen={activeDropdownId === rect.id}
-                                onClose={() => setActiveDropdownId(null)}
-                                onEdit={handleEditEvent}
-                                onDelete={handleDeleteEvent}
-                                onViewDescription={(id, description) => {
-                                  setSelectedDescription({ id, description });
-                                  setShowDescriptionModal(true);
-                                }}
-                                event={{
-                                  id: rect.id,
-                                  startX: rect.startX,
-                                  startY: rect.startY,
-                                  width: rect.width,
-                                  height: rect.height,
-                                  eventType: rect.eventType,
-                                  eventAction: rect.action || '',
-                                  description: event?.description,
-                                }}
-                                isAdmin={userRole === 'admin'}
-                              />
-                            </div>
-                          ) : event?.description ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedDescription({
-                                  id: rect.id,
-                                  description: event.description || '',
-                                });
-                                setShowDescriptionModal(true);
-                              }}
-                              className="p-1.5 text-gray-500 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-                            >
-                              <FiInfo
-                                className="w-4 h-4"
-                                stroke="currentColor"
-                              />
-                            </button>
-                          ) : null}
-                        </div>
-
-                        {/* Expanded Details */}
-                        {expandedId === rect.id && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            {event?.name && eventType?.id !== 'pageview' && (
-                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                                <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                  Event Name:
-                                </span>
-                                <span
-                                  className="truncate pr-4"
-                                  title={event.name}
-                                >
-                                  {event.name}
-                                </span>
-                              </div>
-                            )}
-                            {event?.value && (
-                              <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                                <span className="font-medium min-w-[90px] whitespace-nowrap">
-                                  Event Value:
-                                </span>
-                                <span
-                                  className="truncate pr-4"
-                                  title={event.value}
-                                >
-                                  {event.value}
-                                </span>
-                              </div>
-                            )}
-                            {event?.dimensions &&
-                              event.dimensions.length > 0 && (
-                                <div className="text-sm text-gray-600">
-                                  <span className="font-medium">
-                                    Dimensions:
-                                  </span>
-                                  <div className="mt-2 space-y-1.5">
-                                    {event.dimensions.map((dim: string) => {
-                                      const dimension =
-                                        dropdownData.dimensions.find(
-                                          (d) => d.id === dim
-                                        );
-                                      return dimension ? (
-                                        <DimensionDisplay
-                                          key={dim}
-                                          dimension={dimension}
-                                          eventId={event.id}
-                                        />
-                                      ) : null;
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          </div>
+          <EventPanel
+            events={events}
+            rectangles={rectangles}
+            selectedEventFilter={selectedEventFilter}
+            highlightedCardId={highlightedCardId}
+            expandedId={expandedId}
+            userRole={userRole}
+            activeDropdownId={activeDropdownId}
+            dimensions={dropdownData.dimensions}
+            onFilterChange={setSelectedEventFilter}
+            onCardClick={handleCardClick}
+            onDropdownToggle={setActiveDropdownId}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={handleDeleteEvent}
+            onViewDescription={handleViewDescription}
+            getEventTypeBorderColor={getEventTypeBorderColor}
+          />
         </div>
       </div>
 
       {/* Event Type Selection Modal */}
-      {showEventTypeModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              onClick={() => setShowEventTypeModal(false)}
-            />
-
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-              <div className="absolute right-0 top-0 pr-4 pt-4">
-                <button
-                  type="button"
-                  className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
-                  onClick={() => setShowEventTypeModal(false)}
-                >
-                  <span className="sr-only">Close</span>
-                  <FiX className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                  <FiPlus className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                    Add New Event
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Select the type of event you want to add to this screenshot.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                {EVENT_TYPES.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => handleEventTypeSelect(type)}
-                    className="relative w-full rounded-lg border p-4 hover:border-blue-500 transition-all duration-200 group"
-                  >
-                    <div className="flex items-center">
-                      <div
-                        className="h-4 w-4 rounded-full mr-4"
-                        style={{ backgroundColor: type.color }}
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 group-hover:text-blue-600">
-                          {type.name}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {getEventTypeDescription(type.id)}
-                        </p>
-                      </div>
-                      <FiChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-500" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <EventTypeSelector
+        isOpen={showEventTypeModal}
+        eventTypes={EVENT_TYPES}
+        onClose={() => setShowEventTypeModal(false)}
+        onSelect={handleEventTypeSelect}
+        getEventTypeDescription={getEventTypeDescription}
+      />
 
       {/* Event Form Modal */}
       {showEventForm && (
@@ -1314,31 +1040,19 @@ export default function ScreenshotDetailPage() {
                     }}
                     className="mt-6 space-y-4"
                   >
-                    <div>
-                      <label
-                        htmlFor="description"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Description (for developers)
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        rows={2}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                        placeholder="Add description to help other developers understand this event's purpose"
-                        value={formData.description || ''}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            description: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-
+                    <Textarea
+                      id="description"
+                      label="Description (for developers)"
+                      value={formData.description || ''}
+                      rows={2}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                    />
                     {renderFormFields()}
-
                     <div className="mt-6 flex justify-end space-x-3">
                       <button
                         type="button"
