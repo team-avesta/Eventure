@@ -22,47 +22,20 @@ import { Textarea } from '@/components/common/Textarea';
 import EventPanel from '@/components/screenshots/detail/EventPanel/EventPanel';
 import EventTypeSelector from '@/components/screenshots/detail/EventTypeSelector';
 import { ScreenshotHeader } from '@/components/screenshots/detail/Header';
-import { useDropdownData } from '@/hooks';
-
-const EVENT_TYPES = [
-  { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
-  {
-    id: EventType.TrackEventWithPageView,
-    name: 'TrackEvent with PageView',
-    color: '#16A34A',
-  },
-  { id: EventType.TrackEvent, name: 'TrackEvent', color: '#9333EA' },
-  { id: EventType.Outlink, name: 'Outlink', color: '#DC2626' },
-  { id: EventType.BackendEvent, name: 'Backend Event', color: '#F59E0B' },
-];
-
-type RectangleState = {
-  id: string;
-  startX: number;
-  startY: number;
-  width: number;
-  height: number;
-  color: string;
-  eventType: string;
-  action: string;
-};
-
-function getEventTypeBorderColor(eventType: string): string {
-  const type = EVENT_TYPES.find((t) => t.id === eventType);
-  return type ? type.color : '#3B82F6';
-}
+import {
+  EVENT_TYPES,
+  getEventTypeBorderColor,
+  getEventTypeDescription,
+} from '../../../src/constants/constants';
+import { RectangleState } from '../../../src/types/types';
+import { useDropdownData } from '@/hooks/useDropdownData';
+import { useEventForm } from '@/hooks/useEventForm';
 
 export default function ScreenshotDetailPage() {
   const params = useParams();
   const screenshotId = params.id as string;
   const [isDraggable, setIsDraggable] = useState(false);
   const [showEventTypeModal, setShowEventTypeModal] = useState(false);
-  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
-  const [selectedDescription, setSelectedDescription] = useState<{
-    id: string;
-    description: string;
-  } | null>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
   const [selectedEventType, setSelectedEventType] = useState<{
     id: string;
     name: string;
@@ -78,20 +51,11 @@ export default function ScreenshotDetailPage() {
     getPageById,
     getPageByTitle,
   } = useDropdownData();
-  const [selectedPageId, setSelectedPageId] = useState<string>('');
   const [rectangles, setRectangles] = useState<RectangleState[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [highlightedCardId, setHighlightedCardId] = useState<string | null>(
     null
   );
-  const [formData, setFormData] = useState<{
-    eventcategory?: string;
-    eventactionname?: string;
-    eventname?: string;
-    eventvalue?: string;
-    dimensions?: string[];
-    description?: string;
-  }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [modules, setModules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,8 +66,25 @@ export default function ScreenshotDetailPage() {
   const [activeDropdownId, setActiveDropdownId] = useState<string | undefined>(
     undefined
   );
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    formData,
+    setFormData,
+    selectedPageId,
+    setSelectedPageId,
+    isSubmitting,
+    setIsSubmitting,
+    showDescriptionModal,
+    setShowDescriptionModal,
+    selectedDescription,
+    setSelectedDescription,
+    resetForm,
+    handleDimensionChange,
+    prepareFormDataForSubmission,
+    populateFormFromEvent,
+    handleViewDescription,
+  } = useEventForm();
 
   useEffect(() => {
     if (dropdownError) {
@@ -163,6 +144,11 @@ export default function ScreenshotDetailPage() {
       fetchEvents();
     }
   }, [screenshotId]);
+
+  const getEventTypeBorderColor = (eventType: string): string => {
+    const type = EVENT_TYPES.find((t) => t.id === eventType);
+    return type ? type.color : '#3B82F6';
+  };
 
   // Add refetch function for use in other parts of the component
   const refetchEvents = async () => {
@@ -266,24 +252,22 @@ export default function ScreenshotDetailPage() {
     setShowEventTypeModal(false);
     setSelectedEventType(type);
     // Clear form data for new event
-    setFormData({});
-    setSelectedPageId('');
+    resetForm();
     setIsEditing(false); // Reset editing state
     toast.success(`Click and drag on the image to add a ${type.name} event`);
   };
 
   // Handle form submission
-  const handleEventFormSubmit = async (formData: {
-    name: string;
-    category: string;
-    action: string;
-    value: string;
-    dimensions: string[];
-    description?: string;
-  }) => {
+  const handleEventFormSubmit = async (formValues: FormData) => {
     if (!newEvent) return;
 
     setIsSubmitting(true);
+
+    // Use the prepareFormDataForSubmission function from useEventForm
+    const formData = prepareFormDataForSubmission(
+      formValues,
+      selectedEventType?.id || ''
+    );
 
     let eventData: any = {
       id: newEvent.id || Date.now().toString(),
@@ -326,6 +310,7 @@ export default function ScreenshotDetailPage() {
       setNewEvent(null);
       setSelectedEventType(null);
       setIsEditing(false);
+      resetForm();
       toast.success(
         isEditing ? 'Event updated successfully' : 'Event saved successfully'
       );
@@ -336,15 +321,6 @@ export default function ScreenshotDetailPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleDimensionChange = (dimensionId: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      dimensions: checked
-        ? [...(prev.dimensions || []), dimensionId]
-        : (prev.dimensions || []).filter((id) => id !== dimensionId),
-    }));
   };
 
   const renderFormFields = () => {
@@ -629,9 +605,8 @@ export default function ScreenshotDetailPage() {
     setShowEventForm(false);
     setNewEvent(null);
     setSelectedEventType(null);
-    // Reset any form data
-    setFormData({});
-    setSelectedPageId('');
+    // Reset form data
+    resetForm();
   };
 
   const handleEditEvent = (rect: Rectangle) => {
@@ -644,35 +619,8 @@ export default function ScreenshotDetailPage() {
         EVENT_TYPES.find((t) => t.id === event.eventType) || null
       );
 
-      // Pre-fill form data based on event type
-      switch (event.eventType) {
-        case 'pageview':
-          const pageData = dropdownData.pageData.find(
-            (p) => p.title === event.name
-          );
-          if (pageData) {
-            setSelectedPageId(pageData.id);
-            setFormData({
-              dimensions: event.dimensions,
-              description: event.description,
-            });
-          }
-          break;
-
-        case 'trackevent':
-        case 'trackevent_pageview':
-        case 'backendevent':
-        case 'outlink':
-          setFormData({
-            eventcategory: event.category,
-            eventactionname: event.action,
-            eventname: event.name || '',
-            eventvalue: event.value || '',
-            dimensions: event.dimensions,
-            description: event.description,
-          });
-          break;
-      }
+      // Use populateFormFromEvent from useEventForm
+      populateFormFromEvent(event, event.eventType, dropdownData.pageData);
 
       setNewEvent({
         id: event.id,
@@ -793,11 +741,6 @@ export default function ScreenshotDetailPage() {
     }
   };
 
-  const handleViewDescription = (id: string, description: string) => {
-    setSelectedDescription({ id, description });
-    setShowDescriptionModal(true);
-  };
-
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       <ScreenshotHeader
@@ -898,47 +841,7 @@ export default function ScreenshotDetailPage() {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      if (selectedEventType?.id === 'pageview') {
-                        handleEventFormSubmit({
-                          name: formData.get('customTitle') as string,
-                          category: formData.get('customUrl') as string,
-                          dimensions: Array.from(
-                            formData.getAll('dimensions')
-                          ) as string[],
-                          action: '', // Not used for pageview
-                          value: '', // Not used for pageview
-                          description: formData.get('description') as string,
-                        });
-                      } else if (
-                        selectedEventType?.id === 'trackevent_pageview' ||
-                        selectedEventType?.id === 'trackevent' ||
-                        selectedEventType?.id === 'backendevent'
-                      ) {
-                        const eventData = {
-                          name: (formData.get('eventname') as string) || '',
-                          category: formData.get('eventcategory') as string,
-                          action: formData.get('eventactionname') as string,
-                          value: (formData.get('eventvalue') as string) || '',
-                          dimensions: Array.from(
-                            formData.getAll('dimensions')
-                          ) as string[],
-                          description: formData.get('description') as string,
-                        };
-                        handleEventFormSubmit(eventData);
-                      } else if (selectedEventType?.id === 'outlink') {
-                        const eventData = {
-                          name: (formData.get('eventname') as string) || '',
-                          category: formData.get('eventcategory') as string,
-                          action: 'Outlink',
-                          value: (formData.get('eventvalue') as string) || '',
-                          dimensions: Array.from(
-                            formData.getAll('dimensions')
-                          ) as string[],
-                          description: formData.get('description') as string,
-                        };
-                        handleEventFormSubmit(eventData);
-                      }
+                      handleEventFormSubmit(new FormData(e.currentTarget));
                     }}
                     className="mt-6 space-y-4"
                   >
@@ -1004,21 +907,4 @@ export default function ScreenshotDetailPage() {
       />
     </div>
   );
-}
-
-function getEventTypeDescription(typeId: string): string {
-  switch (typeId) {
-    case EventType.PageView:
-      return 'Track when users view a page';
-    case EventType.TrackEventWithPageView:
-      return 'Track user interactions that also trigger a page view';
-    case EventType.TrackEvent:
-      return 'Track user interactions without a page view';
-    case EventType.Outlink:
-      return 'Track when users click links to external sites';
-    case EventType.BackendEvent:
-      return 'Track backend-specific events and operations';
-    default:
-      return '';
-  }
 }
