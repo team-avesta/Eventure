@@ -11,25 +11,18 @@ import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import DescriptionModal from '@/components/shared/DescriptionModal';
 import ActionDropdown from '@/components/shared/ActionDropdown';
-import Breadcrumb from '@/components/common/Breadcrumb';
 import { Autocomplete } from '@/components/common/Autocomplete';
 import DimensionDisplay from '@/components/common/DimensionDisplay';
 import InputField from '@/components/common/InputField';
 import CheckboxField from '@/components/common/CheckboxField';
 import DimensionsSection from '@/components/common/DimensionsSection';
 import EmptyState from '@/components/screenshots/module/EmptyState';
-import {
-  FiPlus,
-  FiX,
-  FiMoreVertical,
-  FiChevronRight,
-  FiImage,
-  FiInfo,
-} from 'react-icons/fi';
-import Switch from '@/components/common/Switch';
+import { FiX, FiMoreVertical, FiChevronRight, FiInfo } from 'react-icons/fi';
 import { Textarea } from '@/components/common/Textarea';
 import EventPanel from '@/components/screenshots/detail/EventPanel/EventPanel';
 import EventTypeSelector from '@/components/screenshots/detail/EventTypeSelector';
+import { ScreenshotHeader } from '@/components/screenshots/detail/Header';
+import { useDropdownData } from '@/hooks';
 
 const EVENT_TYPES = [
   { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
@@ -79,28 +72,12 @@ export default function ScreenshotDetailPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<Event> | null>(null);
-  const [dropdownData, setDropdownData] = useState<{
-    pageData: Array<{
-      id: string;
-      title: string;
-      url: string;
-    }>;
-    dimensions: Array<{
-      id: string;
-      name: string;
-      description?: string;
-      type: string;
-    }>;
-    eventCategories: string[];
-    eventActionNames: string[];
-    eventNames: string[];
-  }>({
-    pageData: [],
-    dimensions: [],
-    eventCategories: [],
-    eventActionNames: [],
-    eventNames: [],
-  });
+  const {
+    data: dropdownData,
+    error: dropdownError,
+    getPageById,
+    getPageByTitle,
+  } = useDropdownData();
   const [selectedPageId, setSelectedPageId] = useState<string>('');
   const [rectangles, setRectangles] = useState<RectangleState[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -127,6 +104,13 @@ export default function ScreenshotDetailPage() {
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (dropdownError) {
+      toast.error('Failed to load form data');
+    }
+  }, [dropdownError]);
+
   useEffect(() => {
     const auth = sessionStorage.getItem('auth');
     if (auth) {
@@ -308,9 +292,7 @@ export default function ScreenshotDetailPage() {
       eventType: selectedEventType?.id || '',
       name:
         selectedEventType?.id === EventType.PageView
-          ? dropdownData.pageData.find(
-              (p) => p.title.toLowerCase() === formData.name.toLowerCase()
-            )?.title || ''
+          ? getPageByTitle(formData.name)?.title || ''
           : formData.name,
       category: formData.category,
       action: formData.action,
@@ -356,20 +338,6 @@ export default function ScreenshotDetailPage() {
     }
   };
 
-  // Add dropdown data fetching
-  useEffect(() => {
-    const fetchDropdownData = async () => {
-      try {
-        const data = await adminS3Service.fetchDropdownData();
-        setDropdownData(data);
-      } catch (error) {
-        toast.error('Failed to load form data');
-      }
-    };
-
-    fetchDropdownData();
-  }, []);
-
   const handleDimensionChange = (dimensionId: string, checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
@@ -400,14 +368,9 @@ export default function ScreenshotDetailPage() {
                 name="customTitle"
                 label="Custom Title"
                 options={dropdownData.pageData.map((page) => page.title)}
-                value={
-                  dropdownData.pageData.find((p) => p.id === selectedPageId)
-                    ?.title || ''
-                }
+                value={getPageById(selectedPageId)?.title || ''}
                 onChange={(value) => {
-                  const selectedPage = dropdownData.pageData.find(
-                    (p) => p.title === value
-                  );
+                  const selectedPage = getPageByTitle(value);
                   if (selectedPage) {
                     setSelectedPageId(selectedPage.id);
                     setFormData((prev) => ({
@@ -425,10 +388,7 @@ export default function ScreenshotDetailPage() {
               id="customUrl"
               name="customUrl"
               label="Custom URL"
-              value={
-                dropdownData.pageData.find((p) => p.id === selectedPageId)
-                  ?.url || ''
-              }
+              value={getPageById(selectedPageId)?.url || ''}
               readOnly
               required
               placeholder="URL will be set automatically"
@@ -675,7 +635,8 @@ export default function ScreenshotDetailPage() {
   };
 
   const handleEditEvent = (rect: Rectangle) => {
-    const event = events.find((e: Event) => e.id === rect.id);
+    const event = events.find((e) => e.id === rect.id);
+    if (!event) return;
 
     if (event) {
       setIsEditing(true); // Set editing state
@@ -839,78 +800,19 @@ export default function ScreenshotDetailPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-[95%] mx-auto px-6 py-3">
-          <div className="flex flex-col space-y-4">
-            {/* Top row with breadcrumb */}
-            <div className="flex items-center justify-between">
-              <Breadcrumb
-                items={[
-                  {
-                    label: parentModule.name,
-                    href: `/screenshots/modules/${parentModule.key}`,
-                  },
-                  {
-                    label: screenshot.name,
-                  },
-                ]}
-              />
-
-              {userRole === 'admin' && (
-                <div className="flex items-center gap-4">
-                  {/* Add Event Button */}
-                  <button
-                    onClick={() => setShowEventTypeModal(true)}
-                    className="inline-flex items-center h-11 px-5 rounded-md bg-[#0073CF] text-white hover:bg-[#005ba3] transition-colors duration-200 shadow-sm"
-                  >
-                    <FiPlus className="h-5 w-5 mr-2" />
-                    <span className="text-sm font-medium">Add Event</span>
-                  </button>
-
-                  {/* Hidden file input */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-
-                  {/* Replace Image Button */}
-                  <button
-                    onClick={handleReplaceClick}
-                    className="inline-flex items-center h-11 px-5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
-                  >
-                    <FiImage className="h-5 w-5 mr-2" />
-                    <span className="text-sm font-medium">Replace Image</span>
-                  </button>
-
-                  {/* Drag Switch */}
-                  <Switch
-                    isDraggable={isDraggable}
-                    setIsDraggable={setIsDraggable}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Bottom row with legend */}
-            <div className="flex items-center border-t border-gray-100 pt-3">
-              <div className="flex items-center gap-6">
-                {EVENT_TYPES.map((type) => (
-                  <div key={type.id} className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: type.color }}
-                    />
-                    <span className="text-sm text-gray-600">{type.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ScreenshotHeader
+        moduleName={parentModule.name}
+        moduleKey={parentModule.key}
+        screenshotName={screenshot.name}
+        userRole={userRole}
+        isDraggable={isDraggable}
+        setIsDraggable={setIsDraggable}
+        eventTypes={EVENT_TYPES}
+        onAddEventClick={() => setShowEventTypeModal(true)}
+        onReplaceImageClick={handleReplaceClick}
+        handleFileChange={handleFileChange}
+        fileInputRef={fileInputRef}
+      />
 
       <div className="flex-1 max-w-[95%] w-full mx-auto py-4 overflow-hidden">
         <div className="flex gap-2 h-full">
