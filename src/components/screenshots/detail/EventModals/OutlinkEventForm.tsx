@@ -1,14 +1,22 @@
 import { Autocomplete } from '@/components/common/Autocomplete';
 import { Textarea } from '@/components/common/Textarea';
 import React from 'react';
-import { useEventForm } from '@/hooks/useEventForm';
 import { useDropdownData } from '@/hooks/useDropdownData';
 import InputField from '@/components/common/InputField';
 import DimensionsSection from '@/components/common/DimensionsSection';
 import { FormState } from '@/types/types';
 
-const OutlinkEventForm = () => {
-  const { formData, setFormData, handleDimensionChange } = useEventForm();
+interface OutlinkEventFormProps {
+  formData: FormState;
+  setFormData: React.Dispatch<React.SetStateAction<FormState>>;
+  handleDimensionChange: (dimensionId: string, checked: boolean) => void;
+}
+
+const OutlinkEventForm = ({
+  formData,
+  setFormData,
+  handleDimensionChange,
+}: OutlinkEventFormProps) => {
   const { data: dropdownData } = useDropdownData();
 
   const handleChange = (key: keyof FormState, value: string) => {

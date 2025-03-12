@@ -40,6 +40,7 @@ export default function ScreenshotDetailPage() {
     data: dropdownData,
     error: dropdownError,
     getPageByTitle,
+    getPageById,
   } = useDropdownData();
   const [rectangles, setRectangles] = useState<RectangleState[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -69,6 +70,11 @@ export default function ScreenshotDetailPage() {
     prepareFormDataForSubmission,
     populateFormFromEvent,
     handleViewDescription,
+    formData,
+    setFormData,
+    handleDimensionChange,
+    selectedPageId,
+    setSelectedPageId,
   } = useEventForm();
 
   useEffect(() => {
@@ -521,6 +527,13 @@ export default function ScreenshotDetailPage() {
         isSubmitting={isSubmitting}
         handleEventFormSubmit={handleEventFormSubmit}
         selectedEventType={selectedEventType}
+        formData={formData}
+        setFormData={setFormData}
+        handleDimensionChange={handleDimensionChange}
+        selectedPageId={selectedPageId}
+        setSelectedPageId={setSelectedPageId}
+        customTitle={getPageById(selectedPageId)?.title || ''}
+        customUrl={getPageById(selectedPageId)?.url || ''}
       />
     );
   };

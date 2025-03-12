@@ -2,14 +2,10 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TrackEventForm from '@/components/screenshots/detail/EventModals/TrackEventForm';
-import { useEventForm } from '@/hooks/useEventForm';
 import { useDropdownData } from '@/hooks/useDropdownData';
+import { FormState } from '@/types/types';
 
 // Mock the hooks
-jest.mock('@/hooks/useEventForm', () => ({
-  useEventForm: jest.fn(),
-}));
-
 jest.mock('@/hooks/useDropdownData', () => ({
   useDropdownData: jest.fn(),
 }));
@@ -138,23 +134,17 @@ jest.mock('@/components/common/DimensionsSection', () => ({
 describe('TrackEventForm', () => {
   const mockSetFormData = jest.fn();
   const mockHandleDimensionChange = jest.fn();
+  const mockFormData: FormState = {
+    description: 'Test description',
+    eventcategory: 'Navigation',
+    eventactionname: 'Click',
+    eventname: 'Button Click',
+    eventvalue: '10',
+    dimensions: ['dimension1', 'dimension2'],
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Mock the useEventForm hook
-    (useEventForm as jest.Mock).mockReturnValue({
-      formData: {
-        description: 'Test description',
-        eventcategory: 'Navigation',
-        eventactionname: 'Click',
-        eventname: 'Button Click',
-        eventvalue: '10',
-        dimensions: ['dimension1', 'dimension2'],
-      },
-      setFormData: mockSetFormData,
-      handleDimensionChange: mockHandleDimensionChange,
-    });
 
     // Mock the useDropdownData hook
     (useDropdownData as jest.Mock).mockReturnValue({
@@ -168,7 +158,13 @@ describe('TrackEventForm', () => {
   });
 
   it('renders all form fields correctly', () => {
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     // Check if all components are rendered
     expect(screen.getByTestId('textarea-description')).toBeInTheDocument();
@@ -184,7 +180,13 @@ describe('TrackEventForm', () => {
   });
 
   it('displays the correct initial values from formData', () => {
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     expect(screen.getByTestId('textarea-input-description')).toHaveValue(
       'Test description'
@@ -202,7 +204,13 @@ describe('TrackEventForm', () => {
   });
 
   it('shows the correct number of dimensions', () => {
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     expect(screen.getByTestId('dimensions-count')).toHaveTextContent('2');
     expect(screen.getByTestId('dimensions-total')).toHaveTextContent('4');
@@ -210,7 +218,13 @@ describe('TrackEventForm', () => {
 
   it('calls setFormData when description is changed', async () => {
     const user = userEvent.setup();
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     const descriptionInput = screen.getByTestId('textarea-input-description');
     await user.clear(descriptionInput);
@@ -221,7 +235,13 @@ describe('TrackEventForm', () => {
 
   it('calls setFormData when eventcategory is changed', async () => {
     const user = userEvent.setup();
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     const eventCategoryInput = screen.getByTestId(
       'autocomplete-input-eventcategory'
@@ -234,7 +254,13 @@ describe('TrackEventForm', () => {
 
   it('calls setFormData when eventactionname is changed', async () => {
     const user = userEvent.setup();
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     const eventActionNameInput = screen.getByTestId(
       'autocomplete-input-eventactionname'
@@ -247,7 +273,13 @@ describe('TrackEventForm', () => {
 
   it('calls setFormData when eventname is changed', async () => {
     const user = userEvent.setup();
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     const eventNameInput = screen.getByTestId('autocomplete-input-eventname');
     await user.clear(eventNameInput);
@@ -258,7 +290,13 @@ describe('TrackEventForm', () => {
 
   it('calls setFormData when eventvalue is changed', async () => {
     const user = userEvent.setup();
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     const eventValueInput = screen.getByTestId('input-field-eventvalue');
     await user.clear(eventValueInput);
@@ -268,7 +306,13 @@ describe('TrackEventForm', () => {
   });
 
   it('displays autocomplete options for event fields', () => {
-    render(<TrackEventForm />);
+    render(
+      <TrackEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+      />
+    );
 
     const categoryOptions = screen.getByTestId(
       'autocomplete-options-eventcategory'

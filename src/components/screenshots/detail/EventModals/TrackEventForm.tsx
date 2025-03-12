@@ -1,13 +1,22 @@
 import { Autocomplete } from '@/components/common/Autocomplete';
 import { Textarea } from '@/components/common/Textarea';
-import { useEventForm } from '@/hooks/useEventForm';
 import { useDropdownData } from '@/hooks/useDropdownData';
 import InputField from '@/components/common/InputField';
 import DimensionsSection from '@/components/common/DimensionsSection';
 import { FormState } from '@/types/types';
+import { useEffect } from 'react';
 
-const TrackEventForm = () => {
-  const { formData, setFormData, handleDimensionChange } = useEventForm();
+interface TrackEventFormProps {
+  formData: FormState;
+  setFormData: React.Dispatch<React.SetStateAction<FormState>>;
+  handleDimensionChange: (dimensionId: string, checked: boolean) => void;
+}
+
+const TrackEventForm = ({
+  formData,
+  setFormData,
+  handleDimensionChange,
+}: TrackEventFormProps) => {
   const { data: dropdownData } = useDropdownData();
 
   const handleChange = (key: keyof FormState, value: string) => {

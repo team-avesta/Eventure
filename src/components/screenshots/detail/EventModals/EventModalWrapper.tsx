@@ -6,6 +6,7 @@ import { useEventForm } from '@/hooks/useEventForm';
 import { EventType } from '@/services/adminS3Service';
 import TrackEventForm from './TrackEventForm';
 import OutlinkEventForm from './OutlinkEventForm';
+import { FormState } from '@/types/types';
 
 interface EventModalWrapperProps {
   showEventForm: boolean;
@@ -17,6 +18,13 @@ interface EventModalWrapperProps {
     name: string;
     color: string;
   } | null;
+  formData: FormState;
+  setFormData: React.Dispatch<React.SetStateAction<FormState>>;
+  handleDimensionChange: (dimensionId: string, checked: boolean) => void;
+  selectedPageId: string;
+  setSelectedPageId: React.Dispatch<React.SetStateAction<string>>;
+  customTitle: string;
+  customUrl: string;
 }
 const EventModalWrapper = ({
   showEventForm,
@@ -24,21 +32,50 @@ const EventModalWrapper = ({
   isSubmitting,
   handleEventFormSubmit,
   selectedEventType,
+  formData,
+  setFormData,
+  handleDimensionChange,
+  selectedPageId,
+  setSelectedPageId,
+  customTitle,
+  customUrl,
 }: EventModalWrapperProps) => {
   const renderFormFields = () => {
     if (!selectedEventType) return null;
 
     switch (selectedEventType.id) {
       case 'pageview':
-        return <PageViewEventForm />;
+        return (
+          <PageViewEventForm
+            formData={formData}
+            setFormData={setFormData}
+            handleDimensionChange={handleDimensionChange}
+            selectedPageId={selectedPageId}
+            setSelectedPageId={setSelectedPageId}
+            customTitle={customTitle}
+            customUrl={customUrl}
+          />
+        );
 
       case 'trackevent':
       case 'trackevent_pageview':
       case 'backendevent':
-        return <TrackEventForm />;
+        return (
+          <TrackEventForm
+            formData={formData}
+            setFormData={setFormData}
+            handleDimensionChange={handleDimensionChange}
+          />
+        );
 
       case 'outlink':
-        return <OutlinkEventForm />;
+        return (
+          <OutlinkEventForm
+            formData={formData}
+            setFormData={setFormData}
+            handleDimensionChange={handleDimensionChange}
+          />
+        );
     }
   };
 

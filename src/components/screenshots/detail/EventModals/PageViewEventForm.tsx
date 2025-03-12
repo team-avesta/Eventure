@@ -3,18 +3,29 @@ import DimensionsSection from '@/components/common/DimensionsSection';
 import InputField from '@/components/common/InputField';
 import { Textarea } from '@/components/common/Textarea';
 import { useDropdownData } from '@/hooks/useDropdownData';
-import { useEventForm } from '@/hooks/useEventForm';
-import { ChangeEvent } from 'react';
+import { FormState } from '@/types/types';
+import { ChangeEvent, useState, useEffect } from 'react';
 
-const PageViewEventForm = () => {
+interface PageViewEventFormProps {
+  formData: FormState;
+  setFormData: React.Dispatch<React.SetStateAction<FormState>>;
+  handleDimensionChange: (dimensionId: string, checked: boolean) => void;
+  selectedPageId: string;
+  setSelectedPageId: React.Dispatch<React.SetStateAction<string>>;
+  customTitle: string;
+  customUrl: string;
+}
+
+const PageViewEventForm = ({
+  formData,
+  setFormData,
+  handleDimensionChange,
+  selectedPageId,
+  setSelectedPageId,
+  customTitle,
+  customUrl,
+}: PageViewEventFormProps) => {
   const { data: dropdownData, getPageById, getPageByTitle } = useDropdownData();
-  const {
-    selectedPageId,
-    setSelectedPageId,
-    setFormData,
-    formData,
-    handleDimensionChange,
-  } = useEventForm();
 
   const onChangeCustomTitle = (value: string) => {
     const selectedPage = getPageByTitle(value);
@@ -48,7 +59,7 @@ const PageViewEventForm = () => {
         name="customTitle"
         label="Custom Title"
         options={dropdownData.pageData.map((page) => page.title)}
-        value={getPageById(selectedPageId)?.title || ''}
+        value={customTitle}
         onChange={onChangeCustomTitle}
         required
         placeholder="Search custom title..."
@@ -57,7 +68,7 @@ const PageViewEventForm = () => {
         id="customUrl"
         name="customUrl"
         label="Custom URL"
-        value={getPageById(selectedPageId)?.url || ''}
+        value={customUrl}
         readOnly
         required
         placeholder="URL will be set automatically"

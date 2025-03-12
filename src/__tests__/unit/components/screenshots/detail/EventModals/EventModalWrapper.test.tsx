@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EventModalWrapper from '@/components/screenshots/detail/EventModals/EventModalWrapper';
-import { useEventForm } from '@/hooks/useEventForm';
+import { FormState } from '@/types/types';
 
 // Define interface for Modal props
 interface ModalProps {
@@ -34,30 +34,52 @@ jest.mock(
   '@/components/screenshots/detail/EventModals/PageViewEventForm',
   () => ({
     __esModule: true,
-    default: () => <div data-testid="pageview-form">PageView Form</div>,
+    default: (props: any) => (
+      <div data-testid="pageview-form">
+        PageView Form
+        <div data-testid="pageview-props">{JSON.stringify(props)}</div>
+      </div>
+    ),
   })
 );
 
 jest.mock('@/components/screenshots/detail/EventModals/TrackEventForm', () => ({
   __esModule: true,
-  default: () => <div data-testid="track-event-form">Track Event Form</div>,
+  default: (props: any) => (
+    <div data-testid="track-event-form">
+      Track Event Form
+      <div data-testid="track-event-props">{JSON.stringify(props)}</div>
+    </div>
+  ),
 }));
 
 jest.mock(
   '@/components/screenshots/detail/EventModals/OutlinkEventForm',
   () => ({
     __esModule: true,
-    default: () => <div data-testid="outlink-form">Outlink Form</div>,
+    default: (props: any) => (
+      <div data-testid="outlink-form">
+        Outlink Form
+        <div data-testid="outlink-props">{JSON.stringify(props)}</div>
+      </div>
+    ),
   })
 );
-
-jest.mock('@/hooks/useEventForm', () => ({
-  useEventForm: jest.fn(),
-}));
 
 describe('EventModalWrapper', () => {
   const mockHandleCancelEventForm = jest.fn();
   const mockHandleEventFormSubmit = jest.fn();
+  const mockSetFormData = jest.fn();
+  const mockHandleDimensionChange = jest.fn();
+  const mockSetSelectedPageId = jest.fn();
+  const mockFormData: FormState = {
+    description: 'Test description',
+    eventcategory: 'Navigation',
+    eventactionname: 'Click',
+    eventname: 'Button Click',
+    eventvalue: '10',
+    dimensions: ['dimension1', 'dimension2'],
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -71,6 +93,13 @@ describe('EventModalWrapper', () => {
         isSubmitting={false}
         handleEventFormSubmit={mockHandleEventFormSubmit}
         selectedEventType={null}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
@@ -85,6 +114,13 @@ describe('EventModalWrapper', () => {
         isSubmitting={false}
         handleEventFormSubmit={mockHandleEventFormSubmit}
         selectedEventType={null}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
@@ -104,6 +140,13 @@ describe('EventModalWrapper', () => {
         isSubmitting={false}
         handleEventFormSubmit={mockHandleEventFormSubmit}
         selectedEventType={null}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
@@ -121,6 +164,13 @@ describe('EventModalWrapper', () => {
         isSubmitting={false}
         handleEventFormSubmit={mockHandleEventFormSubmit}
         selectedEventType={null}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
@@ -144,6 +194,13 @@ describe('EventModalWrapper', () => {
         isSubmitting={true}
         handleEventFormSubmit={mockHandleEventFormSubmit}
         selectedEventType={null}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
@@ -161,10 +218,20 @@ describe('EventModalWrapper', () => {
         isSubmitting={false}
         handleEventFormSubmit={mockHandleEventFormSubmit}
         selectedEventType={{ id: 'pageview', name: 'Page View', color: '#000' }}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
     expect(screen.getByTestId('pageview-form')).toBeInTheDocument();
+    const propsJson = screen.getByTestId('pageview-props').textContent;
+    expect(propsJson).toContain('formData');
+    expect(propsJson).toContain('selectedPageId');
   });
 
   it('renders TrackEventForm when selectedEventType.id is trackevent', () => {
@@ -179,10 +246,19 @@ describe('EventModalWrapper', () => {
           name: 'Track Event',
           color: '#000',
         }}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
     expect(screen.getByTestId('track-event-form')).toBeInTheDocument();
+    const propsJson = screen.getByTestId('track-event-props').textContent;
+    expect(propsJson).toContain('formData');
   });
 
   it('renders TrackEventForm when selectedEventType.id is trackevent_pageview', () => {
@@ -197,10 +273,19 @@ describe('EventModalWrapper', () => {
           name: 'Track Event Pageview',
           color: '#000',
         }}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
     expect(screen.getByTestId('track-event-form')).toBeInTheDocument();
+    const propsJson = screen.getByTestId('track-event-props').textContent;
+    expect(propsJson).toContain('formData');
   });
 
   it('renders TrackEventForm when selectedEventType.id is backendevent', () => {
@@ -215,10 +300,19 @@ describe('EventModalWrapper', () => {
           name: 'Backend Event',
           color: '#000',
         }}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
     expect(screen.getByTestId('track-event-form')).toBeInTheDocument();
+    const propsJson = screen.getByTestId('track-event-props').textContent;
+    expect(propsJson).toContain('formData');
   });
 
   it('renders OutlinkEventForm when selectedEventType.id is outlink', () => {
@@ -229,9 +323,18 @@ describe('EventModalWrapper', () => {
         isSubmitting={false}
         handleEventFormSubmit={mockHandleEventFormSubmit}
         selectedEventType={{ id: 'outlink', name: 'Outlink', color: '#000' }}
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
       />
     );
 
     expect(screen.getByTestId('outlink-form')).toBeInTheDocument();
+    const propsJson = screen.getByTestId('outlink-props').textContent;
+    expect(propsJson).toContain('formData');
   });
 });

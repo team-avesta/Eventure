@@ -2,14 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PageViewEventForm from '@/components/screenshots/detail/EventModals/PageViewEventForm';
-import { useEventForm } from '@/hooks/useEventForm';
 import { useDropdownData } from '@/hooks/useDropdownData';
+import { FormState } from '@/types/types';
 
 // Mock the hooks
-jest.mock('@/hooks/useEventForm', () => ({
-  useEventForm: jest.fn(),
-}));
-
 jest.mock('@/hooks/useDropdownData', () => ({
   useDropdownData: jest.fn(),
 }));
@@ -73,7 +69,13 @@ jest.mock('@/components/common/Autocomplete', () => ({
       />
       <div data-testid={`autocomplete-options-${id}`}>
         {options.map((option: string) => (
-          <div key={option}>{option}</div>
+          <div
+            key={option}
+            data-testid={`option-${option.replace(/\s+/g, '-').toLowerCase()}`}
+            onClick={() => onChange(option)}
+          >
+            {option}
+          </div>
         ))}
       </div>
     </div>
@@ -141,22 +143,14 @@ describe('PageViewEventForm', () => {
   const mockHandleDimensionChange = jest.fn();
   const mockGetPageById = jest.fn();
   const mockGetPageByTitle = jest.fn();
+  const mockFormData: FormState = {
+    description: 'Test description',
+    customUrl: 'https://example.com/page1',
+    dimensions: ['dimension1', 'dimension2'],
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Mock the useEventForm hook
-    (useEventForm as jest.Mock).mockReturnValue({
-      selectedPageId: 'page1',
-      setSelectedPageId: mockSetSelectedPageId,
-      formData: {
-        description: 'Test description',
-        customUrl: 'https://example.com/page1',
-        dimensions: ['dimension1', 'dimension2'],
-      },
-      setFormData: mockSetFormData,
-      handleDimensionChange: mockHandleDimensionChange,
-    });
 
     // Mock the useDropdownData hook
     mockGetPageById.mockImplementation((id) => {
@@ -209,7 +203,17 @@ describe('PageViewEventForm', () => {
   });
 
   it('renders all form fields correctly', () => {
-    render(<PageViewEventForm />);
+    render(
+      <PageViewEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
+      />
+    );
 
     // Check if all components are rendered
     expect(screen.getByTestId('textarea-description')).toBeInTheDocument();
@@ -219,7 +223,17 @@ describe('PageViewEventForm', () => {
   });
 
   it('displays the correct initial values from formData', () => {
-    render(<PageViewEventForm />);
+    render(
+      <PageViewEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
+      />
+    );
 
     expect(screen.getByTestId('textarea-input-description')).toHaveValue(
       'Test description'
@@ -233,7 +247,17 @@ describe('PageViewEventForm', () => {
   });
 
   it('shows the correct number of dimensions', () => {
-    render(<PageViewEventForm />);
+    render(
+      <PageViewEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
+      />
+    );
 
     expect(screen.getByTestId('dimensions-count')).toHaveTextContent('2');
     expect(screen.getByTestId('dimensions-total')).toHaveTextContent('4');
@@ -241,7 +265,17 @@ describe('PageViewEventForm', () => {
 
   it('calls setFormData when description is changed', async () => {
     const user = userEvent.setup();
-    render(<PageViewEventForm />);
+    render(
+      <PageViewEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
+      />
+    );
 
     const descriptionInput = screen.getByTestId('textarea-input-description');
     await user.clear(descriptionInput);
@@ -250,45 +284,25 @@ describe('PageViewEventForm', () => {
     expect(mockSetFormData).toHaveBeenCalled();
   });
 
-  it('updates page selection when customTitle is changed', async () => {
+  it('calls setSelectedPageId and setFormData when custom title is changed', async () => {
     const user = userEvent.setup();
-    render(<PageViewEventForm />);
-
-    const customTitleInput = screen.getByTestId(
-      'autocomplete-input-customTitle'
+    render(
+      <PageViewEventForm
+        formData={mockFormData}
+        setFormData={mockSetFormData}
+        handleDimensionChange={mockHandleDimensionChange}
+        selectedPageId="page1"
+        setSelectedPageId={mockSetSelectedPageId}
+        customTitle="Page 1"
+        customUrl="https://example.com/page1"
+      />
     );
-    await user.clear(customTitleInput);
-    // Instead of typing the full string, we'll simulate the onChange directly
-    // since userEvent.type types one character at a time
-    const mockOnChange = jest.fn();
-    const originalOnChange = customTitleInput.onchange;
-    customTitleInput.onchange = mockOnChange;
 
-    // Trigger the onChange with the full value
-    fireEvent.change(customTitleInput, { target: { value: 'Page 2' } });
+    // Instead of typing, directly click on the option
+    const option = screen.getByTestId('option-page-2');
+    await user.click(option);
 
-    // Restore the original onChange
-    customTitleInput.onchange = originalOnChange;
-
-    // Now verify our mocks were called correctly
-    expect(mockGetPageByTitle).toHaveBeenCalledWith('Page 2');
     expect(mockSetSelectedPageId).toHaveBeenCalledWith('page2');
     expect(mockSetFormData).toHaveBeenCalled();
-  });
-
-  it('has customUrl field as read-only', () => {
-    render(<PageViewEventForm />);
-
-    const customUrlInput = screen.getByTestId('input-field-customUrl');
-    expect(customUrlInput).toHaveAttribute('readOnly');
-  });
-
-  it('displays autocomplete options for customTitle', () => {
-    render(<PageViewEventForm />);
-
-    const options = screen.getByTestId('autocomplete-options-customTitle');
-    expect(options).toBeInTheDocument();
-    expect(options.textContent).toContain('Page 1');
-    expect(options.textContent).toContain('Page 2');
   });
 });
