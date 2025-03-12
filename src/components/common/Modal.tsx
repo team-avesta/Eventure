@@ -13,6 +13,7 @@ interface ModalProps {
   isSubmitting?: boolean;
   isSubmitDisabled?: boolean;
   showCancelButton?: boolean;
+  contentClassName?: string;
 }
 
 export function Modal({
@@ -25,6 +26,7 @@ export function Modal({
   isSubmitting = false,
   isSubmitDisabled = false,
   showCancelButton = true,
+  contentClassName,
 }: ModalProps) {
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -65,7 +67,11 @@ export function Modal({
                 </div>
 
                 <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                  <div
+                    className={`mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full ${
+                      contentClassName ? contentClassName : ''
+                    }`}
+                  >
                     <Dialog.Title
                       as="h3"
                       className="text-xl font-semibold leading-6 text-gray-900 mb-6"

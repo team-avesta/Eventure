@@ -1,0 +1,74 @@
+import { Autocomplete } from '@/components/common/Autocomplete';
+import DimensionsSection from '@/components/common/DimensionsSection';
+import InputField from '@/components/common/InputField';
+import { Textarea } from '@/components/common/Textarea';
+import { useDropdownData } from '@/hooks/useDropdownData';
+import { useEventForm } from '@/hooks/useEventForm';
+import { ChangeEvent } from 'react';
+
+const PageViewEventForm = () => {
+  const { data: dropdownData, getPageById, getPageByTitle } = useDropdownData();
+  const {
+    selectedPageId,
+    setSelectedPageId,
+    setFormData,
+    formData,
+    handleDimensionChange,
+  } = useEventForm();
+
+  const onChangeCustomTitle = (value: string) => {
+    const selectedPage = getPageByTitle(value);
+    if (selectedPage) {
+      setSelectedPageId(selectedPage.id);
+      setFormData((prev) => ({
+        ...prev,
+        customUrl: selectedPage.url,
+      }));
+    }
+  };
+
+  const onChangeDescription = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: e.target.value,
+    }));
+  };
+
+  return (
+    <>
+      <Textarea
+        id="description"
+        label="Description (for developers)"
+        value={formData.description || ''}
+        rows={2}
+        onChange={onChangeDescription}
+      />
+      <Autocomplete
+        id="customTitle"
+        name="customTitle"
+        label="Custom Title"
+        options={dropdownData.pageData.map((page) => page.title)}
+        value={getPageById(selectedPageId)?.title || ''}
+        onChange={onChangeCustomTitle}
+        required
+        placeholder="Search custom title..."
+      />
+      <InputField
+        id="customUrl"
+        name="customUrl"
+        label="Custom URL"
+        value={getPageById(selectedPageId)?.url || ''}
+        readOnly
+        required
+        placeholder="URL will be set automatically"
+      />
+      <DimensionsSection
+        dimensions={dropdownData.dimensions}
+        selectedDimensions={formData.dimensions || []}
+        onDimensionChange={handleDimensionChange}
+      />
+    </>
+  );
+};
+
+export default PageViewEventForm;

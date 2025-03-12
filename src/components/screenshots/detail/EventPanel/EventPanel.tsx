@@ -3,6 +3,7 @@ import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import EventCard from './EventCard';
 import { Event } from '@/types';
 import { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
+import { getEventTypeBorderColor } from '@/constants/constants';
 
 interface EventPanelProps {
   events: Event[];
@@ -24,7 +25,6 @@ interface EventPanelProps {
   onEditEvent: (rect: Rectangle) => void;
   onDeleteEvent: (rect: Rectangle) => void;
   onViewDescription: (id: string, description: string) => void;
-  getEventTypeBorderColor: (eventType: string) => string;
 }
 
 const EventPanel: React.FC<EventPanelProps> = ({
@@ -42,7 +42,6 @@ const EventPanel: React.FC<EventPanelProps> = ({
   onEditEvent,
   onDeleteEvent,
   onViewDescription,
-  getEventTypeBorderColor,
 }) => {
   // Filter rectangles based on selected filter
   const getFilteredRectangles = () => {

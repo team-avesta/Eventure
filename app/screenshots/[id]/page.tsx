@@ -7,29 +7,20 @@ import { Event } from '@/types';
 import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
 import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
 import { adminS3Service, EventType } from '@/services/adminS3Service';
-import EventTypeFilter from '@/components/eventFilter/EventTypeFilter';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import DescriptionModal from '@/components/shared/DescriptionModal';
-import ActionDropdown from '@/components/shared/ActionDropdown';
-import { Autocomplete } from '@/components/common/Autocomplete';
-import DimensionDisplay from '@/components/common/DimensionDisplay';
-import InputField from '@/components/common/InputField';
-import CheckboxField from '@/components/common/CheckboxField';
-import DimensionsSection from '@/components/common/DimensionsSection';
 import EmptyState from '@/components/screenshots/module/EmptyState';
-import { FiX, FiMoreVertical, FiChevronRight, FiInfo } from 'react-icons/fi';
-import { Textarea } from '@/components/common/Textarea';
 import EventPanel from '@/components/screenshots/detail/EventPanel/EventPanel';
 import EventTypeSelector from '@/components/screenshots/detail/EventTypeSelector';
 import { ScreenshotHeader } from '@/components/screenshots/detail/Header';
 import {
   EVENT_TYPES,
-  getEventTypeBorderColor,
   getEventTypeDescription,
 } from '../../../src/constants/constants';
 import { RectangleState } from '../../../src/types/types';
 import { useDropdownData } from '@/hooks/useDropdownData';
 import { useEventForm } from '@/hooks/useEventForm';
+import EventModalWrapper from '@/components/screenshots/detail/EventModals/EventModalWrapper';
 
 export default function ScreenshotDetailPage() {
   const params = useParams();
@@ -48,7 +39,6 @@ export default function ScreenshotDetailPage() {
   const {
     data: dropdownData,
     error: dropdownError,
-    getPageById,
     getPageByTitle,
   } = useDropdownData();
   const [rectangles, setRectangles] = useState<RectangleState[]>([]);
@@ -69,10 +59,6 @@ export default function ScreenshotDetailPage() {
   const [containerWidth, setContainerWidth] = useState(0);
 
   const {
-    formData,
-    setFormData,
-    selectedPageId,
-    setSelectedPageId,
     isSubmitting,
     setIsSubmitting,
     showDescriptionModal,
@@ -80,7 +66,6 @@ export default function ScreenshotDetailPage() {
     selectedDescription,
     setSelectedDescription,
     resetForm,
-    handleDimensionChange,
     prepareFormDataForSubmission,
     populateFormFromEvent,
     handleViewDescription,
@@ -144,11 +129,6 @@ export default function ScreenshotDetailPage() {
       fetchEvents();
     }
   }, [screenshotId]);
-
-  const getEventTypeBorderColor = (eventType: string): string => {
-    const type = EVENT_TYPES.find((t) => t.id === eventType);
-    return type ? type.color : '#3B82F6';
-  };
 
   // Add refetch function for use in other parts of the component
   const refetchEvents = async () => {
@@ -251,19 +231,19 @@ export default function ScreenshotDetailPage() {
   }) => {
     setShowEventTypeModal(false);
     setSelectedEventType(type);
-    // Clear form data for new event
     resetForm();
-    setIsEditing(false); // Reset editing state
+    setIsEditing(false);
     toast.success(`Click and drag on the image to add a ${type.name} event`);
   };
 
-  // Handle form submission
-  const handleEventFormSubmit = async (formValues: FormData) => {
+  const handleEventFormSubmit = async (e: any) => {
+    e.preventDefault();
+    const formValues = new FormData(e.currentTarget);
+
     if (!newEvent) return;
 
     setIsSubmitting(true);
 
-    // Use the prepareFormDataForSubmission function from useEventForm
     const formData = prepareFormDataForSubmission(
       formValues,
       selectedEventType?.id || ''
@@ -320,206 +300,6 @@ export default function ScreenshotDetailPage() {
       );
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const renderFormFields = () => {
-    if (!selectedEventType) return null;
-
-    const dimensionsSection = (
-      <DimensionsSection
-        dimensions={dropdownData.dimensions}
-        selectedDimensions={formData.dimensions || []}
-        onDimensionChange={handleDimensionChange}
-      />
-    );
-
-    switch (selectedEventType.id) {
-      case 'pageview':
-        return (
-          <>
-            <div>
-              <Autocomplete
-                id="customTitle"
-                name="customTitle"
-                label="Custom Title"
-                options={dropdownData.pageData.map((page) => page.title)}
-                value={getPageById(selectedPageId)?.title || ''}
-                onChange={(value) => {
-                  const selectedPage = getPageByTitle(value);
-                  if (selectedPage) {
-                    setSelectedPageId(selectedPage.id);
-                    setFormData((prev) => ({
-                      ...prev,
-                      customUrl: selectedPage.url,
-                    }));
-                  }
-                }}
-                required
-                placeholder="Search custom title..."
-              />
-            </div>
-
-            <InputField
-              id="customUrl"
-              name="customUrl"
-              label="Custom URL"
-              value={getPageById(selectedPageId)?.url || ''}
-              readOnly
-              required
-              placeholder="URL will be set automatically"
-            />
-
-            {dimensionsSection}
-          </>
-        );
-
-      case 'trackevent':
-      case 'trackevent_pageview':
-      case 'backendevent':
-        return (
-          <>
-            <div>
-              <Autocomplete
-                id="eventcategory"
-                name="eventcategory"
-                label="Event Category"
-                options={dropdownData.eventCategories}
-                value={formData.eventcategory || ''}
-                onChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventcategory: value,
-                  }))
-                }
-                required
-                placeholder="Search event category..."
-              />
-            </div>
-
-            <div>
-              <Autocomplete
-                id="eventactionname"
-                name="eventactionname"
-                label="Event Action Name"
-                options={dropdownData.eventActionNames}
-                value={formData.eventactionname || ''}
-                onChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventactionname: value,
-                  }))
-                }
-                required
-                placeholder="Search event action..."
-              />
-            </div>
-
-            <div>
-              <Autocomplete
-                id="eventname"
-                name="eventname"
-                label="Event Name (Optional)"
-                options={dropdownData.eventNames}
-                value={formData.eventname || ''}
-                onChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventname: value,
-                  }))
-                }
-                placeholder="Search event name..."
-              />
-            </div>
-
-            <div>
-              <InputField
-                id="eventvalue"
-                name="eventvalue"
-                label="Event Value (Optional)"
-                value={formData.eventvalue || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventvalue: e.target.value,
-                  }))
-                }
-                placeholder="Enter Event Value"
-              />
-            </div>
-
-            {dimensionsSection}
-          </>
-        );
-
-      case 'outlink':
-        return (
-          <>
-            <div>
-              <Autocomplete
-                id="eventcategory"
-                name="eventcategory"
-                label="Event Category"
-                options={dropdownData.eventCategories}
-                value={formData.eventcategory || ''}
-                onChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventcategory: value,
-                  }))
-                }
-                required
-                placeholder="Search event category..."
-              />
-            </div>
-
-            <div>
-              <InputField
-                id="eventactionname"
-                name="eventactionname"
-                label="Event Action Name"
-                value="Outlink"
-                readOnly
-                required
-              />
-            </div>
-
-            <div>
-              <Autocomplete
-                id="eventname"
-                name="eventname"
-                label="Event Name (Optional)"
-                options={dropdownData.eventNames}
-                value={formData.eventname || ''}
-                onChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventname: value,
-                  }))
-                }
-                placeholder="Search event name..."
-              />
-            </div>
-
-            <div>
-              <InputField
-                id="eventvalue"
-                name="eventvalue"
-                label="Event Value (Optional)"
-                value={formData.eventvalue || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    eventvalue: e.target.value,
-                  }))
-                }
-                placeholder="Enter Event Value"
-              />
-            </div>
-
-            {dimensionsSection}
-          </>
-        );
     }
   };
 
@@ -605,7 +385,6 @@ export default function ScreenshotDetailPage() {
     setShowEventForm(false);
     setNewEvent(null);
     setSelectedEventType(null);
-    // Reset form data
     resetForm();
   };
 
@@ -696,13 +475,6 @@ export default function ScreenshotDetailPage() {
     }
   };
 
-  // Filter rectangles for right panel display
-  const filteredRectangles = rectangles.filter(
-    (rect) =>
-      selectedEventFilter === 'all' || rect.eventType === selectedEventFilter
-  );
-
-  // Add click handler for document to close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (activeDropdownId) {
@@ -739,6 +511,48 @@ export default function ScreenshotDetailPage() {
     if (activeDropdownId) {
       setActiveDropdownId(undefined);
     }
+  };
+
+  const renderEventFormModal = () => {
+    return (
+      <EventModalWrapper
+        showEventForm={showEventForm}
+        handleCancelEventForm={handleCancelEventForm}
+        isSubmitting={isSubmitting}
+        handleEventFormSubmit={handleEventFormSubmit}
+        selectedEventType={selectedEventType}
+      />
+    );
+  };
+
+  const renderConfirmationModal = () => {
+    return (
+      <ConfirmationModal
+        isOpen={showDeleteConfirmation}
+        onClose={() => {
+          setShowDeleteConfirmation(false);
+          setEventToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Event"
+        message="Are you sure you want to delete this event? This action cannot be undone."
+        confirmText="Delete Event"
+        cancelText="Cancel"
+      />
+    );
+  };
+
+  const renderDescriptionModal = () => {
+    return (
+      <DescriptionModal
+        isOpen={showDescriptionModal}
+        onClose={() => {
+          setShowDescriptionModal(false);
+          setSelectedDescription(null);
+        }}
+        description={selectedDescription?.description || ''}
+      />
+    );
   };
 
   return (
@@ -798,12 +612,10 @@ export default function ScreenshotDetailPage() {
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEvent}
             onViewDescription={handleViewDescription}
-            getEventTypeBorderColor={getEventTypeBorderColor}
           />
         </div>
       </div>
 
-      {/* Event Type Selection Modal */}
       <EventTypeSelector
         isOpen={showEventTypeModal}
         eventTypes={EVENT_TYPES}
@@ -812,99 +624,9 @@ export default function ScreenshotDetailPage() {
         getEventTypeDescription={getEventTypeDescription}
       />
 
-      {/* Event Form Modal */}
-      {showEventForm && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              onClick={handleCancelEventForm}
-            />
-
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-              <div className="absolute right-0 top-0 pr-4 pt-4">
-                <button
-                  type="button"
-                  className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
-                  onClick={handleCancelEventForm}
-                >
-                  <span className="sr-only">Close</span>
-                  <FiX className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="sm:flex sm:items-start">
-                <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                    Event Details
-                  </h3>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleEventFormSubmit(new FormData(e.currentTarget));
-                    }}
-                    className="mt-6 space-y-4"
-                  >
-                    <Textarea
-                      id="description"
-                      label="Description (for developers)"
-                      value={formData.description || ''}
-                      rows={2}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                    />
-                    {renderFormFields()}
-                    <div className="mt-6 flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        onClick={handleCancelEventForm}
-                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className={`rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                          isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Saving...' : 'Save Event'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ConfirmationModal
-        isOpen={showDeleteConfirmation}
-        onClose={() => {
-          setShowDeleteConfirmation(false);
-          setEventToDelete(null);
-        }}
-        onConfirm={handleConfirmDelete}
-        title="Delete Event"
-        message="Are you sure you want to delete this event? This action cannot be undone."
-        confirmText="Delete Event"
-        cancelText="Cancel"
-      />
-
-      <DescriptionModal
-        isOpen={showDescriptionModal}
-        onClose={() => {
-          setShowDescriptionModal(false);
-          setSelectedDescription(null);
-        }}
-        description={selectedDescription?.description || ''}
-      />
+      {renderEventFormModal()}
+      {renderConfirmationModal()}
+      {renderDescriptionModal()}
     </div>
   );
 }
