@@ -1,7 +1,7 @@
-import { Autocomplete } from '@/components/common/Autocomplete';
-import DimensionsSection from '@/components/common/DimensionsSection';
-import InputField from '@/components/common/InputField';
-import { Textarea } from '@/components/common/Textarea';
+import { Autocomplete } from '@/components/shared/Autocomplete';
+import DimensionsSection from '@/components/shared/DimensionsSection';
+import InputField from '@/components/shared/InputField';
+import { Textarea } from '@/components/shared/Textarea';
 import { useDropdownData } from '@/hooks/useDropdownData';
 import { FormState } from '@/types/types';
 import { ChangeEvent, useState, useEffect } from 'react';

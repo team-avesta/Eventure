@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Chip } from '@/components/common/Chip';
+import { Chip } from '@/components/shared/Chip';
 
 describe('Chip component', () => {
   const defaultProps = {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
+import { Modal } from '@/components/shared/Modal';
+import { Input } from '@/components/shared/Input';
 import { adminS3Service, DimensionType } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 

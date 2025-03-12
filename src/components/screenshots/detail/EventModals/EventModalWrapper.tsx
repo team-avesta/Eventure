@@ -1,5 +1,5 @@
-import { Modal } from '@/components/common/Modal';
-import { Textarea } from '@/components/common/Textarea';
+import { Modal } from '@/components/shared/Modal';
+import { Textarea } from '@/components/shared/Textarea';
 import React from 'react';
 import PageViewEventForm from './PageViewEventForm';
 import { useEventForm } from '@/hooks/useEventForm';

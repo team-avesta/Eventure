@@ -4,7 +4,7 @@ import { ScreenshotFilters } from '@/components/screenshots/module';
 import { PageLabel } from '@/types/pageLabel';
 
 // Mock the SearchInput component
-jest.mock('@/components/common/SearchInput', () => ({
+jest.mock('@/components/shared/SearchInput', () => ({
   SearchInput: ({ onSearch, placeholder, delay, ...props }: any) => (
     <input
       type="text"
@@ -18,7 +18,7 @@ jest.mock('@/components/common/SearchInput', () => ({
 }));
 
 // Mock the Dropdown component
-jest.mock('@/components/common/Dropdown', () => ({
+jest.mock('@/components/shared/Dropdown', () => ({
   Dropdown: ({
     options,
     selectedId,

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { Autocomplete } from '@/components/common/Autocomplete';
+import { Autocomplete } from '@/components/shared/Autocomplete';
 import userEvent from '@testing-library/user-event';
 
 describe('Autocomplete', () => {

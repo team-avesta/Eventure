@@ -1,11 +1,11 @@
 'use client';
 
-import { Select } from '@/components/common/Select';
-import { FileUpload } from '@/components/common/FileUpload';
-import { Button } from '@/components/common/Button';
+import { Select } from '@/components/shared/Select';
+import { FileUpload } from '@/components/shared/FileUpload';
+import { Button } from '@/components/shared/Button';
 import { useScreenshotUpload } from '@/hooks/useScreenshotUpload';
 import { Module } from '@/services/adminS3Service';
-import { Input } from '@/components/common/Input';
+import { Input } from '@/components/shared/Input';
 import { useEffect, useState } from 'react';
 import { PageLabel } from '@/types/pageLabel';
 import { pageLabelService } from '@/services/pageLabelService';

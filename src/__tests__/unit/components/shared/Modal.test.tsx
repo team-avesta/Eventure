@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Modal } from '@/components/common/Modal';
+import { Modal } from '@/components/shared/Modal';
 
 // Mock headlessui components
 jest.mock('@headlessui/react', () => {

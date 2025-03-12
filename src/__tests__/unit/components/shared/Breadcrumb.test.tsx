@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import Breadcrumb from '@/components/common/Breadcrumb';
+import Breadcrumb from '@/components/shared/Breadcrumb';
 
 describe('Breadcrumb', () => {
   it('renders home link correctly', () => {

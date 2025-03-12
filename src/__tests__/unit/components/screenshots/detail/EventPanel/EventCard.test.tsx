@@ -23,7 +23,7 @@ jest.mock('@/components/shared/ActionDropdown', () => {
 });
 
 // Mock the DimensionDisplay component
-jest.mock('@/components/common/DimensionDisplay', () => {
+jest.mock('@/components/shared/DimensionDisplay', () => {
   return function MockDimensionDisplay({ dimension }: any) {
     return (
       <div data-testid={`dimension-${dimension.id}`}>{dimension.name}</div>

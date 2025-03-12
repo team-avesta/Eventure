@@ -6,7 +6,7 @@ import {
   TrashIcon,
   ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
-import { Button } from '@/components/common/Button';
+import { Button } from '@/components/shared/Button';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';

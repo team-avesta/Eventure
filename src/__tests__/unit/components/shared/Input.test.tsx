@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Input } from '@/components/common/Input';
+import { Input } from '@/components/shared/Input';
 
 describe('Input', () => {
   const defaultProps = {

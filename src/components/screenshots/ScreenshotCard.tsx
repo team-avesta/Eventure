@@ -6,10 +6,10 @@ import EditScreenshotLabelModal from './EditScreenshotLabelModal';
 import EditScreenshotStatusModal from './EditScreenshotStatusModal';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { HighlightedText } from '@/components/common/HighlightedText';
+import { HighlightedText } from '@/components/shared/HighlightedText';
 import { PageLabel } from '@/types/pageLabel';
-import { StatusChip } from '@/components/common/StatusChip';
-import { LabelChip } from '@/components/common/LabelChip';
+import { StatusChip } from '@/components/shared/StatusChip';
+import { LabelChip } from '@/components/shared/LabelChip';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 
 interface ScreenshotCardProps {

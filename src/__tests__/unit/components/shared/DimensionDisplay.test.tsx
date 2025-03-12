@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import DimensionDisplay from '@/components/common/DimensionDisplay';
+import DimensionDisplay from '@/components/shared/DimensionDisplay';
 // Mock react-tooltip to avoid actual tooltip rendering in tests
 jest.mock('react-tooltip', () => ({
   Tooltip: ({ id, content }: { id: string; content: string }) => (

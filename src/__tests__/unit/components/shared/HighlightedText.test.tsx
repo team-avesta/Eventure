@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { HighlightedText } from '@/components/common/HighlightedText';
+import { HighlightedText } from '@/components/shared/HighlightedText';
 
 describe('HighlightedText', () => {
   it('renders text without highlight when no match', () => {

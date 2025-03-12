@@ -46,7 +46,7 @@ interface DimensionsSectionProps {
 }
 
 // Mock the components
-jest.mock('@/components/common/Autocomplete', () => ({
+jest.mock('@/components/shared/Autocomplete', () => ({
   Autocomplete: ({
     id,
     label,
@@ -76,7 +76,7 @@ jest.mock('@/components/common/Autocomplete', () => ({
   ),
 }));
 
-jest.mock('@/components/common/Textarea', () => ({
+jest.mock('@/components/shared/Textarea', () => ({
   Textarea: ({ id, label, value, onChange, rows }: TextareaProps) => (
     <div data-testid={`textarea-${id}`}>
       <label>{label}</label>
@@ -90,7 +90,7 @@ jest.mock('@/components/common/Textarea', () => ({
   ),
 }));
 
-jest.mock('@/components/common/InputField', () => ({
+jest.mock('@/components/shared/InputField', () => ({
   __esModule: true,
   default: ({
     id,
@@ -117,7 +117,7 @@ jest.mock('@/components/common/InputField', () => ({
   ),
 }));
 
-jest.mock('@/components/common/DimensionsSection', () => ({
+jest.mock('@/components/shared/DimensionsSection', () => ({
   __esModule: true,
   default: ({
     dimensions,

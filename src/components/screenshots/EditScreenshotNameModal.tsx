@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState } from 'react';
-import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
+import { Input } from '@/components/shared/Input';
+import { Button } from '@/components/shared/Button';
 
 interface EditScreenshotNameModalProps {
   isOpen: boolean;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiMoreVertical, FiInfo } from 'react-icons/fi';
 import ActionDropdown from '@/components/shared/ActionDropdown';
-import DimensionDisplay from '@/components/common/DimensionDisplay';
+import DimensionDisplay from '@/components/shared/DimensionDisplay';
 import { Event } from '@/types';
 import { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
 

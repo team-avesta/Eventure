@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Modal } from '@/components/common/Modal';
-import { Select } from '@/components/common/Select';
+import { Modal } from '@/components/shared/Modal';
+import { Select } from '@/components/shared/Select';
 import { ScreenshotStatus } from '@/services/adminS3Service';
 
 interface EditScreenshotStatusModalProps {

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
-import { Select } from '@/components/common/Select';
+import { Modal } from '@/components/shared/Modal';
+import { Input } from '@/components/shared/Input';
+import { Textarea } from '@/components/shared/Textarea';
+import { Select } from '@/components/shared/Select';
 import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 

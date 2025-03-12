@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Switch from '@/components/common/Switch';
+import Switch from '@/components/shared/Switch';
 
 describe('Switch Component', () => {
   const mockSetIsDraggable = jest.fn();

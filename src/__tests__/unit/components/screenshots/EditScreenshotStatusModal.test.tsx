@@ -4,7 +4,7 @@ import EditScreenshotStatusModal from '@/components/screenshots/EditScreenshotSt
 import { ScreenshotStatus } from '@/services/adminS3Service';
 
 // Mock the Modal component to avoid testing its implementation
-jest.mock('@/components/common/Modal', () => ({
+jest.mock('@/components/shared/Modal', () => ({
   Modal: ({
     children,
     isOpen,
@@ -28,7 +28,7 @@ jest.mock('@/components/common/Modal', () => ({
 }));
 
 // Mock the Select component to simplify testing
-jest.mock('@/components/common/Select', () => ({
+jest.mock('@/components/shared/Select', () => ({
   Select: ({
     id,
     label,
@@ -61,7 +61,7 @@ jest.mock('@/components/common/Select', () => ({
 }));
 
 describe('EditScreenshotStatusModal', () => {
-  // Common props
+  // shared props
   const defaultProps = {
     isOpen: true,
     onClose: jest.fn(),

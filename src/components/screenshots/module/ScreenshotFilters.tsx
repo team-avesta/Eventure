@@ -1,6 +1,6 @@
 import React from 'react';
-import { SearchInput } from '@/components/common/SearchInput';
-import { Dropdown } from '@/components/common/Dropdown';
+import { SearchInput } from '@/components/shared/SearchInput';
+import { Dropdown } from '@/components/shared/Dropdown';
 import { PageLabel } from '@/types/pageLabel';
 
 interface ScreenshotFiltersProps {

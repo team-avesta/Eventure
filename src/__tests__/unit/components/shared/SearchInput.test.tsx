@@ -1,5 +1,5 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
-import { SearchInput } from '@/components/common/SearchInput';
+import { SearchInput } from '@/components/shared/SearchInput';
 
 describe('SearchInput', () => {
   beforeEach(() => {

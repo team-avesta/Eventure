@@ -10,7 +10,7 @@ import EditScreenshotLabelModal from '@/components/screenshots/EditScreenshotLab
 import { PageLabel } from '@/types/pageLabel';
 
 // Mock the Modal component to avoid testing its implementation
-jest.mock('@/components/common/Modal', () => ({
+jest.mock('@/components/shared/Modal', () => ({
   Modal: ({
     children,
     isOpen,
@@ -34,7 +34,7 @@ jest.mock('@/components/common/Modal', () => ({
 }));
 
 // Mock the Select component to simplify testing
-jest.mock('@/components/common/Select', () => ({
+jest.mock('@/components/shared/Select', () => ({
   Select: ({
     id,
     label,

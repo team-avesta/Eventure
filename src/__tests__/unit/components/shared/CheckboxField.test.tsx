@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import CheckboxField from '@/components/common/CheckboxField';
+import CheckboxField from '@/components/shared/CheckboxField';
 
 describe('CheckboxField', () => {
   const defaultProps = {

@@ -43,7 +43,7 @@ jest.mock('@headlessui/react', () => {
 });
 
 // Mock Input component
-jest.mock('@/components/common/Input', () => ({
+jest.mock('@/components/shared/Input', () => ({
   Input: ({ id, label, value, onChange, required, placeholder }: any) => (
     <div data-testid="input-component">
       <label htmlFor={id}>{label}</label>
@@ -60,7 +60,7 @@ jest.mock('@/components/common/Input', () => ({
 }));
 
 // Mock Button component
-jest.mock('@/components/common/Button', () => ({
+jest.mock('@/components/shared/Button', () => ({
   Button: ({ children, type, variant, onClick, disabled, isLoading }: any) => (
     <button
       type={type}

@@ -1,5 +1,5 @@
 import React from 'react';
-import Breadcrumb from '@/components/common/Breadcrumb';
+import Breadcrumb from '@/components/shared/Breadcrumb';
 import ActionButtons from './ActionButtons';
 import EventTypeLegend from './EventTypeLegend';
 

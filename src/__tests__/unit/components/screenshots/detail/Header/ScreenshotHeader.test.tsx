@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import ScreenshotHeader from '@/components/screenshots/detail/Header/ScreenshotHeader';
 
 // Mock the child components
-jest.mock('@/components/common/Breadcrumb', () => {
+jest.mock('@/components/shared/Breadcrumb', () => {
   return function MockBreadcrumb({
     items,
   }: {

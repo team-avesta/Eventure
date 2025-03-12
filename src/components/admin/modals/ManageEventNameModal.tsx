@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import { Modal } from '@/components/common/Modal';
-import { Select } from '@/components/common/Select';
-import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/shared/Modal';
+import { Select } from '@/components/shared/Select';
+import { Button } from '@/components/shared/Button';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { adminS3Service } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';

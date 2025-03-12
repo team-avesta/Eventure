@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import ActionButtons from '@/components/screenshots/detail/Header/ActionButtons';
 
 // Mock the Switch component
-jest.mock('@/components/common/Switch', () => {
+jest.mock('@/components/shared/Switch', () => {
   return function MockSwitch({
     isDraggable,
     setIsDraggable,

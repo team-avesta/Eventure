@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ModuleHeader } from '@/components/screenshots/module';
 
 // Mock the Breadcrumb component
-jest.mock('@/components/common/Breadcrumb', () => ({
+jest.mock('@/components/shared/Breadcrumb', () => ({
   __esModule: true,
   default: ({ items }: { items: Array<{ label: string }> }) => (
     <div data-testid="breadcrumb">

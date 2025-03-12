@@ -14,7 +14,7 @@ interface ModalProps {
 }
 
 // Mock the child components
-jest.mock('@/components/common/Modal', () => ({
+jest.mock('@/components/shared/Modal', () => ({
   Modal: ({ children, isOpen, title, onClose, isSubmitting }: ModalProps) =>
     isOpen ? (
       <div data-testid="modal">

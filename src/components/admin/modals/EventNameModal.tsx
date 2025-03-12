@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
+import { Modal } from '@/components/shared/Modal';
+import { Input } from '@/components/shared/Input';
 
 interface EventNameModalProps {
   isOpen: boolean;

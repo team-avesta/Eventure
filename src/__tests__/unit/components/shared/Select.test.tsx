@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Select } from '@/components/common/Select';
+import { Select } from '@/components/shared/Select';
 
 describe('Select', () => {
   const defaultProps = {

@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { FiPlus, FiImage } from 'react-icons/fi';
-import Switch from '@/components/common/Switch';
+import Switch from '@/components/shared/Switch';
 
 interface ActionButtonsProps {
   userRole: string;

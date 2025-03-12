@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { FileUpload } from '@/components/common/FileUpload';
+import { FileUpload } from '@/components/shared/FileUpload';
 
 const getDropZone = () => {
   const uploadText = screen.getByText('Upload a file');

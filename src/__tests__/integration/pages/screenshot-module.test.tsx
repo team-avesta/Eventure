@@ -94,7 +94,7 @@ interface Screenshot {
 }
 
 // Mock Breadcrumb component
-jest.mock('../../../../src/components/common/Breadcrumb', () => {
+jest.mock('../../../../src/components/shared/Breadcrumb', () => {
   return {
     __esModule: true,
     default: ({ items }: { items: Array<{ label: string }> }) => (
@@ -314,7 +314,7 @@ jest.mock('../../../../src/components/shared/ConfirmationModal', () => {
 });
 
 // Add SearchInput mock
-jest.mock('@/components/common/SearchInput', () => ({
+jest.mock('@/components/shared/SearchInput', () => ({
   SearchInput: ({ onSearch, placeholder }: any) => (
     <input
       type="text"
@@ -326,7 +326,7 @@ jest.mock('@/components/common/SearchInput', () => ({
 }));
 
 // Add Dropdown mock
-jest.mock('@/components/common/Dropdown', () => ({
+jest.mock('@/components/shared/Dropdown', () => ({
   Dropdown: ({
     options,
     selectedId,

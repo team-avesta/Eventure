@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
-import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
+import { Input } from '@/components/shared/Input';
+import { Button } from '@/components/shared/Button';
 import { PageLabel } from '@/types/pageLabel';
 
 interface PageLabelModalProps {

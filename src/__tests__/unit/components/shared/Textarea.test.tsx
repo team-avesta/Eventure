@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Textarea } from '@/components/common/Textarea';
+import { Textarea } from '@/components/shared/Textarea';
 
 describe('Textarea', () => {
   const defaultProps = {

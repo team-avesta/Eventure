@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
+import { Input } from '@/components/shared/Input';
+import { Button } from '@/components/shared/Button';
 import { authService } from '@/services/auth';
 
 export function LoginForm() {

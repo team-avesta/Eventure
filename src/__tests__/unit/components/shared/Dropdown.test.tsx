@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Dropdown, DropdownOption } from '@/components/common/Dropdown';
+import { Dropdown, DropdownOption } from '@/components/shared/Dropdown';
 
 describe('Dropdown component', () => {
   const mockOptions: DropdownOption[] = [

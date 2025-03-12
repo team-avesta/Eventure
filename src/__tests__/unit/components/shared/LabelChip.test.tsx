@@ -1,8 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { LabelChip } from '@/components/common/LabelChip';
+import { LabelChip } from '@/components/shared/LabelChip';
 
 // Mock the Chip component
-jest.mock('@/components/common/Chip', () => ({
+jest.mock('@/components/shared/Chip', () => ({
   Chip: ({ label, icon, colorClasses, onClick, title, isClickable }: any) => (
     <div
       data-testid="chip-component"

@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import DimensionsSection from '@/components/common/DimensionsSection';
+import DimensionsSection from '@/components/shared/DimensionsSection';
 
 // Mock the CheckboxField component
-jest.mock('@/components/common/CheckboxField', () => {
+jest.mock('@/components/shared/CheckboxField', () => {
   return jest.fn(({ label, checked, onChange, value }) => (
     <div data-testid={`checkbox-${value}`}>
       <label>

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { StatusChip } from '@/components/common/StatusChip';
+import { StatusChip } from '@/components/shared/StatusChip';
 import { ScreenshotStatus } from '@/services/adminS3Service';
 
 describe('StatusChip', () => {
