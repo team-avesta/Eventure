@@ -10,14 +10,6 @@ export default function AdminPage() {
   const router = useRouter();
   const { isLoading } = useAdminState();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <CgSpinner size={32} className="animate-spin" role="progressbar" />
-      </div>
-    );
-  }
-
   const renderHeader = () => (
     <div className="text-center">
       <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -27,7 +19,11 @@ export default function AdminPage() {
     </div>
   );
 
-  return (
+  return isLoading ? (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <CgSpinner size={32} className="animate-spin" role="progressbar" />
+    </div>
+  ) : (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {renderHeader()}
