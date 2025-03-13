@@ -10,11 +10,13 @@ export type RectangleState = {
 };
 
 export type EventFormData = {
-  name: string;
-  category: string;
-  action: string;
-  value: string;
-  dimensions: string[];
+  customTitle?: string;
+  customUrl?: string;
+  name?: string;
+  category?: string;
+  action?: string;
+  value?: string;
+  dimensions?: string[];
   description?: string;
 };
 
@@ -25,6 +27,7 @@ export type FormState = {
   eventvalue?: string;
   dimensions?: string[];
   description?: string;
+  customTitle?: string;
   customUrl?: string;
 };
 

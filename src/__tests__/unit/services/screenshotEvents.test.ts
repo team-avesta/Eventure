@@ -1,3 +1,4 @@
+import { EEventType } from '@/services/adminS3Service';
 import { screenshotEventsService } from '@/services/screenshotEvents';
 import { Event } from '@/types';
 
@@ -18,7 +19,7 @@ describe('screenshotEventsService', () => {
       width: 100,
       height: 100,
     },
-    eventType: 'pageview',
+    eventType: EEventType.PageView,
     name: 'Test Event',
     category: 'Test Category',
     action: 'Test Action',

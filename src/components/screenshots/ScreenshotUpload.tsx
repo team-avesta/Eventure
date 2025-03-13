@@ -43,7 +43,6 @@ export default function ScreenshotUpload({
         const labels = await pageLabelService.getAllLabels();
         setAvailableLabels(labels);
       } catch (error) {
-        console.error('Failed to fetch labels:', error);
         setAvailableLabels([]);
       }
     };

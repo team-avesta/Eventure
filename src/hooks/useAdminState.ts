@@ -98,7 +98,6 @@ export function useAdminState() {
       }
       closeModal();
     } catch (error) {
-      console.error('Error updating data:', error);
       toast.error('Failed to update data');
     } finally {
       setIsSubmitting(false);

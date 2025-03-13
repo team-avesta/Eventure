@@ -135,10 +135,6 @@ describe('useAdminState', () => {
         await result.current.handleSubmit('module', { name: 'test' });
       });
 
-      expect(console.error).toHaveBeenCalledWith(
-        'Error updating data:',
-        mockError
-      );
       expect(toast.error).toHaveBeenCalledWith('Failed to update data');
       expect(result.current.isSubmitting).toBeFalsy();
     });

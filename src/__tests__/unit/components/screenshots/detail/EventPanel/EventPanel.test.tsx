@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import EventPanel from '@/components/screenshots/detail/EventPanel/EventPanel';
 import { Event } from '@/types';
 import { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
+import { EEventType } from '@/services/adminS3Service';
 
 // Mock the EventTypeFilter component
 jest.mock('@/components/eventFilter/EventTypeFilter', () => {
@@ -113,7 +114,7 @@ describe('EventPanel Component', () => {
         height: 50,
       },
       screenshotId: 'screenshot-1',
-      eventType: 'pageview',
+      eventType: EEventType.PageView,
       name: 'Home Page',
       category: 'https://example.com',
       action: '',
@@ -130,7 +131,7 @@ describe('EventPanel Component', () => {
         height: 60,
       },
       screenshotId: 'screenshot-1',
-      eventType: 'trackevent',
+      eventType: EEventType.TrackEvent,
       name: 'Click Button',
       category: 'User Interaction',
       action: 'Click',
@@ -147,7 +148,7 @@ describe('EventPanel Component', () => {
         height: 40,
       },
       screenshotId: 'screenshot-1',
-      eventType: 'outlink',
+      eventType: EEventType.Outlink,
       name: 'External Link',
       category: 'Navigation',
       action: 'Outlink',

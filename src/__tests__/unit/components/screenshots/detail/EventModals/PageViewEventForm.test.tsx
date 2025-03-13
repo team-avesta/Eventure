@@ -139,7 +139,6 @@ jest.mock('@/components/shared/DimensionsSection', () => ({
 
 describe('PageViewEventForm', () => {
   const mockSetFormData = jest.fn();
-  const mockSetSelectedPageId = jest.fn();
   const mockHandleDimensionChange = jest.fn();
   const mockGetPageById = jest.fn();
   const mockGetPageByTitle = jest.fn();
@@ -208,10 +207,6 @@ describe('PageViewEventForm', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -228,10 +223,6 @@ describe('PageViewEventForm', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -239,7 +230,7 @@ describe('PageViewEventForm', () => {
       'Test description'
     );
     expect(screen.getByTestId('autocomplete-input-customTitle')).toHaveValue(
-      'Page 1'
+      ''
     );
     expect(screen.getByTestId('input-field-customUrl')).toHaveValue(
       'https://example.com/page1'
@@ -252,10 +243,6 @@ describe('PageViewEventForm', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -270,10 +257,6 @@ describe('PageViewEventForm', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -284,17 +267,13 @@ describe('PageViewEventForm', () => {
     expect(mockSetFormData).toHaveBeenCalled();
   });
 
-  it('calls setSelectedPageId and setFormData when custom title is changed', async () => {
+  it('calls setFormData with updated URL when custom title is changed', async () => {
     const user = userEvent.setup();
     render(
       <PageViewEventForm
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -302,7 +281,19 @@ describe('PageViewEventForm', () => {
     const option = screen.getByTestId('option-page-2');
     await user.click(option);
 
-    expect(mockSetSelectedPageId).toHaveBeenCalledWith('page2');
+    // Check that setFormData was called with a function
     expect(mockSetFormData).toHaveBeenCalled();
+
+    // Get the function that was passed to setFormData
+    const setFormDataArg = mockSetFormData.mock.calls[0][0];
+
+    // Call the function with the current formData
+    const updatedFormData = setFormDataArg(mockFormData);
+
+    // Check that the function returns an object with the expected customUrl
+    expect(updatedFormData).toHaveProperty(
+      'customUrl',
+      'https://example.com/page2'
+    );
   });
 });

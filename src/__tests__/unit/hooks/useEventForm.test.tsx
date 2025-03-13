@@ -9,7 +9,6 @@ describe('useEventForm', () => {
     const { result } = renderHook(() => useEventForm());
 
     expect(result.current.formData).toEqual({});
-    expect(result.current.selectedPageId).toBe('');
     expect(result.current.isSubmitting).toBe(false);
     expect(result.current.showDescriptionModal).toBe(false);
     expect(result.current.selectedDescription).toBe(null);
@@ -22,13 +21,11 @@ describe('useEventForm', () => {
     // Set some initial values
     act(() => {
       result.current.setFormData({ eventname: 'Test Event' });
-      result.current.setSelectedPageId('page-123');
       result.current.setIsSubmitting(true);
     });
 
     // Verify values were set
     expect(result.current.formData).toEqual({ eventname: 'Test Event' });
-    expect(result.current.selectedPageId).toBe('page-123');
     expect(result.current.isSubmitting).toBe(true);
 
     // Reset form
@@ -38,7 +35,6 @@ describe('useEventForm', () => {
 
     // Verify reset
     expect(result.current.formData).toEqual({});
-    expect(result.current.selectedPageId).toBe('');
     expect(result.current.isSubmitting).toBe(false);
   });
 
@@ -108,8 +104,8 @@ describe('useEventForm', () => {
       );
 
       expect(formData).toEqual({
-        name: 'Home Page',
-        category: '/home',
+        customTitle: 'Home Page',
+        customUrl: '/home',
         action: '',
         value: '',
         dimensions: ['dim1', 'dim2'],
@@ -212,6 +208,8 @@ describe('useEventForm', () => {
         updatedAt: '2023-01-01',
         dimensions: ['dim1', 'dim2'],
         description: 'Home page view',
+        customTitle: 'Home Page',
+        customUrl: '/home',
       };
 
       const pageData: Array<{ id: string; title: string; url: string }> = [
@@ -227,10 +225,11 @@ describe('useEventForm', () => {
         );
       });
 
-      expect(result.current.selectedPageId).toBe('page-123');
       expect(result.current.formData).toEqual({
         dimensions: ['dim1', 'dim2'],
         description: 'Home page view',
+        customTitle: 'Home Page',
+        customUrl: '/home',
       });
     });
 

@@ -9,14 +9,16 @@ export type Event = {
     height: number;
   };
   screenshotId: string;
-  eventType: string;
-  name: string;
-  category: string;
-  action: string;
-  value: string;
-  dimensions: string[];
+  eventType?: EEventType;
+  name?: string;
+  category?: string;
+  action?: string;
+  value?: string;
+  dimensions?: string[];
   updatedAt?: string;
   description?: string;
+  customTitle?: string;
+  customUrl?: string;
 };
 
 export interface Screenshot {

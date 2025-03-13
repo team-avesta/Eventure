@@ -78,36 +78,6 @@ describe('useDropdownData', () => {
     expect(toast.error).toHaveBeenCalledWith('Failed to load dropdown data');
   });
 
-  it('should get page by ID', async () => {
-    const { result } = renderHook(() => useDropdownData());
-
-    // Wait for the data to be fetched
-    await waitFor(() => expect(result.current.data).toEqual(mockDropdownData));
-
-    // Test getPageById
-    const page = result.current.getPageById('page1');
-    expect(page).toEqual({ id: 'page1', title: 'Home Page', url: '/home' });
-
-    // Test with non-existent ID
-    const nonExistentPage = result.current.getPageById('nonexistent');
-    expect(nonExistentPage).toBeUndefined();
-  });
-
-  it('should get page by title', async () => {
-    const { result } = renderHook(() => useDropdownData());
-
-    // Wait for the data to be fetched
-    await waitFor(() => expect(result.current.data).toEqual(mockDropdownData));
-
-    // Test getPageByTitle (case insensitive)
-    const page = result.current.getPageByTitle('home page');
-    expect(page).toEqual({ id: 'page1', title: 'Home Page', url: '/home' });
-
-    // Test with non-existent title
-    const nonExistentPage = result.current.getPageByTitle('nonexistent');
-    expect(nonExistentPage).toBeUndefined();
-  });
-
   it('should manually fetch dropdown data', async () => {
     const { result } = renderHook(() => useDropdownData());
 

@@ -10,27 +10,18 @@ interface PageViewEventFormProps {
   formData: FormState;
   setFormData: React.Dispatch<React.SetStateAction<FormState>>;
   handleDimensionChange: (dimensionId: string, checked: boolean) => void;
-  selectedPageId: string;
-  setSelectedPageId: React.Dispatch<React.SetStateAction<string>>;
-  customTitle: string;
-  customUrl: string;
 }
 
 const PageViewEventForm = ({
   formData,
   setFormData,
   handleDimensionChange,
-  selectedPageId,
-  setSelectedPageId,
-  customTitle,
-  customUrl,
 }: PageViewEventFormProps) => {
-  const { data: dropdownData, getPageById, getPageByTitle } = useDropdownData();
+  const { data: dropdownData, getPageByTitle } = useDropdownData();
 
   const onChangeCustomTitle = (value: string) => {
     const selectedPage = getPageByTitle(value);
     if (selectedPage) {
-      setSelectedPageId(selectedPage.id);
       setFormData((prev) => ({
         ...prev,
         customUrl: selectedPage.url,
@@ -59,7 +50,7 @@ const PageViewEventForm = ({
         name="customTitle"
         label="Custom Title"
         options={dropdownData.pageData.map((page) => page.title)}
-        value={customTitle}
+        value={formData.customTitle || ''}
         onChange={onChangeCustomTitle}
         required
         placeholder="Search custom title..."
@@ -68,7 +59,7 @@ const PageViewEventForm = ({
         id="customUrl"
         name="customUrl"
         label="Custom URL"
-        value={customUrl}
+        value={formData.customUrl || ''}
         readOnly
         required
         placeholder="URL will be set automatically"

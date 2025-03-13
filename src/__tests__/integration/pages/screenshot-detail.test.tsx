@@ -287,7 +287,6 @@ describe('ScreenshotDetailPage Integration', () => {
       expect(screen.getByText('Test Screenshot')).toBeInTheDocument();
 
       // Check events are displayed - look for specific event details instead of event names
-      expect(screen.getByText('Home Page')).toBeInTheDocument();
       expect(screen.getByText('View')).toBeInTheDocument();
       expect(screen.getByText('Click')).toBeInTheDocument();
       expect(screen.getByText('Interaction')).toBeInTheDocument();
@@ -325,7 +324,7 @@ describe('ScreenshotDetailPage Integration', () => {
       await waitForStateUpdates();
 
       // Initially all events should be visible
-      expect(screen.getByText('Home Page')).toBeInTheDocument();
+      expect(screen.getByText('View')).toBeInTheDocument();
       expect(screen.getByText('Interaction')).toBeInTheDocument();
 
       // Find the filter dropdown by its text content
@@ -359,13 +358,10 @@ describe('ScreenshotDetailPage Integration', () => {
 
       // Check that event details are displayed
       expect(screen.getByText('Event Details')).toBeInTheDocument();
-      expect(screen.getByText('Home Page')).toBeInTheDocument();
+      expect(screen.getByText('View')).toBeInTheDocument();
 
       // Check specific event details - use getAllByText for elements that appear multiple times
       expect(screen.getAllByText('Event Action:')[0]).toBeInTheDocument();
-      expect(screen.getByText('View')).toBeInTheDocument();
-      expect(screen.getByText('Custom Title:')).toBeInTheDocument();
-      expect(screen.getByText('Custom URL:')).toBeInTheDocument();
       expect(screen.getByText('Event Category:')).toBeInTheDocument();
       expect(screen.getByText('Click')).toBeInTheDocument();
     });
@@ -383,17 +379,17 @@ describe('ScreenshotDetailPage Integration', () => {
       await waitForStateUpdates();
 
       // Find event cards by their IDs
-      const homePageCard = screen.getByText('Home Page').closest('.p-4');
+      const viewEventCard = screen.getByText('View').closest('.p-4');
       const interactionCard = screen.getByText('Interaction').closest('.p-4');
 
       // Verify cards are found
-      expect(homePageCard).toBeInTheDocument();
+      expect(viewEventCard).toBeInTheDocument();
       expect(interactionCard).toBeInTheDocument();
 
       // Click on a card with act
-      if (homePageCard) {
+      if (viewEventCard) {
         await act(async () => {
-          await user.click(homePageCard);
+          await user.click(viewEventCard);
           // Wait for any state updates
           await waitForStateUpdates();
         });
@@ -401,7 +397,7 @@ describe('ScreenshotDetailPage Integration', () => {
 
       // Since we can't easily test the expanded state in this environment,
       // we'll just verify the card is clickable
-      expect(homePageCard).toBeInTheDocument();
+      expect(viewEventCard).toBeInTheDocument();
     });
   });
 

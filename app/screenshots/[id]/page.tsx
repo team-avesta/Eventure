@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Event } from '@/types';
+import { Event, EventType } from '@/types';
 import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
 import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
 import { adminS3Service, EEventType } from '@/services/adminS3Service';
@@ -27,21 +27,14 @@ export default function ScreenshotDetailPage() {
   const screenshotId = params.id as string;
   const [isDraggable, setIsDraggable] = useState(false);
   const [showEventTypeModal, setShowEventTypeModal] = useState(false);
-  const [selectedEventType, setSelectedEventType] = useState<{
-    id: string;
-    name: string;
-    color: string;
-  } | null>(null);
+  const [selectedEventType, setSelectedEventType] = useState<EventType | null>(
+    null
+  );
   const [userRole, setUserRole] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [newEvent, setNewEvent] = useState<Partial<Event> | null>(null);
-  const {
-    data: dropdownData,
-    error: dropdownError,
-    getPageByTitle,
-    getPageById,
-  } = useDropdownData();
+  const { data: dropdownData, error: dropdownError } = useDropdownData();
   const [rectangles, setRectangles] = useState<RectangleState[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [highlightedCardId, setHighlightedCardId] = useState<string | null>(
@@ -73,8 +66,6 @@ export default function ScreenshotDetailPage() {
     formData,
     setFormData,
     handleDimensionChange,
-    selectedPageId,
-    setSelectedPageId,
   } = useEventForm();
 
   useEffect(() => {
@@ -122,7 +113,7 @@ export default function ScreenshotDetailPage() {
           color:
             EVENT_TYPES.find((type) => type.id === event.eventType)?.color ||
             '#000000',
-          eventType: event.eventType,
+          eventType: event.eventType || '',
           action: event.action || 'No Action',
         }));
         setRectangles(savedRectangles);
@@ -230,11 +221,7 @@ export default function ScreenshotDetailPage() {
     fileInputRef.current?.click();
   };
 
-  const handleEventTypeSelect = (type: {
-    id: string;
-    name: string;
-    color: string;
-  }) => {
+  const handleEventTypeSelect = (type: EventType) => {
     setShowEventTypeModal(false);
     setSelectedEventType(type);
     resetForm();
@@ -255,20 +242,22 @@ export default function ScreenshotDetailPage() {
       selectedEventType?.id || ''
     );
 
-    let eventData: any = {
+    let eventData: Event = {
       id: newEvent.id || Date.now().toString(),
       coordinates: newEvent.coordinates!,
       screenshotId,
-      eventType: selectedEventType?.id || '',
-      name:
-        selectedEventType?.id === EEventType.PageView
-          ? getPageByTitle(formData.name)?.title || ''
-          : formData.name,
-      category: formData.category,
-      action: formData.action,
-      value: formData.value,
-      dimensions: formData.dimensions,
+      eventType: selectedEventType?.id,
+      ...(selectedEventType?.id === EEventType.PageView && {
+        customTitle: formData.customTitle,
+        customUrl: formData.customUrl,
+      }),
+      ...(selectedEventType?.id !== EEventType.PageView && {
+        category: formData.category,
+        action: formData.action,
+        value: formData.value,
+      }),
       description: formData.description || undefined,
+      dimensions: formData.dimensions,
     };
 
     try {
@@ -285,7 +274,7 @@ export default function ScreenshotDetailPage() {
             width: eventData.coordinates.width,
             height: eventData.coordinates.height,
             color: selectedEventType?.color || '#000000',
-            eventType: eventData.eventType,
+            eventType: eventData.eventType || '',
             action: eventData.action || 'No Action',
           },
         ]);
@@ -405,7 +394,11 @@ export default function ScreenshotDetailPage() {
       );
 
       // Use populateFormFromEvent from useEventForm
-      populateFormFromEvent(event, event.eventType, dropdownData.pageData);
+      populateFormFromEvent(
+        event,
+        event.eventType || '',
+        dropdownData.pageData
+      );
 
       setNewEvent({
         id: event.id,
@@ -530,10 +523,6 @@ export default function ScreenshotDetailPage() {
         formData={formData}
         setFormData={setFormData}
         handleDimensionChange={handleDimensionChange}
-        selectedPageId={selectedPageId}
-        setSelectedPageId={setSelectedPageId}
-        customTitle={getPageById(selectedPageId)?.title || ''}
-        customUrl={getPageById(selectedPageId)?.url || ''}
       />
     );
   };

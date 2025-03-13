@@ -20,10 +20,6 @@ interface EventModalWrapperProps {
   formData: FormState;
   setFormData: React.Dispatch<React.SetStateAction<FormState>>;
   handleDimensionChange: (dimensionId: string, checked: boolean) => void;
-  selectedPageId: string;
-  setSelectedPageId: React.Dispatch<React.SetStateAction<string>>;
-  customTitle: string;
-  customUrl: string;
 }
 const EventModalWrapper = ({
   showEventForm,
@@ -34,10 +30,6 @@ const EventModalWrapper = ({
   formData,
   setFormData,
   handleDimensionChange,
-  selectedPageId,
-  setSelectedPageId,
-  customTitle,
-  customUrl,
 }: EventModalWrapperProps) => {
   const renderFormFields = () => {
     if (!selectedEventType) return null;
@@ -49,10 +41,6 @@ const EventModalWrapper = ({
             formData={formData}
             setFormData={setFormData}
             handleDimensionChange={handleDimensionChange}
-            selectedPageId={selectedPageId}
-            setSelectedPageId={setSelectedPageId}
-            customTitle={customTitle}
-            customUrl={customUrl}
           />
         );
 

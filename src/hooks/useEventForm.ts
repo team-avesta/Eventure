@@ -5,7 +5,6 @@ import { EEventType } from '@/services/adminS3Service';
 
 export function useEventForm() {
   const [formData, setFormData] = useState<FormState>({});
-  const [selectedPageId, setSelectedPageId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [selectedDescription, setSelectedDescription] = useState<{
@@ -15,7 +14,6 @@ export function useEventForm() {
 
   const resetForm = () => {
     setFormData({});
-    setSelectedPageId('');
     setIsSubmitting(false);
   };
 
@@ -37,12 +35,12 @@ export function useEventForm() {
   const getPageViewData = (formValues: any) => {
     const { dimensions, description } = getDimensionsAndDescription(formValues);
 
-    const name = formValues.get('customTitle') as string;
-    const category = formValues.get('customUrl') as string;
+    const customTitle = formValues.get('customTitle') as string;
+    const customUrl = formValues.get('customUrl') as string;
     const action = '';
     const value = '';
 
-    return { name, category, action, value, dimensions, description };
+    return { customTitle, customUrl, action, value, dimensions, description };
   };
 
   const getTrackEventData = (formValues: any) => {
@@ -94,14 +92,12 @@ export function useEventForm() {
   ) => {
     switch (eventType) {
       case EEventType.PageView:
-        const pageInfo = pageData.find((p) => p.title === event.name);
-        if (pageInfo) {
-          setSelectedPageId(pageInfo.id);
-          setFormData({
-            dimensions: event.dimensions,
-            description: event.description,
-          });
-        }
+        setFormData({
+          dimensions: event.dimensions,
+          description: event.description,
+          customTitle: event.customTitle,
+          customUrl: event.customUrl,
+        });
         break;
 
       case EEventType.TrackEvent:
@@ -128,8 +124,6 @@ export function useEventForm() {
   return {
     formData,
     setFormData,
-    selectedPageId,
-    setSelectedPageId,
     isSubmitting,
     setIsSubmitting,
     showDescriptionModal,

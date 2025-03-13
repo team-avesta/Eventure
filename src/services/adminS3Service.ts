@@ -1,3 +1,4 @@
+import { Event } from '@/types';
 import { api } from './api';
 
 export enum EEventType {
@@ -32,25 +33,6 @@ export interface Module {
   key: string;
   screenshots: Screenshot[];
   screenshotOrder?: string[]; // Array of screenshot IDs in order
-}
-
-export interface Event {
-  id: string;
-  coordinates: {
-    startX: number;
-    startY: number;
-    width: number;
-    height: number;
-  };
-  screenshotId: string;
-  eventType: EEventType;
-  name: string;
-  category: string;
-  action: string;
-  value: string;
-  dimensions: string[];
-  updatedAt: string;
-  description?: string;
 }
 
 export interface PageView {

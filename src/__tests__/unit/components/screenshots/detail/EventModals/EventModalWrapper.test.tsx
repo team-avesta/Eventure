@@ -71,7 +71,6 @@ describe('EventModalWrapper', () => {
   const mockHandleEventFormSubmit = jest.fn();
   const mockSetFormData = jest.fn();
   const mockHandleDimensionChange = jest.fn();
-  const mockSetSelectedPageId = jest.fn();
   const mockFormData: FormState = {
     description: 'Test description',
     eventcategory: 'Navigation',
@@ -96,10 +95,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -117,10 +112,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -143,10 +134,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -167,10 +154,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -197,10 +180,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -221,17 +200,12 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
     expect(screen.getByTestId('pageview-form')).toBeInTheDocument();
     const propsJson = screen.getByTestId('pageview-props').textContent;
     expect(propsJson).toContain('formData');
-    expect(propsJson).toContain('selectedPageId');
   });
 
   it('renders TrackEventForm when selectedEventType.id is trackevent', () => {
@@ -249,10 +223,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -276,10 +246,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -303,10 +269,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 
@@ -326,10 +288,6 @@ describe('EventModalWrapper', () => {
         formData={mockFormData}
         setFormData={mockSetFormData}
         handleDimensionChange={mockHandleDimensionChange}
-        selectedPageId="page1"
-        setSelectedPageId={mockSetSelectedPageId}
-        customTitle="Page 1"
-        customUrl="https://example.com/page1"
       />
     );
 

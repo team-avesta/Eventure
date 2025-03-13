@@ -1,18 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  adminS3Service,
-  Module,
-  Event,
-  EEventType,
-} from '@/services/adminS3Service';
+import { adminS3Service, Module, EEventType } from '@/services/adminS3Service';
 import ScreenshotUpload from '@/components/screenshots/ScreenshotUpload';
 import { ModuleCard } from '@/components/screenshots/ModuleCard';
 import { AnalyticsModal } from '@/components/screenshots/AnalyticsModal';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 import { CgSpinner } from 'react-icons/cg';
+import { Event } from '@/types';
 
 interface EventCounts {
   pageViewCount: number;

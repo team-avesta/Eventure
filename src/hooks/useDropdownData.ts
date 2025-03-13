@@ -52,11 +52,6 @@ export function useDropdownData() {
     }
   };
 
-  // Get page data by ID
-  const getPageById = (id: string): PageData | undefined => {
-    return data.pageData.find((page) => page.id === id);
-  };
-
   // Get page data by title
   const getPageByTitle = (title: string): PageData | undefined => {
     return data.pageData.find(
@@ -67,7 +62,6 @@ export function useDropdownData() {
   return {
     data,
     error,
-    getPageById,
     getPageByTitle,
     fetchDropdownData,
   };

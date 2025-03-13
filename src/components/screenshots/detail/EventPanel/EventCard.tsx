@@ -80,8 +80,8 @@ const EventCard: React.FC<EventCardProps> = ({
 
     return (
       <>
-        {renderMetadataField('Custom Title', event.name)}
-        {renderMetadataField('Custom URL', event.category)}
+        {renderMetadataField('Custom Title', event.customTitle)}
+        {renderMetadataField('Custom URL', event.customUrl)}
       </>
     );
   };
