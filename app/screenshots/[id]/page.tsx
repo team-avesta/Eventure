@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { Event } from '@/types';
 import ImageAnnotatorWrapper from '@/components/imageAnnotator/ImageAnnotatorWrapper';
 import type { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
-import { adminS3Service, EventType } from '@/services/adminS3Service';
+import { adminS3Service, EEventType } from '@/services/adminS3Service';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import DescriptionModal from '@/components/shared/DescriptionModal';
 import EmptyState from '@/components/screenshots/module/EmptyState';
@@ -261,7 +261,7 @@ export default function ScreenshotDetailPage() {
       screenshotId,
       eventType: selectedEventType?.id || '',
       name:
-        selectedEventType?.id === EventType.PageView
+        selectedEventType?.id === EEventType.PageView
           ? getPageByTitle(formData.name)?.title || ''
           : formData.name,
       category: formData.category,
@@ -634,7 +634,6 @@ export default function ScreenshotDetailPage() {
         eventTypes={EVENT_TYPES}
         onClose={() => setShowEventTypeModal(false)}
         onSelect={handleEventTypeSelect}
-        getEventTypeDescription={getEventTypeDescription}
       />
 
       {renderEventFormModal()}

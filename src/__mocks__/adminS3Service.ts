@@ -1,4 +1,4 @@
-import { EventType } from '@/services/adminS3Service';
+import { EEventType } from '@/services/adminS3Service';
 
 // Mock data
 const mockEvents = [
@@ -11,7 +11,7 @@ const mockEvents = [
       height: 100,
     },
     screenshotId: 'mock-screenshot-id',
-    eventType: EventType.PageView,
+    eventType: EEventType.PageView,
     name: 'Home Page',
     category: 'Navigation',
     action: 'View',
@@ -28,7 +28,7 @@ const mockEvents = [
       height: 80,
     },
     screenshotId: 'mock-screenshot-id',
-    eventType: EventType.TrackEvent,
+    eventType: EEventType.TrackEvent,
     name: 'Button Click',
     category: 'Interaction',
     action: 'Click',
@@ -79,5 +79,5 @@ export const adminS3Service = {
   }),
 };
 
-// Export EventType enum for use in tests
-export { EventType };
+// Export EEventType enum for use in tests
+export { EEventType };

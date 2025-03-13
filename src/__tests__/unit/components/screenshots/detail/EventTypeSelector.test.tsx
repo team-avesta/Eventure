@@ -2,12 +2,12 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EventTypeSelector from '@/components/screenshots/detail/EventTypeSelector';
-
+import { EEventType } from '@/services/adminS3Service';
 describe('EventTypeSelector Component', () => {
   const mockEventTypes = [
-    { id: 'pageview', name: 'Page View', color: '#2563EB' },
-    { id: 'trackevent', name: 'TrackEvent', color: '#9333EA' },
-    { id: 'outlink', name: 'Outlink', color: '#DC2626' },
+    { id: EEventType.PageView, name: 'Page View', color: '#2563EB' },
+    { id: EEventType.TrackEvent, name: 'TrackEvent', color: '#9333EA' },
+    { id: EEventType.Outlink, name: 'Outlink', color: '#DC2626' },
   ];
 
   const mockOnClose = jest.fn();
@@ -34,7 +34,6 @@ describe('EventTypeSelector Component', () => {
         eventTypes={mockEventTypes}
         onClose={mockOnClose}
         onSelect={mockOnSelect}
-        getEventTypeDescription={mockGetEventTypeDescription}
       />
     );
 
@@ -49,7 +48,6 @@ describe('EventTypeSelector Component', () => {
         eventTypes={mockEventTypes}
         onClose={mockOnClose}
         onSelect={mockOnSelect}
-        getEventTypeDescription={mockGetEventTypeDescription}
       />
     );
 
@@ -71,7 +69,6 @@ describe('EventTypeSelector Component', () => {
         eventTypes={mockEventTypes}
         onClose={mockOnClose}
         onSelect={mockOnSelect}
-        getEventTypeDescription={mockGetEventTypeDescription}
       />
     );
 
@@ -101,7 +98,6 @@ describe('EventTypeSelector Component', () => {
         eventTypes={mockEventTypes}
         onClose={mockOnClose}
         onSelect={mockOnSelect}
-        getEventTypeDescription={mockGetEventTypeDescription}
       />
     );
 
@@ -121,7 +117,6 @@ describe('EventTypeSelector Component', () => {
         eventTypes={mockEventTypes}
         onClose={mockOnClose}
         onSelect={mockOnSelect}
-        getEventTypeDescription={mockGetEventTypeDescription}
       />
     );
 
@@ -146,7 +141,6 @@ describe('EventTypeSelector Component', () => {
         eventTypes={mockEventTypes}
         onClose={mockOnClose}
         onSelect={mockOnSelect}
-        getEventTypeDescription={mockGetEventTypeDescription}
       />
     );
 
@@ -156,22 +150,5 @@ describe('EventTypeSelector Component', () => {
 
     // Check if onClose was called
     expect(mockOnClose).toHaveBeenCalled();
-  });
-
-  it('calls getEventTypeDescription for each event type', () => {
-    render(
-      <EventTypeSelector
-        isOpen={true}
-        eventTypes={mockEventTypes}
-        onClose={mockOnClose}
-        onSelect={mockOnSelect}
-        getEventTypeDescription={mockGetEventTypeDescription}
-      />
-    );
-
-    // Check if getEventTypeDescription was called for each event type
-    mockEventTypes.forEach((type) => {
-      expect(mockGetEventTypeDescription).toHaveBeenCalledWith(type.id);
-    });
   });
 });

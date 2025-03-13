@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Event } from '@/types';
 import { FormState, EventFormData } from '../types/types';
-import { EventType } from '@/services/adminS3Service';
+import { EEventType } from '@/services/adminS3Service';
 
 export function useEventForm() {
   const [formData, setFormData] = useState<FormState>({});
@@ -59,18 +59,18 @@ export function useEventForm() {
     formValues: any,
     eventType: string
   ): EventFormData => {
-    if (eventType === EventType.PageView) {
+    if (eventType === EEventType.PageView) {
       return getPageViewData(formValues);
     } else if (
-      eventType === EventType.TrackEventWithPageView ||
-      eventType === EventType.TrackEvent ||
-      eventType === EventType.BackendEvent
+      eventType === EEventType.TrackEventWithPageView ||
+      eventType === EEventType.TrackEvent ||
+      eventType === EEventType.BackendEvent
     ) {
       return {
         ...getTrackEventData(formValues),
         action: formValues.get('eventactionname') as string,
       };
-    } else if (eventType === EventType.Outlink) {
+    } else if (eventType === EEventType.Outlink) {
       return {
         ...getTrackEventData(formValues),
         action: 'Outlink',
@@ -93,7 +93,7 @@ export function useEventForm() {
     pageData: Array<{ id: string; title: string; url: string }>
   ) => {
     switch (eventType) {
-      case EventType.PageView:
+      case EEventType.PageView:
         const pageInfo = pageData.find((p) => p.title === event.name);
         if (pageInfo) {
           setSelectedPageId(pageInfo.id);
@@ -104,10 +104,10 @@ export function useEventForm() {
         }
         break;
 
-      case EventType.TrackEvent:
-      case EventType.TrackEventWithPageView:
-      case EventType.BackendEvent:
-      case EventType.Outlink:
+      case EEventType.TrackEvent:
+      case EEventType.TrackEventWithPageView:
+      case EEventType.BackendEvent:
+      case EEventType.Outlink:
         setFormData({
           eventcategory: event.category,
           eventactionname: event.action,

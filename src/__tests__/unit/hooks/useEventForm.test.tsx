@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useEventForm } from '@/hooks/useEventForm';
-import { EventType } from '@/services/adminS3Service';
+import { EEventType } from '@/services/adminS3Service';
 import { Event } from '@/types';
 
 describe('useEventForm', () => {
@@ -104,7 +104,7 @@ describe('useEventForm', () => {
 
       const formData = result.current.prepareFormDataForSubmission(
         mockFormData,
-        EventType.PageView
+        EEventType.PageView
       );
 
       expect(formData).toEqual({
@@ -131,7 +131,7 @@ describe('useEventForm', () => {
 
       const formData = result.current.prepareFormDataForSubmission(
         mockFormData,
-        EventType.TrackEvent
+        EEventType.TrackEvent
       );
 
       expect(formData).toEqual({
@@ -157,7 +157,7 @@ describe('useEventForm', () => {
 
       const formData = result.current.prepareFormDataForSubmission(
         mockFormData,
-        EventType.Outlink
+        EEventType.Outlink
       );
 
       expect(formData).toEqual({
@@ -177,7 +177,7 @@ describe('useEventForm', () => {
 
       const formData = result.current.prepareFormDataForSubmission(
         mockFormData,
-        'unknown-type' as EventType
+        'unknown-type' as EEventType
       );
 
       expect(formData).toEqual({
@@ -201,7 +201,7 @@ describe('useEventForm', () => {
         category: '/home',
         action: '',
         value: '',
-        eventType: EventType.PageView,
+        eventType: EEventType.PageView,
         coordinates: {
           startX: 0,
           startY: 0,
@@ -222,7 +222,7 @@ describe('useEventForm', () => {
       act(() => {
         result.current.populateFormFromEvent(
           event,
-          EventType.PageView,
+          EEventType.PageView,
           pageData
         );
       });
@@ -243,7 +243,7 @@ describe('useEventForm', () => {
         category: 'User Interaction',
         action: 'Click',
         value: '1',
-        eventType: EventType.TrackEvent,
+        eventType: EEventType.TrackEvent,
         coordinates: {
           startX: 100,
           startY: 200,
@@ -261,7 +261,7 @@ describe('useEventForm', () => {
       act(() => {
         result.current.populateFormFromEvent(
           event,
-          EventType.TrackEvent,
+          EEventType.TrackEvent,
           pageData
         );
       });

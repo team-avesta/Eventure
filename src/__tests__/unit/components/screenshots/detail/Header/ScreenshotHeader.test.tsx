@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import ScreenshotHeader from '@/components/screenshots/detail/Header/ScreenshotHeader';
-
+import { EEventType } from '@/services/adminS3Service';
 // Mock the child components
 jest.mock('@/components/shared/Breadcrumb', () => {
   return function MockBreadcrumb({
@@ -61,8 +61,8 @@ describe('ScreenshotHeader', () => {
     isDraggable: false,
     setIsDraggable: jest.fn(),
     eventTypes: [
-      { id: 'pageview', name: 'Page View', color: '#2563EB' },
-      { id: 'trackevent', name: 'Track Event', color: '#9333EA' },
+      { id: EEventType.PageView, name: 'Page View', color: '#2563EB' },
+      { id: EEventType.TrackEvent, name: 'Track Event', color: '#9333EA' },
     ],
     onAddEventClick: jest.fn(),
     onReplaceImageClick: jest.fn(),

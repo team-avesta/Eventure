@@ -2,6 +2,7 @@ import React from 'react';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import ActionButtons from './ActionButtons';
 import EventTypeLegend from './EventTypeLegend';
+import { EventType } from '@/types';
 
 interface ScreenshotHeaderProps {
   moduleName: string;
@@ -10,11 +11,7 @@ interface ScreenshotHeaderProps {
   userRole: string;
   isDraggable: boolean;
   setIsDraggable: (isDraggable: boolean) => void;
-  eventTypes: Array<{
-    id: string;
-    name: string;
-    color: string;
-  }>;
+  eventTypes: EventType[];
   onAddEventClick: () => void;
   onReplaceImageClick: () => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;

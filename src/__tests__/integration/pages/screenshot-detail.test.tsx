@@ -5,6 +5,7 @@ import { server } from '@/__mocks__/server';
 import ScreenshotDetailPage from '../../../../app/screenshots/[id]/page';
 import { EVENT_TYPES } from '@/constants/constants';
 import React from 'react';
+import { EEventType } from '@/services/adminS3Service';
 
 // Define Rectangle type for the mock
 interface MockRectangle {
@@ -145,7 +146,7 @@ jest.mock('@/services/adminS3Service', () => {
       updateEvent: jest.fn().mockResolvedValue({ success: true }),
       deleteEvent: jest.fn().mockResolvedValue({ success: true }),
     },
-    EventType: {
+    EEventType: {
       PageView: 'pageview',
       TrackEventWithPageView: 'trackevent_pageview',
       TrackEvent: 'trackevent',

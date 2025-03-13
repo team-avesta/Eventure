@@ -1,16 +1,16 @@
-import { EventType } from '@/services/adminS3Service';
-import { EventTypeOption } from '@/types/types';
+import { EEventType } from '@/services/adminS3Service';
+import { EventType } from '@/types';
 
-export const EVENT_TYPES: EventTypeOption[] = [
-  { id: EventType.PageView, name: 'Page View', color: '#2563EB' },
+export const EVENT_TYPES: EventType[] = [
+  { id: EEventType.PageView, name: 'Page View', color: '#2563EB' },
   {
-    id: EventType.TrackEventWithPageView,
+    id: EEventType.TrackEventWithPageView,
     name: 'TrackEvent with PageView',
     color: '#16A34A',
   },
-  { id: EventType.TrackEvent, name: 'TrackEvent', color: '#9333EA' },
-  { id: EventType.Outlink, name: 'Outlink', color: '#DC2626' },
-  { id: EventType.BackendEvent, name: 'Backend Event', color: '#F59E0B' },
+  { id: EEventType.TrackEvent, name: 'TrackEvent', color: '#9333EA' },
+  { id: EEventType.Outlink, name: 'Outlink', color: '#DC2626' },
+  { id: EEventType.BackendEvent, name: 'Backend Event', color: '#F59E0B' },
 ];
 
 export function getEventTypeBorderColor(eventType: string): string {
@@ -18,17 +18,17 @@ export function getEventTypeBorderColor(eventType: string): string {
   return type ? type.color : '#3B82F6';
 }
 
-export function getEventTypeDescription(typeId: string): string {
+export function getEventTypeDescription(typeId: EEventType): string {
   switch (typeId) {
-    case EventType.PageView:
+    case EEventType.PageView:
       return 'Track when users view a page';
-    case EventType.TrackEventWithPageView:
+    case EEventType.TrackEventWithPageView:
       return 'Track user interactions that also trigger a page view';
-    case EventType.TrackEvent:
+    case EEventType.TrackEvent:
       return 'Track user interactions without a page view';
-    case EventType.Outlink:
+    case EEventType.Outlink:
       return 'Track when users click links to external sites';
-    case EventType.BackendEvent:
+    case EEventType.BackendEvent:
       return 'Track backend-specific events and operations';
     default:
       return '';

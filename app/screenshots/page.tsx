@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import {
   adminS3Service,
   Module,
-  EventType,
   Event,
+  EEventType,
 } from '@/services/adminS3Service';
 import ScreenshotUpload from '@/components/screenshots/ScreenshotUpload';
 import { ModuleCard } from '@/components/screenshots/ModuleCard';
@@ -23,16 +23,16 @@ interface EventCounts {
 
 const getEventCounts = (events: Event[]): EventCounts => {
   const counts = {
-    [EventType.PageView]: 0,
-    [EventType.TrackEventWithPageView]: 0,
-    [EventType.TrackEvent]: 0,
-    [EventType.Outlink]: 0,
+    [EEventType.PageView]: 0,
+    [EEventType.TrackEventWithPageView]: 0,
+    [EEventType.TrackEvent]: 0,
+    [EEventType.Outlink]: 0,
   };
 
   events.forEach((event) => {
     if (event?.eventType) {
-      if (event.eventType === EventType.BackendEvent) {
-        counts[EventType.TrackEvent]++; // Count BackendEvent as TrackEvent
+      if (event.eventType === EEventType.BackendEvent) {
+        counts[EEventType.TrackEvent]++; // Count BackendEvent as TrackEvent
       } else {
         counts[event.eventType]++;
       }
@@ -40,10 +40,10 @@ const getEventCounts = (events: Event[]): EventCounts => {
   });
 
   return {
-    pageViewCount: counts[EventType.PageView],
-    trackEventWithPageViewCount: counts[EventType.TrackEventWithPageView],
-    trackEventCount: counts[EventType.TrackEvent],
-    outlinkCount: counts[EventType.Outlink],
+    pageViewCount: counts[EEventType.PageView],
+    trackEventWithPageViewCount: counts[EEventType.TrackEventWithPageView],
+    trackEventCount: counts[EEventType.TrackEvent],
+    outlinkCount: counts[EEventType.Outlink],
   };
 };
 

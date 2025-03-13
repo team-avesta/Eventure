@@ -1,7 +1,7 @@
 import {
   adminS3Service,
   Module,
-  EventType,
+  EEventType,
   ScreenshotStatus,
   PageView,
   Dimension,
@@ -34,7 +34,7 @@ describe('adminS3Service', () => {
             id: '1',
             screenshotId: '1',
             coordinates: { startX: 0, startY: 0, width: 100, height: 100 },
-            eventType: EventType.PageView,
+            eventType: EEventType.PageView,
             name: 'Test Event',
             category: 'Test Category',
             action: 'Test Action',
@@ -91,12 +91,12 @@ describe('adminS3Service', () => {
           {
             id: '1',
             screenshotId: '1',
-            eventType: EventType.PageView,
+            eventType: EEventType.PageView,
           },
           {
             id: '2',
             screenshotId: '1',
-            eventType: EventType.TrackEventWithPageView,
+            eventType: EEventType.TrackEventWithPageView,
           },
         ];
 
@@ -106,10 +106,10 @@ describe('adminS3Service', () => {
           mockModule,
         ]);
         const expectedCounts = {
-          [EventType.PageView]: 1,
-          [EventType.TrackEventWithPageView]: 1,
-          [EventType.TrackEvent]: 0,
-          [EventType.Outlink]: 0,
+          [EEventType.PageView]: 1,
+          [EEventType.TrackEventWithPageView]: 1,
+          [EEventType.TrackEvent]: 0,
+          [EEventType.Outlink]: 0,
         };
         expect(result[0].eventCounts).toEqual(expectedCounts);
       });
@@ -697,7 +697,7 @@ describe('adminS3Service', () => {
         height: 100,
       },
       screenshotId: '1',
-      eventType: EventType.PageView,
+      eventType: EEventType.PageView,
       name: 'Test Event',
       category: 'Test Category',
       action: 'Test Action',

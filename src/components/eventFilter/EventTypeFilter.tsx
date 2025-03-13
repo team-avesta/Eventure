@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiChevronDown } from 'react-icons/fi';
-import { EventType } from '@/services/adminS3Service';
 
 const EVENT_TYPES = [
   { id: 'all', name: 'All Events', color: '#6B7280' },

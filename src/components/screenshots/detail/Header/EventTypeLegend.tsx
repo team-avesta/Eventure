@@ -1,10 +1,5 @@
 import React from 'react';
-
-interface EventType {
-  id: string;
-  name: string;
-  color: string;
-}
+import { EventType } from '@/types';
 
 interface EventTypeLegendProps {
   eventTypes: EventType[];

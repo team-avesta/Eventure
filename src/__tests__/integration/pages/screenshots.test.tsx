@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import ScreenshotsPage from '../../../../app/screenshots/page';
 import { adminS3Service } from '@/services/adminS3Service';
 import { useAuth } from '@/hooks/useAuth';
-import { EventType } from '@/services/adminS3Service';
+import { EEventType } from '@/services/adminS3Service';
 import toast from 'react-hot-toast';
 
 // Mock dependencies
@@ -12,12 +12,12 @@ jest.mock('@/services/adminS3Service', () => ({
     fetchModules: jest.fn(),
     fetchModuleEventCounts: jest.fn(),
   },
-  EventType: {
-    PageView: 'PageView',
-    TrackEventWithPageView: 'TrackEventWithPageView',
-    TrackEvent: 'TrackEvent',
-    Outlink: 'Outlink',
-    BackendEvent: 'BackendEvent',
+  EEventType: {
+    PageView: 'pageview',
+    TrackEventWithPageView: 'trackevent_pageview',
+    TrackEvent: 'trackevent',
+    Outlink: 'outlink',
+    BackendEvent: 'backendevent',
   },
 }));
 
@@ -51,9 +51,9 @@ describe('Screenshots Page Integration', () => {
         {
           id: 's1',
           events: [
-            { eventType: EventType.PageView },
-            { eventType: EventType.TrackEvent },
-            { eventType: EventType.BackendEvent },
+            { eventType: EEventType.PageView },
+            { eventType: EEventType.TrackEvent },
+            { eventType: EEventType.BackendEvent },
           ],
         },
       ],
@@ -66,8 +66,8 @@ describe('Screenshots Page Integration', () => {
         {
           id: 's2',
           events: [
-            { eventType: EventType.TrackEventWithPageView },
-            { eventType: EventType.Outlink },
+            { eventType: EEventType.TrackEventWithPageView },
+            { eventType: EEventType.Outlink },
           ],
         },
       ],

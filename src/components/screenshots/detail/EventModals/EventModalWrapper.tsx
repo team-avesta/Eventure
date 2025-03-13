@@ -3,7 +3,6 @@ import { Textarea } from '@/components/shared/Textarea';
 import React from 'react';
 import PageViewEventForm from './PageViewEventForm';
 import { useEventForm } from '@/hooks/useEventForm';
-import { EventType } from '@/services/adminS3Service';
 import TrackEventForm from './TrackEventForm';
 import OutlinkEventForm from './OutlinkEventForm';
 import { FormState } from '@/types/types';

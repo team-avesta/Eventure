@@ -1,13 +1,3 @@
-import { Event } from '@/types';
-import { Rectangle } from '@/components/imageAnnotator/ImageAnnotator';
-import { EventType } from '@/services/adminS3Service';
-
-export type EventTypeOption = {
-  id: string;
-  name: string;
-  color: string;
-};
-
 export type RectangleState = {
   id: string;
   startX: number;

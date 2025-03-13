@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { AnalyticsOverview } from '@/components/screenshots/AnalyticsOverview';
-import { Module, EventType, ScreenshotStatus } from '@/services/adminS3Service';
+import {
+  Module,
+  EEventType,
+  ScreenshotStatus,
+} from '@/services/adminS3Service';
 
 describe('AnalyticsOverview', () => {
   const mockModules: Module[] = [
@@ -20,7 +24,7 @@ describe('AnalyticsOverview', () => {
           events: [
             {
               id: '1',
-              eventType: EventType.PageView,
+              eventType: EEventType.PageView,
               screenshotId: 'screenshot1',
               name: 'Page View 1',
               coordinates: { startX: 0, startY: 0, width: 100, height: 50 },
@@ -32,7 +36,7 @@ describe('AnalyticsOverview', () => {
             },
             {
               id: '2',
-              eventType: EventType.TrackEvent,
+              eventType: EEventType.TrackEvent,
               screenshotId: 'screenshot1',
               name: 'Track Event 1',
               coordinates: { startX: 0, startY: 0, width: 100, height: 50 },
@@ -44,7 +48,7 @@ describe('AnalyticsOverview', () => {
             },
             {
               id: '3',
-              eventType: EventType.PageView,
+              eventType: EEventType.PageView,
               screenshotId: 'screenshot1',
               name: 'Page View 2',
               coordinates: { startX: 0, startY: 0, width: 100, height: 50 },
@@ -74,7 +78,7 @@ describe('AnalyticsOverview', () => {
           events: [
             {
               id: '4',
-              eventType: EventType.TrackEventWithPageView,
+              eventType: EEventType.TrackEventWithPageView,
               screenshotId: 'screenshot2',
               name: 'Track with Page View 1',
               coordinates: { startX: 0, startY: 0, width: 100, height: 50 },
@@ -86,7 +90,7 @@ describe('AnalyticsOverview', () => {
             },
             {
               id: '5',
-              eventType: EventType.Outlink,
+              eventType: EEventType.Outlink,
               screenshotId: 'screenshot2',
               name: 'Outlink 1',
               coordinates: { startX: 0, startY: 0, width: 100, height: 50 },
@@ -98,7 +102,7 @@ describe('AnalyticsOverview', () => {
             },
             {
               id: '6',
-              eventType: EventType.BackendEvent,
+              eventType: EEventType.BackendEvent,
               screenshotId: 'screenshot2',
               name: 'Backend Event 1',
               coordinates: { startX: 0, startY: 0, width: 100, height: 50 },
@@ -234,11 +238,11 @@ describe('AnalyticsOverview', () => {
 
     // Verify that each card has the correct background color style
     const colors = {
-      [EventType.PageView]: 'rgba(37, 99, 235, 0.082)',
-      [EventType.TrackEventWithPageView]: 'rgba(22, 163, 74, 0.082)',
-      [EventType.TrackEvent]: 'rgba(147, 51, 234, 0.082)',
-      [EventType.Outlink]: 'rgba(220, 38, 38, 0.082)',
-      [EventType.BackendEvent]: 'rgba(245, 158, 11, 0.082)',
+      [EEventType.PageView]: 'rgba(37, 99, 235, 0.082)',
+      [EEventType.TrackEventWithPageView]: 'rgba(22, 163, 74, 0.082)',
+      [EEventType.TrackEvent]: 'rgba(147, 51, 234, 0.082)',
+      [EEventType.Outlink]: 'rgba(220, 38, 38, 0.082)',
+      [EEventType.BackendEvent]: 'rgba(245, 158, 11, 0.082)',
     };
 
     Object.values(colors).forEach((color) => {

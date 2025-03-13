@@ -1,4 +1,4 @@
-import { Module, EventType } from '@/services/adminS3Service';
+import { Module, EEventType } from '@/services/adminS3Service';
 import {
   FiEye,
   FiCheckSquare,
@@ -12,27 +12,27 @@ interface AnalyticsOverviewProps {
 }
 
 const EVENT_TYPE_INFO = {
-  [EventType.PageView]: {
+  [EEventType.PageView]: {
     name: 'Page Views',
     color: '#2563EB',
     icon: <FiEye className="w-5 h-5" />,
   },
-  [EventType.TrackEventWithPageView]: {
+  [EEventType.TrackEventWithPageView]: {
     name: 'Track + PageView',
     color: '#16A34A',
     icon: <FiCheckSquare className="w-5 h-5" />,
   },
-  [EventType.TrackEvent]: {
+  [EEventType.TrackEvent]: {
     name: 'Track Event',
     color: '#9333EA',
     icon: <FiTarget className="w-5 h-5" />,
   },
-  [EventType.Outlink]: {
+  [EEventType.Outlink]: {
     name: 'Outlink',
     color: '#DC2626',
     icon: <FiExternalLink className="w-5 h-5" />,
   },
-  [EventType.BackendEvent]: {
+  [EEventType.BackendEvent]: {
     name: 'Backend Event',
     color: '#F59E0B',
     icon: <FiServer className="w-5 h-5" />,
@@ -41,11 +41,11 @@ const EVENT_TYPE_INFO = {
 
 const calculateEventTotals = (modules: Module[]) => {
   const totals = {
-    [EventType.PageView]: 0,
-    [EventType.TrackEventWithPageView]: 0,
-    [EventType.TrackEvent]: 0,
-    [EventType.Outlink]: 0,
-    [EventType.BackendEvent]: 0,
+    [EEventType.PageView]: 0,
+    [EEventType.TrackEventWithPageView]: 0,
+    [EEventType.TrackEvent]: 0,
+    [EEventType.Outlink]: 0,
+    [EEventType.BackendEvent]: 0,
   };
 
   modules.forEach((module) => {
@@ -59,7 +59,7 @@ const calculateEventTotals = (modules: Module[]) => {
 
   return Object.entries(EVENT_TYPE_INFO).map(([type, info]) => ({
     name: info.name,
-    count: totals[type as EventType],
+    count: totals[type as EEventType],
     color: info.color,
     icon: info.icon,
   }));

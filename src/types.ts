@@ -1,3 +1,5 @@
+import { EEventType } from './services/adminS3Service';
+
 export type Event = {
   id: string;
   coordinates: {
@@ -32,4 +34,10 @@ export interface Module {
   key: string;
   pages: string[];
   screenshots: Screenshot[];
+}
+
+export interface EventType {
+  id: EEventType;
+  name: string;
+  color: string;
 }

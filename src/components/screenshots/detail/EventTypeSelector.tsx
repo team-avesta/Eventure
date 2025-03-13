@@ -1,18 +1,13 @@
+import { getEventTypeDescription } from '@/constants/constants';
+import { EventType } from '@/types';
 import React from 'react';
 import { FiPlus, FiX, FiChevronRight } from 'react-icons/fi';
-
-interface EventType {
-  id: string;
-  name: string;
-  color: string;
-}
 
 interface EventTypeSelectorProps {
   isOpen: boolean;
   eventTypes: EventType[];
   onClose: () => void;
   onSelect: (type: EventType) => void;
-  getEventTypeDescription: (typeId: string) => string;
 }
 
 const EventTypeSelector: React.FC<EventTypeSelectorProps> = ({
@@ -20,7 +15,6 @@ const EventTypeSelector: React.FC<EventTypeSelectorProps> = ({
   eventTypes,
   onClose,
   onSelect,
-  getEventTypeDescription,
 }) => {
   if (!isOpen) return null;
 

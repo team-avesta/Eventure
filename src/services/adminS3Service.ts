@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export enum EventType {
+export enum EEventType {
   PageView = 'pageview',
   TrackEventWithPageView = 'trackevent_pageview',
   TrackEvent = 'trackevent',
@@ -43,7 +43,7 @@ export interface Event {
     height: number;
   };
   screenshotId: string;
-  eventType: EventType;
+  eventType: EEventType;
   name: string;
   category: string;
   action: string;
@@ -95,17 +95,17 @@ const calculateEventCounts = (screenshots: Screenshot[]) => {
     const events = screenshot.events || [];
     events.forEach((event) => {
       switch (event.eventType) {
-        case EventType.PageView:
+        case EEventType.PageView:
           pageView++;
           break;
-        case EventType.TrackEventWithPageView:
+        case EEventType.TrackEventWithPageView:
           trackEventWithPageView++;
           break;
-        case EventType.TrackEvent:
-        case EventType.BackendEvent:
+        case EEventType.TrackEvent:
+        case EEventType.BackendEvent:
           trackEvent++;
           break;
-        case EventType.Outlink:
+        case EEventType.Outlink:
           outlink++;
           break;
       }
@@ -113,10 +113,10 @@ const calculateEventCounts = (screenshots: Screenshot[]) => {
   });
 
   return {
-    [EventType.PageView]: pageView,
-    [EventType.TrackEventWithPageView]: trackEventWithPageView,
-    [EventType.TrackEvent]: trackEvent,
-    [EventType.Outlink]: outlink,
+    [EEventType.PageView]: pageView,
+    [EEventType.TrackEventWithPageView]: trackEventWithPageView,
+    [EEventType.TrackEvent]: trackEvent,
+    [EEventType.Outlink]: outlink,
   };
 };
 

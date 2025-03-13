@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import EventTypeLegend from '@/components/screenshots/detail/Header/EventTypeLegend';
-
+import { EEventType } from '@/services/adminS3Service';
 describe('EventTypeLegend', () => {
   const mockEventTypes = [
-    { id: 'pageview', name: 'Page View', color: '#2563EB' },
-    { id: 'trackevent', name: 'Track Event', color: '#9333EA' },
-    { id: 'outlink', name: 'Outlink', color: '#DC2626' },
+    { id: EEventType.PageView, name: 'Page View', color: '#2563EB' },
+    { id: EEventType.TrackEvent, name: 'Track Event', color: '#9333EA' },
+    { id: EEventType.Outlink, name: 'Outlink', color: '#DC2626' },
   ];
 
   it('renders all event types correctly', () => {
