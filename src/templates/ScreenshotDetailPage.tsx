@@ -243,6 +243,7 @@ const ScreenshotDetailPage = ({ userRole }: { userRole: string }) => {
         category: formData.category,
         action: formData.action,
         value: formData.value,
+        name: formData.name,
       }),
       description: formData.description || undefined,
       dimensions: formData.dimensions,
